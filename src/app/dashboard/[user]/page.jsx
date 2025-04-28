@@ -10,7 +10,7 @@ import Sidebar from '@/components/Sidebar';
 import QuizSection from '@/components/quiz/QuizSection';
 import CodeEditorSection from '@/components/code/CodeEditorSection';
 import ProfileSection from '@/components/profile/ProfileSection';
-import ProjectsSection from '@/components/projects/ProjectsSection';
+import ProjectsSection from '@/components/project/ProjectsSection';
 import SolutionsSection from '@/components/solutions/SolutionsSection';
 
 export default function CodingClubPage() {
