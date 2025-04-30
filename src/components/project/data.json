@@ -1,0 +1,16 @@
+[
+    {
+      "title": "AI Resume Screener",
+      "description": "A smart resume analysis tool that uses NLP to filter and shortlist candidates based on job criteria.",
+      "type": "AI Tool",
+      "stack": ["React", "Python", "TensorFlow", "Flask"],
+      "github": "https://github.com/user/project",
+      "gdrive": "https://drive.google.com/somefolder",
+      "deployment": "https://projectsite.vercel.app",
+      "usp": "University Funded | TechConf Winner",
+      "teamLead": "Tushar Yadav",
+      "groupMembers": ["Ayush", "Sahajdeep", "Vikhyat"],
+      "image": "/images/project1.jpg"
+    }
+  ]
+  

@@ -20,12 +20,11 @@ export default function ProjectNav({ activeTab, setActiveTab }) {
         color: "white",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
         height: "100vh",
         position: "sticky",
         top: 0,
-        backdropFilter: "blur(8px)",
         borderRight: "1px solid #333",
+        backdropFilter: "blur(8px)",
       }}
     >
       {/* Navigation Tabs */}
@@ -43,13 +42,13 @@ export default function ProjectNav({ activeTab, setActiveTab }) {
                 onClick={() => setActiveTab(tab.value)}
                 sx={{
                   "&.Mui-selected": {
-                    bgcolor: "#ff69b4",
+                    bgcolor: "#ff69b4",  // Highlight color
                     color: "black",
                     fontWeight: "bold",
                     borderRadius: 2,
                   },
                   "&:hover": {
-                    bgcolor: "#00bfff",
+                    bgcolor: "#00bfff", // Hover color
                     color: "black",
                     borderRadius: 2,
                   },
@@ -65,22 +64,23 @@ export default function ProjectNav({ activeTab, setActiveTab }) {
       </List>
 
       {/* Profile Section */}
+      <Box sx={{ flexGrow: 1 }} />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <Box sx={{ p: 2, display: "flex", justifyContent: "center", mt: "auto" }}>
+        <Box sx={{ p: 2, display: "flex", justifyContent: "center" }}>
           <Avatar
             alt="Profile"
             src="/profile.jpg" // optional profile pic
             sx={{
               width: 56,
               height: 56,
-              border: "2px solid #00bfff",
+              border: "2px solid #00bfff", // Border color for profile
               transition: "transform 0.3s",
               "&:hover": {
-                transform: "scale(1.1)",
+                transform: "scale(1.1)", // Hover effect for profile picture
               },
             }}
           />

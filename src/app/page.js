@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation'; 
-import './login.css';
 
 import RegisterPage from './Register';
 import LoginPage from './Login';

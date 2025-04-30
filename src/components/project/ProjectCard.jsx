@@ -1,166 +1,194 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, Typography, Chip, Stack, Link, Divider, Dialog, DialogContent, IconButton, Grid } from "@mui/material";
+import {
+  Card, CardContent, Typography, Grid, Dialog, DialogContent,
+  IconButton, Link, Divider, Avatar, Chip, Box, Tabs, Tab, Tooltip
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import CloudIcon from "@mui/icons-material/Cloud";
+import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
+import projectData from "./data.json";
 
-export default function ProjectCard({ data }) {
+export default function ProjectCard() {
   const [open, setOpen] = useState(false);
+  const [currentProject, setCurrentProject] = useState(null);
+  const [tab, setTab] = useState(0);
 
-  const handleOpen = () => setOpen(true);
+  const handleOpen = (project) => {
+    setCurrentProject(project);
+    setTab(0);
+    setOpen(true);
+  };
+
   const handleClose = () => setOpen(false);
+
+  const goldenStyle = {
+    color: "#ffcb05",
+    fontWeight: 600,
+    fontFamily: "serif",
+  };
+
+  const cardStyle = {
+    background: "#111827",
+    borderRadius: 4,
+    color: "#e5e7eb",
+    height: 370,
+    cursor: "pointer",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+    border: "1px solid #1f2937",
+    transition: "transform 0.3s",
+    "&:hover": {
+      transform: "scale(1.03)",
+      boxShadow: "0 6px 30px rgba(255,203,5,0.2)",
+    },
+  };
 
   return (
     <>
-      {/* Mini View Card */}
-      <Card
-        onClick={handleOpen}
-        sx={{
-          bgcolor: "#222",
-          border: "1px solid #ff69b4",
-          color: "white",
-          p: 2,
-          cursor: "pointer",
-          transition: "0.3s",
-          "&:hover": {
-            borderColor: "#00bfff",
-            transform: "scale(1.05)",
-          },
-        }}
-      >
-        <CardContent>
-          <Typography variant="h5" sx={{ color: "#ff69b4" }}>
-            {data?.title || "No Title"}
-          </Typography>
-          <Typography variant="body2" sx={{ mt: 1 }}>
-            {data?.description?.slice(0, 60) || "No Description"}...
-          </Typography>
-          <Typography variant="caption" sx={{ mt: 2, display: "block", color: "#00bfff" }}>
-            Tap to see details
-          </Typography>
-        </CardContent>
-      </Card>
+      <Grid container spacing={3} sx={{ px: 2, py: 4 }}>
+        {projectData.map((project, idx) => (
+          <Grid item xs={12} sm={6} md={4} key={idx}>
+            <Card sx={cardStyle} onClick={() => handleOpen(project)}>
+              <CardContent>
+                <Box sx={{ textAlign: "center", mb: 2 }}>
+                  <img
+                    src={project.image || "/placeholder.jpg"}
+                    alt="project"
+                    style={{ width: "100%", height: 150, objectFit: "cover", borderRadius: 8 }}
+                  />
+                </Box>
+                <Typography variant="h6" sx={{ ...goldenStyle, mb: 1 }}>
+                  {project.title}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#9ca3af", mb: 2 }}>
+                  {project.description?.slice(0, 70)}...
+                </Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                  {project.stack?.slice(0, 3).map((tech, i) => (
+                    <Chip
+                      key={i}
+                      label={tech}
+                      size="small"
+                      variant="outlined"
+                      sx={{ color: "#ffcb05", borderColor: "#ffcb05" }}
+                    />
+                  ))}
+                </Box>
+                {project.usp && (
+                  <Box sx={{ mt: 2 }}>
+                    <Chip label={project.usp} color="success" size="small" />
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
 
-      {/* Full Screen Dialog */}
-      <Dialog open={open} onClose={handleClose} fullScreen>
-        <DialogContent sx={{ bgcolor: "#111", color: "white", p: 4 }}>
-          <IconButton onClick={handleClose} sx={{ color: "white", position: "absolute", top: 10, right: 10 }}>
-            <CloseIcon />
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
+        <DialogContent sx={{ p: 0, bgcolor: tab === 0 ? "#0f172a" : "#fff", minHeight: "600px" }}>
+          <IconButton onClick={handleClose} sx={{ position: "absolute", top: 10, right: 10, zIndex: 1 }}>
+            <CloseIcon sx={{ color: tab === 0 ? "#fff" : "#000" }} />
           </IconButton>
 
-          {/* Split Layout */}
-          <Grid container spacing={4}>
-            
-            {/* Left Side */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="h4" sx={{ color: "#ff69b4", mb: 2 }}>
-                {data?.title}
-              </Typography>
+          <Tabs
+            value={tab}
+            onChange={(e, newVal) => setTab(newVal)}
+            variant="fullWidth"
+            sx={{
+              bgcolor: tab === 0 ? "#1e293b" : "#f5f5f5",
+              borderBottom: 1,
+              borderColor: "#ccc",
+              color: tab === 0 ? "#fff" : "#000",
+            }}
+          >
+            <Tab label="Title Page" />
+            <Tab label="Overview" />
+            <Tab label="Tech & Links" />
+            <Tab label="Team" />
+          </Tabs>
 
-              <Typography variant="body1" sx={{ mb: 3 }}>
-                {data?.description}
+          {tab === 0 && (
+            <Box sx={{ p: 5, textAlign: "center", color: "#ffcb05" }}>
+              <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
+                {currentProject?.title}
               </Typography>
-
-              <Divider sx={{ borderColor: "#444", my: 2 }} />
-
-              <Typography variant="subtitle2" sx={{ color: "#00bfff" }}>
-                Stack Used:
+              <Typography variant="subtitle1" sx={{ fontFamily: "serif", color: "#bbb" }}>
+                Project Report | {currentProject?.type}
               </Typography>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", my: 1 }}>
-                {data?.stack?.map((tech, idx) => (
-                  <Chip key={idx} label={tech} size="small" color="primary" />
+            </Box>
+          )}
+
+          {tab === 1 && (
+            <Box sx={{ p: 4 }}>
+              <Typography variant="h5" sx={{ ...goldenStyle, mb: 2 }}>Description</Typography>
+              <Typography variant="body1" sx={{ color: "#333" }}>{currentProject?.description}</Typography>
+              {currentProject?.usp && (
+                <Box mt={3}>
+                  <Chip label={`USP: ${currentProject.usp}`} color="success" />
+                </Box>
+              )}
+            </Box>
+          )}
+
+          {tab === 2 && (
+            <Box sx={{ p: 4 }}>
+              <Typography variant="h6" sx={{ ...goldenStyle }}>Tech Stack</Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
+                {currentProject?.stack?.map((tech, i) => (
+                  <Chip key={i} label={tech} color="info" size="small" />
                 ))}
-              </Stack>
+              </Box>
 
-              {data?.usp && (
-                <>
-                  <Typography variant="subtitle2" sx={{ color: "#00bfff", mt: 3 }}>
-                    Unique Selling Point:
-                  </Typography>
-                  <Typography variant="body2" sx={{ mt: 0.5 }}>
-                    {data.usp}
-                  </Typography>
-                </>
-              )}
-
-              <Typography variant="subtitle2" sx={{ color: "#00bfff", mt: 3 }}>
-                Team Lead:
-              </Typography>
-              <Typography variant="body2">{data?.teamLead}</Typography>
-
-              {data?.groupMembers?.length > 0 && (
-                <>
-                  <Typography variant="subtitle2" sx={{ color: "#00bfff", mt: 2 }}>
-                    Group Members:
-                  </Typography>
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mt: 1 }}>
-                    {data.groupMembers.map((member, idx) => (
-                      <Chip key={idx} label={member} size="small" variant="outlined" />
-                    ))}
-                  </Stack>
-                </>
-              )}
-            </Grid>
-
-            {/* Right Side */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" sx={{ color: "#00bfff" }}>
-                Project Type:
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 3 }}>
-                {data?.type}
-              </Typography>
-
-              <Divider sx={{ borderColor: "#444", my: 2 }} />
-              <Typography variant="subtitle2" sx={{ color: "#00bfff" }}>
-                Important Links:
-              </Typography>
-              <Stack spacing={1} sx={{ mt: 1 }}>
-                {data?.github && (
-                  <Link href={data.github} target="_blank" underline="hover" color="#ff69b4">
-                    GitHub Repository
-                  </Link>
+              <Typography variant="h6" sx={{ ...goldenStyle, mt: 4 }}>Project Links</Typography>
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                {currentProject?.github && (
+                  <Grid item>
+                    <Tooltip title="GitHub Repository">
+                      <Link href={currentProject.github} target="_blank" underline="hover">
+                        <GitHubIcon sx={{ mr: 0.5 }} /> GitHub
+                      </Link>
+                    </Tooltip>
+                  </Grid>
                 )}
-                {data?.gdrive && (
-                  <Link href={data.gdrive} target="_blank" underline="hover" color="#00bfff">
-                    Google Drive
-                  </Link>
+                {currentProject?.gdrive && (
+                  <Grid item>
+                    <Tooltip title="Google Drive Docs">
+                      <Link href={currentProject.gdrive} target="_blank" underline="hover">
+                        <DriveFolderUploadIcon sx={{ mr: 0.5 }} /> Drive
+                      </Link>
+                    </Tooltip>
+                  </Grid>
                 )}
-                {data?.deployment && (
-                  <Link href={data.deployment} target="_blank" underline="hover" color="#ff69b4">
-                    Deployment Link
-                  </Link>
+                {currentProject?.deployment && (
+                  <Grid item>
+                    <Tooltip title="Live Deployment">
+                      <Link href={currentProject.deployment} target="_blank" underline="hover">
+                        <CloudIcon sx={{ mr: 0.5 }} /> Live
+                      </Link>
+                    </Tooltip>
+                  </Grid>
                 )}
-              </Stack>
+              </Grid>
+            </Box>
+          )}
 
-              {data?.appreciations?.length > 0 && (
-                <>
-                  <Divider sx={{ borderColor: "#444", my: 3 }} />
-                  <Typography variant="subtitle2" sx={{ color: "#00bfff" }}>
-                    Appreciations:
-                  </Typography>
-                  <Stack direction="column" spacing={0.5} sx={{ mt: 1 }}>
-                    {data.appreciations.map((title, idx) => (
-                      <Typography key={idx} variant="body2">🏆 {title}</Typography>
-                    ))}
-                  </Stack>
-                </>
-              )}
-
-              {data?.marketValue && (
-                <>
-                  <Divider sx={{ borderColor: "#444", my: 3 }} />
-                  <Typography variant="subtitle2" sx={{ color: "#00bfff" }}>
-                    Market Bidding Value:
-                  </Typography>
-                  <Typography variant="h6" sx={{ color: "#ff69b4", mt: 1 }}>
-                    ₹ {data.marketValue}
-                  </Typography>
-                </>
-              )}
-            </Grid>
-
-          </Grid>
+          {tab === 3 && (
+            <Box sx={{ p: 4 }}>
+              <Typography variant="h6" sx={{ ...goldenStyle }}>Team Lead</Typography>
+              <Typography>{currentProject?.teamLead}</Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" sx={{ ...goldenStyle }}>Group Members</Typography>
+              {currentProject?.groupMembers?.map((member, index) => (
+                <Box key={index} sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                  <Avatar sx={{ width: 32, height: 32, mr: 1 }}>{member[0]}</Avatar>
+                  <Typography>{member}</Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
         </DialogContent>
       </Dialog>
     </>

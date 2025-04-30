@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "type": "project",
+    "title": "Project Management System",
+    "description": "A web-based application to manage projects, tasks, and timelines.",
+    "owner": "my_user",
+    "status": "In Progress"
+  },
+  {
+    "id": 2,
+    "type": "project",
+    "title": "E-commerce Website",
+    "description": "An e-commerce platform for online shopping and payment processing.",
+    "owner": "my_user",
+    "status": "Completed"
+  },
+  {
+    "id": 3,
+    "type": "research",
+    "title": "AI for Healthcare",
+    "abstract": "A research paper exploring the application of AI in healthcare for disease prediction and diagnostics.",
+    "owner": "my_user",
+    "status": "Published"
+  },
+  {
+    "id": 4,
+    "type": "research",
+    "title": "Quantum Computing: A New Frontier",
+    "abstract": "A comprehensive study of quantum computing and its potential to revolutionize various industries.",
+    "owner": "other_user",
+    "status": "Under Review"
+  },
+  {
+    "id": 5,
+    "type": "project",
+    "title": "Social Media Dashboard",
+    "description": "A dashboard for managing social media accounts, analyzing metrics, and scheduling posts.",
+    "owner": "my_user",
+    "status": "In Progress"
+  },
+  {
+    "id": 6,
+    "type": "research",
+    "title": "Blockchain in Financial Services",
+    "abstract": "An in-depth research paper on the potential uses of blockchain in the financial industry.",
+    "owner": "other_user",
+    "status": "Completed"
+  }
+]
