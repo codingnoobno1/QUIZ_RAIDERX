@@ -49,17 +49,27 @@ const RegisterPage = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      // Get existing users or initialize empty array
+      const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      
+      // Check if email already exists
+      if (existingUsers.some(user => user.email === formData.email)) {
+        throw new Error('Email already registered');
+      }
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Registration failed");
+      // Add new user
+      const newUser = {
+        ...formData,
+        id: Date.now(), // Simple way to generate unique ID
+        createdAt: new Date().toISOString()
+      };
+      delete newUser.confirmPassword; // Remove confirmPassword before storing
 
-      setSuccess("User registered successfully! Redirecting...");
-      setTimeout(() => router.push("/success"), 2000);
+      existingUsers.push(newUser);
+      localStorage.setItem('users', JSON.stringify(existingUsers));
+
+      setSuccess("Registration successful! Redirecting to login...");
+      setTimeout(() => router.push("/"), 2000);
     } catch (err) {
       setError(err.message);
     } finally {

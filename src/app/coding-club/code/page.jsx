@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Button, Typography, Paper } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Typography, Paper, Snackbar, Alert } from '@mui/material';
 import { styled } from '@mui/system';
 import Sidebar from '@/components/Sidebar';
 import CodeEditorSection from '@/components/code/CodeEditorSection';
@@ -18,66 +18,85 @@ const MetallicPaper = styled(Paper)(({ theme }) => ({
 export default function Page() {
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('javascript');
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
+
+  // Check for authentication
+  useEffect(() => {
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+      window.location.href = '/';
+    }
+  }, []);
 
   const handleSubmit = () => {
+    // Simulate code submission
+    setNotification({
+      open: true,
+      message: 'Solution submitted successfully! It will be evaluated shortly.',
+      severity: 'success'
+    });
+    
+    // Here you would typically send the code to a backend for evaluation
     console.log('Submitted Code:', code);
     console.log('Selected Language:', language);
-    // Further submission logic here (API call etc.)
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'black' }}>
       {/* Sidebar Section */}
-      <Sidebar />
+      <Box
+        component="aside"
+        sx={{
+          width: { xs: '60px', sm: '240px' },
+          backgroundColor: '#111',
+          height: '100vh',
+          position: 'fixed',
+          overflowY: 'auto',
+          borderRight: '1px solid #1e1e1e',
+        }}
+      >
+        <Sidebar />
+      </Box>
 
       {/* Main Content */}
-      <Box sx={{ flexGrow: 1, p: 4 }}>
-        {/* Heading */}
-        <Typography
-          variant="h3"
-          gutterBottom
-          sx={{
-            color: 'deepskyblue',
-            fontWeight: 'bold',
-            fontFamily: 'monospace',
-            textAlign: 'center',
-            mb: 4,
-          }}
-        >
-          Code Raider X
-        </Typography>
-
-        {/* Editor + Submit Section */}
+      <Box 
+        sx={{ 
+          flexGrow: 1, 
+          ml: { xs: '60px', sm: '240px' },
+          p: { xs: 2, sm: 4 },
+        }}
+      >
+        {/* Editor Section */}
         <MetallicPaper elevation={8}>
           <CodeEditorSection
             code={code}
             setCode={setCode}
             language={language}
             setLanguage={setLanguage}
+            onSubmit={handleSubmit}
           />
-
-          {/* Submit Button */}
-          <Box sx={{ mt: 4, textAlign: 'center' }}>
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={handleSubmit}
-              sx={{
-                bgcolor: 'deepskyblue',
-                fontWeight: 'bold',
-                borderRadius: '12px',
-                px: 5,
-                py: 1.5,
-                '&:hover': {
-                  bgcolor: '#0099cc',
-                },
-              }}
-            >
-              Submit Code
-            </Button>
-          </Box>
         </MetallicPaper>
+
+        {/* Submission Notification */}
+        <Snackbar 
+          open={notification.open} 
+          autoHideDuration={6000} 
+          onClose={handleCloseNotification}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseNotification} 
+            severity={notification.severity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {notification.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </Box>
   );
