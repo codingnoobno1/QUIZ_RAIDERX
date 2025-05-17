@@ -8,12 +8,15 @@ import AllProjects from "@components/project/AllProjects";
 import MyProjects from "@components/project/MyProjects";
 import ResearchPapers from "@components/project/ResearchPapers";
 import MyResearch from "@components/project/MyResearch";
+import CourseProject from "@components/project/CourseProject";  // ← Add this import
 
+// Define the tabs and associate each tab with its respective component
 const tabs = {
   all: AllProjects,
   my: MyProjects,
   research: ResearchPapers,
   myresearch: MyResearch,
+  course: CourseProject,  // Ensure the 'CourseProject' tab is included
 };
 
 export default function ProjectsPage() {

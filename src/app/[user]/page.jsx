@@ -1,20 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
+import useUserStore from '@/store/useUserStore';
 
 export default function Page() {
   const [isExpanded, setIsExpanded] = useState(true);
-  
+  const [timeLeft, setTimeLeft] = useState(900); // 15 minutes in seconds
+  const { user, loginTime, logout } = useUserStore();
+  const router = useRouter();
+
   const toggleSidebar = () => setIsExpanded(prev => !prev);
 
+  // Countdown timer
+  useEffect(() => {
+    if (!user) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          logout();
+          alert('Session expired. You will be logged out.');
+          router.push('/login'); // or your login path
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [user]);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#000000' }}> {/* Black background */}
+    <div style={{ display: 'flex', height: '100vh', background: '#000000' }}>
       <Sidebar isExpanded={isExpanded} toggleSidebar={toggleSidebar} />
+
       <main
         style={{
           flexGrow: 1,
-          padding: '1rem',
+          padding: '2rem',
           overflowY: 'auto',
           transition: 'margin-left 0.3s ease',
           marginLeft: isExpanded ? '250px' : '0',
@@ -26,63 +58,57 @@ export default function Page() {
           height: '100%',
         }}
       >
-        {/* Title with metallic glowing effect */}
         <h1 style={{
-          fontSize: '4rem',
+          fontSize: '3.5rem',
           fontWeight: 'bold',
           textAlign: 'center',
-          color: '#ff4d4d', // Red color for the first line
-          textShadow: '0 0 20px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.8), 0 0 40px rgba(255,255,255,1)',
-          animation: 'slowGlow 5s ease-in-out infinite, shine 2s ease-in-out infinite',
+          color: '#00FFCC',
+          textShadow: '0 0 10px #00FFCC, 0 0 20px #00FFCC',
         }}>
-          PIXEL Club AUP
+          Welcome, {user?.username || 'Guest'}!
         </h1>
+
         <h2 style={{
-          fontSize: '3rem',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          color: '#3399ff', // Blue color for the second line
+          fontSize: '2rem',
           marginTop: '1rem',
-          textShadow: '0 0 20px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.8), 0 0 40px rgba(255,255,255,1)',
-          animation: 'slowGlow 5s ease-in-out infinite, shine 2s ease-in-out infinite',
+          color: '#66CCFF',
         }}>
-          QUIZ RAIDER X
+          You’ve entered the PIXEL Club’s QUIZ RAIDER X dashboard.
         </h2>
-        <p style={{ textAlign: 'center', fontSize: '1.2rem', marginTop: '2rem' }}>
-          This is your main content.
-        </p>
+
+        {user && (
+          <>
+            <div style={{
+              marginTop: '2rem',
+              padding: '1.5rem',
+              border: '1px solid #444',
+              borderRadius: '12px',
+              backgroundColor: '#111111',
+              width: '80%',
+              maxWidth: '600px',
+              boxShadow: '0 0 15px rgba(0,255,200,0.3)',
+            }}>
+              <p><strong>Username:</strong> {user.username}</p>
+              <p><strong>Email:</strong> {user.email}</p>
+              <p><strong>Login Time:</strong> {loginTime}</p>
+            </div>
+
+            <p style={{
+              marginTop: '1.5rem',
+              fontSize: '1.25rem',
+              color: '#FF6666',
+            }}>
+              Session expires in: <strong>{formatTime(timeLeft)}</strong>
+            </p>
+          </>
+        )}
+
+        {!user && (
+          <p style={{ marginTop: '2rem', color: '#ccc' }}>
+            You are not logged in. Please go to the login page.
+          </p>
+        )}
       </main>
-      
-      <style jsx>{`
-        @keyframes slowGlow {
-          0% {
-            text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.8), 0 0 40px rgba(255,255,255,1);
-          }
-          50% {
-            text-shadow: 0 0 30px rgba(255,255,255,1), 0 0 40px rgba(255,255,255,1), 0 0 50px rgba(255,255,255,1);
-          }
-          100% {
-            text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.8), 0 0 40px rgba(255,255,255,1);
-          }
-        }
-
-        @keyframes shine {
-          0% {
-            background-position: -200%;
-          }
-          100% {
-            background-position: 200%;
-          }
-        }
-
-        h1, h2 {
-          background: linear-gradient(45deg, #ff4d4d, #3399ff); // Gradient with red and blue
-          background-size: 400% 400%;
-          color: transparent;
-          -webkit-background-clip: text;
-          animation: shine 3s ease-in-out infinite, slowGlow 5s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }

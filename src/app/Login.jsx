@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import useUserStore from '../store/useUserStore'; // Adjust path as needed
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -10,21 +11,50 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const setUser = useUserStore((state) => state.setUser);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Here we're just simulating a successful login for any email/password
-    setTimeout(() => {
-      setLoading(false);
-      if (email && password) {
-        // Assuming success for any email/password combination
-        router.push(`/${email.split('@')[0]}`); // Redirect to the user page (e.g., /tusharherono1)
-      } else {
-        setError('Invalid credentials. Please try again.');
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Login failed');
       }
-    }, 1000); // Simulate some loading time (e.g., 1 second)
+
+      const data = await res.json();
+
+      // Save to Zustand
+      setUser(
+        {
+          username: data.username,
+          email: data.email,
+          uuid: data.uuid,
+        },
+        data.loginTime
+      );
+
+      // Optional: Inform backend
+      await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ loginTime: data.loginTime, username: data.username }),
+      });
+
+      router.push(`/${data.username}`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,7 +98,7 @@ export default function SignIn() {
           />
         </div>
         {error && (
-          <p style={{ color: 'red', marginBottom: '15px' }} aria-live="polite">{error}</p>
+          <p style={{ color: 'red', marginBottom: '15px' }}>{error}</p>
         )}
         <button
           type="submit"
