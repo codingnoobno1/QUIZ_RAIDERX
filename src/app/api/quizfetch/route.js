@@ -1,4 +1,4 @@
-import clientPromise from '@/lib/mongo';
+import clientPromise from '@/lib/mongodb';
 
 export async function POST(req) {
   const { batch, semester, subject, facultyId } = await req.json();
