@@ -26,7 +26,7 @@ import {
   Menu,
   ChevronLeft,
 } from 'lucide-react';
-import RotatingCube from './ROTATINGCUBE'; // Re-add RotatingCube import
+import RotatingCube from './RotatingCube'; // Re-add RotatingCube import
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react'; // Import useState and useEffect
 

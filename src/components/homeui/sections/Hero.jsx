@@ -3,7 +3,7 @@
 import React from 'react';
 import { Box, Container, Grid, Typography, Button } from '@mui/material';
 import { motion } from 'framer-motion';
-import RotatingCube from '@/components/ROTATINGCUBE';
+import RotatingCube from '@/components/RotatingCube';
 import TextReveal from '../animations/TextReveal';
 import MagneticButton from '../animations/MagneticButton';
 import SystemStatusHUD from '../animations/SystemStatusHUD';
