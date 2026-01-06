@@ -8,7 +8,8 @@
       "@utils/*": ["./src/utils/*"],
       "@models/*": ["./src/models/*"],
       "@styles/*": ["./src/styles/*"],
-      "@api/*": ["./src/app/api/*"]
+      "@api/*": ["./src/app/api/*"],
+      "@layouts/*": ["./src/layouts/*"]     
     }
   },
   "include": ["src"]

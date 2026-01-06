@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Define Role Enum
+enum Role {
+  user
+  student
+  admin
+}
+
+model BaseUser {
+  id               Int      @id @default(autoincrement())
+  uuid             String   @unique @default(uuid())
+  name             String
+  enrollmentNumber String   @unique
+  course           String
+  semester         String
+  email            String   @unique
+  role             Role     @default(user)  // Use the Role enum here
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relationship with Student
+  student          Student? @relation
+
+  // Prisma does not support password hashing inside schema, handle it in application logic
+}
+
+model Student {
+  id             Int      @id @default(autoincrement())
+  baseUser       BaseUser @relation(fields: [baseUserId], references: [id])
+  baseUserId     Int      @unique // Add @unique here for a one-to-one relationship
+  subjects       Subject[]
+
+  // Additional fields for Student
+  enrollmentDate DateTime @default(now())
+}
+
+model Subject {
+  id        Int     @id @default(autoincrement())
+  name      String
+  student   Student @relation(fields: [studentId], references: [id])
+  studentId Int
+  quizzes   Quiz[]
+
+  // Additional fields related to the subject
+}
+
+model Quiz {
+  id        Int    @id @default(autoincrement())
+  name      String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  subjectId Int
+
+  // Additional fields related to quizzes (e.g., scores, answers, etc.)
+}

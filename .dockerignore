@@ -1,0 +1,16 @@
+
+# See https://www.docker.com/blog/docker-build-guide-part-2-best-practices-for-dockerfiles/
+
+.DS_Store
+.dockerignore
+.env*.local
+.git
+.gitignore
+.next
+.swc
+.vscode
+Dockerfile
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

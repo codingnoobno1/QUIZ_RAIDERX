@@ -1,95 +1,112 @@
-"use client";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+'use client';
 
-const getDriveImageUrl = (url) => {
-  if (!url?.includes("drive.google.com")) return url;
-  const match = url.match(/(?:\/d\/|id=)([^/?]+)/);
-  return match ? `https://drive.google.com/uc?export=view&id=${match[1]}` : url;
-};
+import { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Grid,
+  Paper,
+  Button,
+  Card,
+  CardContent,
+  CardActions,
+  Chip,
+  CircularProgress,
+  Alert,
+  CardMedia,
+} from '@mui/material';
+import { Calendar, Clock, MapPin } from 'lucide-react';
 
 export default function EventsPage() {
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("/api/events")
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch('/api/events');
+        if (!res.ok) throw new Error('Failed to fetch events');
+        const data = await res.json();
         setEvents(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching events:", err);
-        setLoading(false);
-      });
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
   }, []);
 
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return <Alert severity="error">{error}</Alert>;
+  }
+
   return (
-    <div className="min-h-screen p-6 bg-black text-white">
-      <h1 className="text-3xl font-bold text-center mb-6">📅 Upcoming Events</h1>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" fontWeight="bold" mb={4}>Upcoming Events</Typography>
 
-      {loading ? (
-        <p className="text-center text-gray-400">Loading events...</p>
-      ) : events.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
-            <motion.div
-              key={event._id}
-              className="p-6 bg-gray-900 rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105"
-              whileHover={{ scale: 1.05 }}
+      <Grid container spacing={3}>
+        {events.map((event) => (
+          <Grid item xs={12} md={6} lg={4} key={event._id}>
+            <Card
+              elevation={2}
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                borderRadius: 3,
+                background: '#2a2a2a',
+                color: 'white',
+              }}
             >
-              <div className="relative w-full h-52">
-                {event.image ? (
-                  <img
-                    src={getDriveImageUrl(event.image)}
-                    alt="Event Poster"
-                    className="w-full h-full object-cover rounded-lg shadow-md"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
-                    🖼 No Image Available
-                  </div>
-                )}
-              </div>
+              <CardMedia
+                component="img"
+                height="140"
+                image={event.imageUrl || 'https://via.placeholder.com/300x140'}
+                alt={event.title}
+              />
+              <CardContent>
+                <Typography variant="h6" fontWeight="bold" mb={1}>{event.title}</Typography>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#aaa' }}>
+                  <Calendar size={16} />
+                  <Typography variant="body2">{new Date(event.date).toLocaleDateString()}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#aaa' }}>
+                  <Clock size={16} />
+                  <Typography variant="body2">{event.time}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, color: '#aaa' }}>
+                  <MapPin size={16} />
+                  <Typography variant="body2">{event.location}</Typography>
+                </Box>
 
-              <h2 className="text-2xl font-bold mt-4">{event.title || "Untitled Event"}</h2>
-              <p className="text-gray-300 text-sm mt-2">{event.description || "No description available."}</p>
+                <Typography variant="body2" mb={2}>{event.description}</Typography>
 
-              {event.date && (
-                <p className="text-sm text-gray-400 mt-2">
-                  📅 {new Date(event.date).toDateString()}
-                </p>
-              )}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {event.tags.map((tag) => (
+                    <Chip key={tag} label={tag} size="small" sx={{ background: '#444', color: 'white' }} />
+                  ))}
+                </Box>
+              </CardContent>
 
-              <div className="mt-4 space-y-2">
-                {event.rulebook && (
-                  <a
-                    href={event.rulebook}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block text-blue-400 hover:text-blue-300 underline"
-                  >
-                    📄 View Rulebook
-                  </a>
-                )}
-                {event.registerLink && (
-                  <a
-                    href={event.registerLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block text-green-400 hover:text-green-300 underline"
-                  >
-                    📝 Register Now
-                  </a>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-gray-400">No upcoming events.</p>
-      )}
-    </div>
+              <CardActions sx={{ mt: 'auto', p: 2 }}>
+                <Button variant="contained" color="primary" fullWidth>Register</Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   );
 }

@@ -1,121 +1,181 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  MenuItem,
+  FormControl,
+  Select,
+  InputLabel,
+  Chip,
+  Stack,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
+import { PlayArrow, RestartAlt } from '@mui/icons-material';
 import Editor from '@monaco-editor/react';
-import { Box, Typography, Select, MenuItem, FormControl, InputLabel, Paper } from '@mui/material';
-import { styled } from '@mui/system';
 
-// Metallic styled container
-const MetallicContainer = styled(Paper)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #2e2e2e 0%, #1c1c1c 100%)',
-  border: '1px solid #555',
-  borderRadius: '16px',
-  padding: theme.spacing(4),
-  boxShadow: '0 6px 15px rgba(0, 0, 0, 0.8)',
-}));
+const languageColors = {
+  javascript: '#f7df1e',
+  python: '#3472a6',
+  cpp: '#00599c',
+  java: '#ec2025',
+};
 
-export default function CodeEditorSection({ code, setCode, language, setLanguage }) {
-  const [question, setQuestion] = useState('Write a function to reverse a string.');
+export default function EditorPanel({
+  fontSize = 14,
+  showMinimap = true,
+  theme = 'light',
+}) {
+  const [code, setCode] = useState('');
+  const [language, setLanguage] = useState('python');
+  const [output, setOutput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleReset = () => {
+    setCode('');
+    setOutput('');
+    setError('');
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setOutput('');
+    setError('');
+
+    try {
+      const res = await fetch('http://localhost:8000/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code, language }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || 'Something went wrong');
+      }
+
+      const data = await res.json();
+      setOutput(data.output || '✅ No output received.');
+    } catch (err) {
+      setError(err.message || 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <motion.div
-      className="space-y-6"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      {/* Coding Question Section */}
-      <MetallicContainer elevation={10}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 'bold',
-            color: 'deepskyblue',
-            mb: 2,
-            fontFamily: 'monospace',
-            letterSpacing: 1,
-          }}
-        >
-          Coding Question:
+    <Box>
+      {/* Header */}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+        flexWrap="wrap"
+        gap={2}
+      >
+        <Typography variant="subtitle1" fontWeight={600}>
+          🧠 Write Your Code
         </Typography>
 
-        {/* Display the full question dynamically */}
-        <Box
-          sx={{
-            color: '#ccc',
-            fontSize: '1.1rem',
-            lineHeight: 1.6,
-            fontFamily: 'Fira Code, monospace',
-            backgroundColor: '#1e1e1e',
-            padding: 2,
-            borderRadius: 2,
-            overflowX: 'auto',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          <span style={{ color: '#CE9178' }}>{question}</span>
-        </Box>
-      </MetallicContainer>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Chip
+            label={language.toUpperCase()}
+            size="small"
+            sx={{
+              bgcolor: languageColors[language] ?? 'grey.300',
+              color: 'black',
+              fontWeight: 600,
+            }}
+          />
+          <Chip
+            label={theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+            size="small"
+            variant="outlined"
+          />
+          <FormControl size="small">
+            <InputLabel>Language</InputLabel>
+            <Select
+              value={language}
+              label="Language"
+              onChange={(e) => setLanguage(e.target.value)}
+              sx={{ minWidth: 120 }}
+            >
+              <MenuItem value="javascript">JavaScript</MenuItem>
+              <MenuItem value="python">Python</MenuItem>
+              <MenuItem value="cpp">C++</MenuItem>
+              <MenuItem value="java">Java</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
+      </Box>
 
-      {/* Language Selection */}
-      <FormControl fullWidth sx={{ mt: 4 }}>
-        <InputLabel id="language-select-label" sx={{ color: 'deepskyblue' }}>
-          Select Language
-        </InputLabel>
-        <Select
-          labelId="language-select-label"
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          sx={{
-            bgcolor: '#222',
-            color: 'white',
-            borderRadius: 2,
-            '.MuiOutlinedInput-notchedOutline': {
-              borderColor: 'deepskyblue',
-            },
-            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#00bfff',
-            },
-            '&:hover .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#00bfff',
-            },
-          }}
-        >
-          <MenuItem value="javascript">JavaScript</MenuItem>
-          <MenuItem value="python">Python</MenuItem>
-          <MenuItem value="cpp">C++</MenuItem>
-          <MenuItem value="java">Java</MenuItem>
-        </Select>
-      </FormControl>
-
-      {/* Code Editor */}
-      <motion.div
-        className="rounded-lg overflow-hidden"
-        style={{
-          height: '450px',
-          background: '#1a1a1a',
-          border: '1px solid #333',
-          borderRadius: '16px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
+      {/* Editor */}
+      <Box
+        sx={{
+          border: '1px solid #e0e0e0',
+          borderRadius: 2,
+          overflow: 'hidden',
+          mb: 2,
         }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
       >
         <Editor
-          height="100%"
+          height="450px"
           language={language}
           value={code}
-          theme="vs-dark"
-          onChange={(value) => setCode(value || '')}
+          onChange={(value) => setCode(value)}
+          theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
           options={{
-            fontSize: 16,
-            minimap: { enabled: false },
-            fontFamily: 'Fira Code, monospace',
-            fontLigatures: true,
+            fontSize,
+            minimap: { enabled: showMinimap },
             automaticLayout: true,
+            scrollBeyondLastLine: false,
+            wordWrap: 'on',
+            lineNumbers: 'on',
+            roundedSelection: false,
+            renderLineHighlight: 'line',
           }}
         />
-      </motion.div>
-    </motion.div>
+      </Box>
+
+      {/* Action Buttons */}
+      <Box display="flex" justifyContent="flex-end" gap={2} mb={2}>
+        <Button
+          variant="outlined"
+          color="secondary"
+          startIcon={<RestartAlt />}
+          onClick={handleReset}
+        >
+          Reset
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<PlayArrow />}
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? <CircularProgress size={20} color="inherit" /> : 'Run Code'}
+        </Button>
+      </Box>
+
+      {/* Output/Error Section */}
+      {output && (
+        <Alert severity="success" sx={{ whiteSpace: 'pre-wrap' }}>
+          {output}
+        </Alert>
+      )}
+      {error && (
+        <Alert severity="error" sx={{ whiteSpace: 'pre-wrap' }}>
+          ❌ {error}
+        </Alert>
+      )}
+    </Box>
   );
 }

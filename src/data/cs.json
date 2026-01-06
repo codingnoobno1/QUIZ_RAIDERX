@@ -1,0 +1,5 @@
+{
+    "title": "C# + MAUI",
+    "subtitle": "Cross-platform development for mobile & desktop",
+    "code": "public partial class MainPage : ContentPage\n{\n  public MainPage()\n  {\n    InitializeComponent();\n  }\n\n  private async void OnPlayClicked(object sender, EventArgs e)\n  {\n    await Shell.Current.GoToAsync(\"QuizDashboard\");\n    SemanticScreenReader.Announce(PlayBtn.Text);\n  }\n}"
+}

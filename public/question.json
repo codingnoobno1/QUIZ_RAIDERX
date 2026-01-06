@@ -1,0 +1,50 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "mcq",
+      "text": "What is the output of print(2 + 2)?",
+      "options": ["2", "4", "22", "'2+2'"],
+      "answer": "4",
+      "time": 30,
+      "score": 2,
+      "level": "easy"
+    },
+    {
+      "id": 2,
+      "type": "fillup",
+      "text": "Python is an ___ language.",
+      "answer": "interpreted",
+      "time": 30,
+      "score": 2,
+      "level": "easy"
+    },
+    {
+      "id": 3,
+      "type": "truefalse",
+      "text": "The output of print(3 > 5) is True.",
+      "answer": false,
+      "time": 20,
+      "score": 1,
+      "level": "easy"
+    },
+    {
+      "id": 4,
+      "type": "blockcode",
+      "blocks": [{"blockId": 1, "order": 1}],
+      "answer": "print('Hello World')",
+      "time": 60,
+      "score": 3,
+      "level": "easy"
+    },
+    {
+      "id": 5,
+      "type": "findoutput",
+      "text": "print('A' * 3)",
+      "answer": "AAA",
+      "time": 20,
+      "score": 2,
+      "level": "easy"
+    }
+  ]
+}

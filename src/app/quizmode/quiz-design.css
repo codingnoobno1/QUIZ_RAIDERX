@@ -1,0 +1,54 @@
+:root {
+  /* HSL Color Palette - Premium Dark Theme */
+  --bg-dark: 220 33% 5%;
+  --bg-card: 220 25% 10%;
+  --primary: 262 83% 58%; /* Vibrant Indigo */
+  --primary-hover: 262 83% 48%;
+  --secondary: 190 90% 50%; /* Cyan accent */
+  --accent: 340 82% 52%; /* Rose/Pink accent for results/errors */
+  --text-main: 210 20% 98%;
+  --text-muted: 210 10% 70%;
+  --border-subtle: 220 20% 20%;
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(15, 20, 30, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(12px);
+}
+
+.premium-card {
+  background: hsl(var(--bg-card));
+  border: 1px solid hsl(var(--border-subtle));
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.premium-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.btn-premium {
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+}

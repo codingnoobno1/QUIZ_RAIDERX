@@ -1,0 +1,5 @@
+{
+    "title": "C Shift / Systems",
+    "subtitle": "Low-level bit manipulation and performance",
+    "code": "#define PIXEL_MASK 0xFF\n\nvoid apply_shift(uint32_t *data, int count) {\n    for(int i = 0; i < count; i++) {\n        data[i] = (data[i] << 8) | (data[i] >> 24);\n        data[i] ^= PIXEL_MASK;\n    }\n}\n\n// Direct Memory Access\nvoid* reserve_block(size_t size) {\n    void* ptr = malloc(size);\n    memset(ptr, 0, size);\n    return ptr;\n}"
+}

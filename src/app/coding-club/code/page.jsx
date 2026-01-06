@@ -1,84 +1,71 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Button, Typography, Paper } from '@mui/material';
-import { styled } from '@mui/system';
-import Sidebar from '@/components/Sidebar';
-import CodeEditorSection from '@/components/code/CodeEditorSection';
+import {
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Box,
+  Container,
+} from '@mui/material';
+import { LayoutDashboard, Terminal, SlidersHorizontal } from 'lucide-react';
 
-// Metallic texture background style
-const MetallicPaper = styled(Paper)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%)',
-  border: '1px solid #4f4f4f',
-  boxShadow: '0 4px 10px rgba(0, 0, 0, 0.8)',
-  padding: theme.spacing(4),
-  borderRadius: '16px',
-}));
+import QuestionCard from '@/components/code/QuestionCard';
+import EditorPanel from '@/components/code/EditorPanel';
+import OutputPanel from '@/components/code/OutputPanel';
+import SettingsDrawer from '@/components/code/SettingsDrawer';
 
-export default function Page() {
+export default function HomePage() {
+  const [activeTab, setActiveTab] = useState('input');
+  const [theme, setTheme] = useState('light');
+  const [fontSize, setFontSize] = useState(14);
+  const [showMinimap, setShowMinimap] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('javascript');
 
   const handleSubmit = () => {
-    console.log('Submitted Code:', code);
-    console.log('Selected Language:', language);
-    // Further submission logic here (API call etc.)
+    console.log('Code submitted:', code);
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'black' }}>
-      {/* Sidebar Section */}
-      <Sidebar />
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#fff' }}>
+      
 
       {/* Main Content */}
-      <Box sx={{ flexGrow: 1, p: 4 }}>
-        {/* Heading */}
-        <Typography
-          variant="h3"
-          gutterBottom
-          sx={{
-            color: 'deepskyblue',
-            fontWeight: 'bold',
-            fontFamily: 'monospace',
-            textAlign: 'center',
-            mb: 4,
-          }}
-        >
-          Code Raider X
-        </Typography>
+      <Container maxWidth="lg" sx={{ py: 4, flexGrow: 1, overflowY: 'auto' }}>
+        <Box mb={3}>
+          <QuestionCard remainingTime={1800} />
+        </Box>
 
-        {/* Editor + Submit Section */}
-        <MetallicPaper elevation={8}>
-          <CodeEditorSection
+        {activeTab === 'input' && (
+          <EditorPanel
             code={code}
             setCode={setCode}
             language={language}
             setLanguage={setLanguage}
+            fontSize={fontSize}
+            showMinimap={showMinimap}
+            theme={theme}
+            onSubmit={handleSubmit}
           />
+        )}
 
-          {/* Submit Button */}
-          <Box sx={{ mt: 4, textAlign: 'center' }}>
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={handleSubmit}
-              sx={{
-                bgcolor: 'deepskyblue',
-                fontWeight: 'bold',
-                borderRadius: '12px',
-                px: 5,
-                py: 1.5,
-                '&:hover': {
-                  bgcolor: '#0099cc',
-                },
-              }}
-            >
-              Submit Code
-            </Button>
-          </Box>
-        </MetallicPaper>
-      </Box>
+        {activeTab === 'output' && <OutputPanel />}
+      </Container>
+
+      {/* Drawer Outside DOM Tree */}
+      <SettingsDrawer
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        theme={theme}
+        setTheme={setTheme}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+        showMinimap={showMinimap}
+        setShowMinimap={setShowMinimap}
+      />
     </Box>
   );
 }

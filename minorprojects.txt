@@ -1,0 +1,263 @@
+# Course Project Evaluation Platform: Comprehensive Technical Documentation
+
+## 1. Introduction
+
+This document outlines the detailed specifications, architectural design, and implementation plan for a Course Project Evaluation Platform developed for academic use in university-level coursework. The system supports streamlined tracking and mentoring of internships and minor projects for students in their 5th and 6th semesters, primarily focusing on project topic submission, mentor-student mapping, and continuous progress evaluation.
+
+The platform will function as a centralized, role-based application enabling students to propose project ideas and allowing faculty (mentors) to evaluate, group, and track project developments over time. The platform ensures transparency, accountability, and efficiency in the management of academic projects.
+
+## 2. System Objectives
+
+* Facilitate submission of internship and minor project proposals by students.
+* Enable mentors to group students into teams and assign them projects.
+* Maintain a detailed log of each group's progress over time.
+* Allow bidirectional interaction for project progress updates and evaluations.
+* Generate timeline and final reports based on incremental logs and progress.
+
+## 3. User Roles and Permissions
+
+### 3.1 Student
+
+* Can log in using institutional credentials.
+* Submit a new project proposal including title, abstract, personal and team member details.
+* View current group status and progress.
+* Request progress updates and submit deliverables.
+
+### 3.2 Mentor/Admin
+
+* Review pending project submissions.
+* Approve/reject proposals.
+* Group students manually or automatically.
+* Assign starting date and mentor to the group.
+* Approve, comment, and update student-submitted progress logs.
+* View all logs, statuses, and generate final reports.
+
+## 4. System Workflow
+
+### 4.1 Step 1: Student Proposal Submission
+
+Students submit their project proposals via a frontend form. Each submission includes:
+
+* Project Title (as announced in class)
+* Abstract or Brief Description
+* Submitter's Name and Enrollment Number
+* Suggested Team Members (Name and Enrollment Number)
+* Project Type Selection (Internship or Minor Project)
+
+Upon submission, the record is stored in the database and marked with a `pending` status. The form becomes non-editable to the student unless rejected by the mentor or ungrouped.
+
+### 4.2 Step 2: Admin Groups Students
+
+Mentors/Admins access a dashboard displaying all pending submissions. For each submission, they can:
+
+* Approve and group the student(s) into a project team (max 4 members)
+* Assign a unique Group ID
+* Allocate a start date for project tracking
+* (Optionally) Assign a different mentor for the project
+
+Approved proposals are updated in the database and tagged with their corresponding group. The project status transitions to "approved" and becomes visible in the tracking interface.
+
+### 4.3 Step 3: Progress Tracking
+
+The dashboard for both students and mentors displays:
+
+* Group ID and Project Title
+* Group Members
+* Assigned Mentor
+* Starting Date
+* Total Progress Percentage
+* A chronological log of all progress entries (who added what and when)
+
+This section acts as a continuous feedback loop and records each step of project development.
+
+### 4.4 Step 4: Progress Update Entries
+
+#### Student Actions
+
+* Can request progress updates by submitting:
+
+  * Description of work completed.
+  * Optional files, screenshots, or documentation.
+  * Suggested percentage improvement (e.g., +5%, +10%).
+
+#### Admin Actions
+
+* Reviews pending progress update requests.
+* Validates and modifies the progress percentage if necessary.
+* Approves or rejects the request.
+* Adds timestamped remarks or feedback.
+* All updates are appended to the project’s log.
+
+### 4.5 Step 5: Final Review and Report Generation
+
+At the end of the project lifecycle, mentors may:
+
+* Lock further edits.
+* Request final submission (GitHub repo, PDF, etc.).
+* Generate and download a final project report including logs, progress chart, and member contributions.
+
+## 5. Data Architecture
+
+The backend is powered by a NoSQL (MongoDB or Firebase) schema enabling nested data structures and flexible querying. Below are two key collections:
+
+### 5.1 `projects`
+
+```json
+{
+  "_id": "auto",
+  "title": "AI Plant Disease Detection",
+  "abstract": "Detects leaf infections using CNN...",
+  "type": "internship",
+  "createdBy": { "name": "Tushar", "enroll": "BT22CSE102" },
+  "suggestedMembers": [
+    { "name": "Ankit", "enroll": "BT22CSE108" }
+  ],
+  "status": "pending",
+  "groupId": null
+}
+```
+
+### 5.2 `groups`
+
+```json
+{
+  "_id": "G101",
+  "projectTitle": "AI Plant Disease Detection",
+  "members": [
+    { "name": "Tushar", "enroll": "BT22CSE102" },
+    { "name": "Ankit", "enroll": "BT22CSE108" }
+  ],
+  "mentor": "Dr. Sharma",
+  "startDate": "2025-05-12",
+  "progress": 35,
+  "logs": [
+    {
+      "date": "2025-05-15",
+      "by": "student",
+      "percent": 10,
+      "description": "Model trained"
+    },
+    {
+      "date": "2025-05-18",
+      "by": "admin",
+      "percent": 5,
+      "description": "Validated work"
+    }
+  ]
+}
+```
+
+## 6. UI Components (Modular Design)
+
+### 6.1 `ProjectSubmissionForm.jsx`
+
+* Used by students to submit proposals
+* Validation for required fields and formatting
+* Locks after submission unless manually unlocked
+
+### 6.2 `AdminPendingProjects.jsx`
+
+* Admin dashboard for reviewing proposals
+* Grouping logic (manual assignment with drag-and-drop or auto-batching)
+* Assign Group ID, start date, mentor
+
+### 6.3 `GroupDashboard.jsx`
+
+* Shared view for both mentors and students
+* Shows real-time progress and group composition
+* Displays logs in descending date order
+
+### 6.4 `ProgressUpdateForm.jsx`
+
+* Enables students to submit progress update requests
+* Accepts files, text, and suggested percentage values
+
+### 6.5 `AdminLogApproval.jsx`
+
+* Admin view of pending update requests
+* Interface to approve/edit/reject with feedback
+
+## 7. Optional Enhancements
+
+### 7.1 Notifications
+
+* In-app or email notifications for:
+
+  * Proposal approval or rejection
+  * Grouping events
+  * Progress update approvals/comments
+
+### 7.2 Final Submission Portal
+
+* File upload component for:
+
+  * Code repository links
+  * Project reports (PDF, DOCX)
+  * Presentation slides
+
+### 7.3 Timeline View
+
+* Calendar-based UI showing all progress events per group
+* Zoomable by week/month
+
+### 7.4 Report Generation
+
+* Generate downloadable PDF report:
+
+  * Group members
+  * Project title
+  * Logs with timestamps
+  * Mentor comments
+  * Total achieved progress
+
+### 7.5 Filters and Analytics
+
+* Filters by:
+
+  * Internship / Minor Project
+  * Group ID / Mentor
+  * Progress range
+
+* Simple charts (bar, pie) showing:
+
+  * Average progress by mentor
+  * Top 10 performing groups
+
+## 8. Security and Data Integrity
+
+* JWT-based authentication or institutional OAuth (e.g., Google Workspace for Education)
+* Role-based access control (RBAC)
+* Field-level validation and input sanitization
+* Immutable logs once approved (non-editable)
+* Secure file upload with virus scanning and file type restrictions
+
+## 9. Technologies and Stack Recommendation
+
+### Frontend
+
+* React with TypeScript (preferred for type safety)
+* MUI for consistent UI/UX components
+
+### Backend
+
+* Node.js + Express (REST API)
+* Firebase Functions or MongoDB with Mongoose ORM
+
+### Storage
+
+* Firebase Storage or AWS S3 for file uploads
+
+### Authentication
+
+* Firebase Auth or JWT via Node.js
+
+### Deployment
+
+* Vercel or Netlify for frontend
+* Heroku / Firebase / Render for backend
+
+## 10. Conclusion
+
+This Course Project Evaluation Platform is designed to improve the workflow of academic project management. By introducing digital proposal submissions, mentor-led groupings, and systematic progress tracking, the platform ensures transparency and consistent documentation of student efforts. Through flexible schema design, modular frontend components, and role-specific interfaces, it provides a scalable and maintainable solution fit for real-world institutional use.
+
+With optional integrations such as analytics, reports, and notifications, the system can evolve into a comprehensive academic project management suite used across multiple semesters and disciplines.

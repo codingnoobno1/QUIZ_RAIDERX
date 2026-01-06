@@ -1,0 +1,18 @@
+[
+    {
+      "title": "Advances in Quantum Cryptography",
+      "abstract": "This paper explores recent advancements in quantum key distribution and its implications for secure communication.",
+      "authors": ["Dr. A. Kumar", "Prof. B. Singh"],
+      "coAuthors": ["Dr. C. Sharma"],
+      "conference": "IEEE QuantumTech 2023",
+      "journal": "Nature Quantum Computing",
+      "doi": "https://doi.org/10.1000/xyz123",
+      "patent": "US2023109987A1",
+      "references": [
+        "Einstein et al. (1935) EPR Paradox",
+        "Shor's Algorithm (1994)",
+        "BB84 Protocol"
+      ]
+    }
+  ]
+  

@@ -1,175 +1,210 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
+  Box,
   Card,
   CardContent,
   Typography,
   Avatar,
-  Box,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  Chip,
+  Grid,
   Button,
-  Stack,
 } from '@mui/material';
 import { motion } from 'framer-motion';
+import { Sparkles, User, BookOpenCheck } from 'lucide-react';
+import CardFullscreen from './CardFullscreen';
 
-const FacultyCard = ({ faculty }) => {
+const FacultyCard = ({ faculty, quizzes = [], onClick }) => {
   const [openDialog, setOpenDialog] = useState(false);
-  const dialogRef = useRef(null);
 
-  const handleClickOpen = async () => {
-    setOpenDialog(true);
-
-    // Trigger fullscreen after short delay
-    setTimeout(() => {
-      if (dialogRef.current && dialogRef.current.requestFullscreen) {
-        dialogRef.current.requestFullscreen().catch((err) => {
-          console.error('Fullscreen error:', err);
-        });
-      }
-    }, 200); // Delay ensures dialog is rendered
-  };
-
-  const handleClose = () => {
-    setOpenDialog(false);
-
-    // Exit fullscreen if active
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch((err) => {
-        console.error('Exit fullscreen error:', err);
-      });
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      setOpenDialog(true);
     }
   };
+
+  const handleClose = () => setOpenDialog(false);
+
+  // ✅ Extract subjects from classAssignments safely
+  const allSubjects = useMemo(() => {
+    return faculty.classAssignments?.flatMap((a) => a.subjects) || [];
+  }, [faculty.classAssignments]);
 
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        whileHover={{ scale: 1.05 }}
+        transition={{ type: 'spring', stiffness: 220, damping: 18 }}
       >
         <Card
-          onClick={handleClickOpen}
+          onClick={handleCardClick}
           sx={{
-            background: 'linear-gradient(145deg, #1c1c1c, #111)',
-            color: 'white',
-            display: 'flex',
-            flexDirection: 'column',
-            maxWidth: 400,
-            minHeight: 350,
+            position: 'relative',
+            width: 360,
+            minHeight: 520,
+            borderRadius: '20px',
+            backgroundColor: '#0e0e0e',
+            color: '#FFD700',
+            boxShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
+            border: '1.5px solid rgba(255, 215, 0, 0.5)',
+            overflow: 'hidden',
             cursor: 'pointer',
-            borderRadius: 4,
-            boxShadow: '0 0 15px #ff0000',
-            transition: '0.4s',
+            backdropFilter: 'blur(12px)',
             '&:hover': {
-              boxShadow: '0 0 25px #ff0000',
-              transform: 'scale(1.05)',
+              boxShadow: '0 0 40px rgba(255, 215, 0, 0.6)',
+              transform: 'translateY(-4px)',
             },
           }}
         >
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <Avatar
-              alt={faculty.name}
-              src={faculty.imageUrl || '/default-avatar.png'}
+          {/* Background */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundImage:
+                "url('https://img.freepik.com/premium-photo/circuit-board-patterns_198067-353259.jpg')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: 0.08,
+              zIndex: 0,
+              filter: 'contrast(1.3)',
+            }}
+          />
+
+          {/* Amity Logo */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              mt: 2.5,
+              position: 'relative',
+              zIndex: 2,
+            }}
+          >
+            <Box
+              component="img"
+              src="https://www.amity.edu/volunteer/image/logo.jpg"
+              alt="Amity University"
               sx={{
-                width: 120,
-                height: 120,
-                border: '4px solid #FF3C3C',
-                boxShadow: '0 0 10px #FF3C3C',
+                width: 100,
+                height: 'auto',
+                borderRadius: 2,
+                boxShadow: '0 0 20px rgba(255,215,0,0.5)',
+                backgroundColor: '#111',
+                p: 0.5,
               }}
             />
           </Box>
 
-          <CardContent sx={{ textAlign: 'center', mt: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+          {/* Avatar */}
+          <Box display="flex" justifyContent="center" mt={1.5} zIndex={2}>
+            <Avatar
+              src={faculty.imageUrl || '/default-avatar.png'}
+              sx={{
+                width: 100,
+                height: 100,
+                border: '3px solid #FFD700',
+                boxShadow: '0 0 12px rgba(255,215,0,0.4)',
+              }}
+            />
+          </Box>
+
+          {/* Main Content */}
+          <CardContent sx={{ textAlign: 'center', zIndex: 2 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                color: '#FFEB3B',
+                mt: 1.2,
+              }}
+            >
+              <User size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />
               {faculty.name}
             </Typography>
-            <Typography variant="body2"><strong>Role:</strong> {faculty.role}</Typography>
-            <Typography variant="body2"><strong>Dept:</strong> {faculty.department}</Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              <strong>Subjects:</strong> {faculty.subjects.join(', ')}
+
+            <Typography variant="body2" sx={{ color: '#f3ce3c', mt: 0.5 }}>
+              <Sparkles size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+              {faculty.position || faculty.Position}
             </Typography>
+
+            <Typography variant="body2" sx={{ color: '#ccc', mb: 2 }}>
+              Department: {faculty.department}
+            </Typography>
+
+            {/* Subjects */}
+            <Box
+              sx={{
+                borderTop: '1px solid rgba(255,215,0,0.25)',
+                borderBottom: '1px solid rgba(255,215,0,0.25)',
+                py: 1.5,
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#FFD700' }}>
+                Assigned Subjects
+              </Typography>
+              <Grid container spacing={1} justifyContent="center">
+                {allSubjects.length > 0 ? (
+                  allSubjects.map((subj, idx) => (
+                    <Grid item key={idx}>
+                      <Chip
+                        label={typeof subj === 'object' ? subj.name : subj}
+                        size="small"
+                        sx={{
+                          fontSize: '0.75rem',
+                          bgcolor: '#141414',
+                          border: '1px solid #FFD700',
+                          color: '#FFD700',
+                        }}
+                      />
+                    </Grid>
+                  ))
+                ) : (
+                  <Chip label="No Subjects" size="small" sx={{ color: '#999' }} />
+                )}
+              </Grid>
+            </Box>
+
+            <Button
+              variant="outlined"
+              fullWidth
+              sx={{
+                mt: 2,
+                color: '#FFD700',
+                borderColor: '#FFD700',
+                borderRadius: 3,
+                fontWeight: 600,
+                textTransform: 'none',
+                '&:hover': {
+                  backgroundColor: '#FFD700',
+                  color: '#101010',
+                },
+              }}
+              startIcon={<BookOpenCheck size={16} />}
+            >
+              View Quizzes
+            </Button>
           </CardContent>
         </Card>
       </motion.div>
 
-      <Dialog
-        open={openDialog}
-        onClose={handleClose}
-        fullWidth
-        maxWidth="sm"
-        ref={dialogRef}
-        sx={{
-          backdropFilter: 'blur(8px)',
-          '& .MuiDialog-paper': {
-            background: 'linear-gradient(145deg, #0d0d0d, #1a1a1a)',
-            color: 'white',
-            borderRadius: '20px',
-            padding: '20px',
-            boxShadow: '0 0 30px #FF3C3C',
-          },
-        }}
-      >
-        <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', color: '#00BFFF', textShadow: '0 0 10px #00BFFF' }}>
-          {faculty.name} - Select Quiz
-        </DialogTitle>
-
-        <DialogContent sx={{ textAlign: 'center' }}>
-          <Typography variant="subtitle1" sx={{ mb: 2 }}>
-            Choose a Quiz to Begin
-          </Typography>
-
-          <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap" sx={{ mt: 2 }}>
-            {[1, 2, 3, 4, 5].map((num) => (
-              <Button
-                key={num}
-                variant="outlined"
-                sx={{
-                  borderColor: '#FF3C3C',
-                  color: '#FF3C3C',
-                  fontWeight: 'bold',
-                  width: 80,
-                  height: 50,
-                  '&:hover': {
-                    backgroundColor: '#FF3C3C',
-                    color: 'white',
-                    transform: 'scale(1.1)',
-                  },
-                }}
-                onClick={() => alert(`Quiz ${num} selected for ${faculty.name}`)}
-              >
-                Quiz {num}
-              </Button>
-            ))}
-          </Stack>
-
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="body2" sx={{ opacity: 0.7 }}>
-              Department: {faculty.department}
-            </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.7 }}>
-              Subjects: {faculty.subjects.join(', ')}
-            </Typography>
-          </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ justifyContent: 'center', mb: 2 }}>
-          <Button
-            onClick={handleClose}
-            variant="contained"
-            sx={{
-              backgroundColor: '#FF3C3C',
-              fontWeight: 'bold',
-              '&:hover': { backgroundColor: '#ff5e5e' },
-            }}
-          >
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Fullscreen Modal */}
+      {openDialog && (
+        <CardFullscreen
+          open={openDialog}
+          handleClose={handleClose}
+          faculty={faculty}
+          quizzes={quizzes}
+        />
+      )}
     </>
   );
 };

@@ -1,0 +1,5 @@
+{
+    "title": "Kotlin + Ktor + Coroutines",
+    "subtitle": "High-concurrency backend with structured concurrency and type-safe routing",
+    "code": "fun Application.module() {\n    install(ContentNegotiation) { json() }\n    \n    val service = PixelService()\n\n    routing {\n        route(\"/api/v1\") {\n            get(\"/projects\") {\n                val results = withContext(Dispatchers.IO) {\n                    service.fetchAllProjects()\n                }\n                call.respond(results)\n            }\n            \n            post(\"/submit\") {\n                val submission = call.receive<Submission>()\n                launch(SupervisorJob()) {\n                    service.process(submission)\n                }\n                call.respond(HttpStatusCode.Accepted)\n            }\n        }\n    }\n}\n\n// Complex Flow logic\nval pixelFlow = flow {\n    while(true) {\n        emit(service.getMetrics())\n        delay(1000)\n    }\n}.flowOn(Dispatchers.Default)\n.catch { e -> logger.error(e) }"
+}

@@ -3,17 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import PageTitle from '@components/ui/PageTitle';
 
-import MainLayout from '@components/layouts/MainLayout';
-import MainContent from '@/components/MainContent';
-import Sidebar from '@/components/Sidebar';
-
-import QuizSection from '@/components/quiz/QuizSection';
-import CodeEditorSection from '@/components/code/CodeEditorSection';
-import ProfileSection from '@/components/profile/ProfileSection';
-import ProjectsSection from '@/components/project/ProjectsSection';
-import SolutionsSection from '@/components/solutions/SolutionsSection';
-
-export default function CodingClubPage() {
+export default function DashboardPage() {
   const searchParams = useSearchParams();
   const section = searchParams.get('section');
 
@@ -30,16 +20,13 @@ export default function CodingClubPage() {
       case 'solutions':
         return <SolutionsSection />;
       default:
-        return <PageTitle text="Welcome to the Coding Club" />;
+        return <PageTitle text="Welcome to your Dashboard" />;
     }
   };
 
   return (
-    <MainLayout>
-      <Sidebar />
-      <MainContent>
-        {renderContent()}
-      </MainContent>
-    </MainLayout>
+    <>
+      {renderContent()}
+    </>
   );
 }

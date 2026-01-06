@@ -1,0 +1,5 @@
+{
+    "title": "Flutter UI",
+    "subtitle": "Declarative UI with beautiful animations",
+    "code": "class PixelApp extends StatelessWidget {\n  @override\n  Widget build(BuildContext context) {\n    return MaterialApp(\n      theme: ThemeData.dark(),\n      home: Scaffold(\n        body: Center(\n          child: AnimatedContainer(\n            duration: Duration(seconds: 1),\n            child: Text('PIXEL CLUB'),\n          ),\n        ),\n      ),\n    );\n  }\n}"
+}

@@ -1,32 +1,32 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": false,
-    "noEmit": true,
-    "incremental": true,
-    "module": "esnext",
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
+    "target": "ES2017", 
+    "lib": ["dom", "dom.iterable", "esnext"], 
+    "allowJs": true, 
+    "skipLibCheck": true, 
+    "strict": false, 
+    "noEmit": true, 
+    "incremental": true, 
+    "module": "esnext", 
+    "esModuleInterop": true, 
+    "moduleResolution": "node", 
+    "resolveJsonModule": true, 
+    "isolatedModules": true, 
+    "jsx": "preserve", 
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "strictNullChecks": true,
-    "baseUrl": "./",
+    "strictNullChecks": true, 
+    "baseUrl": "./", 
     "paths": {
-      "@/*": ["./src/*"],
-      "@components/*": ["./src/components/*"],
-      "@pages/*": ["./src/app/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@models/*": ["./src/models/*"],
-      "@styles/*": ["./src/styles/*"],
+      "@/*": ["./src/*"], 
+      "@components/*": ["./src/components/*"], 
+      "@pages/*": ["./src/app/*"], 
+      "@utils/*": ["./src/utils/*"], 
+      "@models/*": ["./src/models/*"], 
+      "@styles/*": ["./src/styles/*"], 
       "@api/*": ["./src/app/api/*"]
     }
   },
@@ -36,6 +36,6 @@
     "**/*.ts",
     "**/*.tsx",
     "src"
-  ],
+, "hello-prisma/src/server.js", "hello-prisma/src/server.js"  ],
   "exclude": ["node_modules"]
 }

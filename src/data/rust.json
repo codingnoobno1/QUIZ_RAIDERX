@@ -1,0 +1,5 @@
+{
+    "title": "Rust Async + Tokio",
+    "subtitle": "Modern system programming with safety-first concurrency",
+    "code": "use tokio::net::TcpListener;\nuse tokio::io::{AsyncReadExt, AsyncWriteExt};\n\n#[tokio::main]\nasync fn main() -> Result<(), Box<dyn std::error::Error>> {\n    let listener = TcpListener::bind(\"127.0.0.1:8080\").await?;\n    println!(\"Server running on 8080\");\n\n    loop {\n        let (mut socket, _) = listener.accept().await?;\n\n        tokio::spawn(async move {\n            let mut buf = [0; 1024];\n            loop {\n                let n = match socket.read(&mut buf).await {\n                    Ok(n) if n == 0 => return,\n                    Ok(n) => n,\n                    Err(e) => {\n                        eprintln!(\"failed to read from socket; err = {:?}\", e);\n                        return;\n                    }\n                };\n\n                if let Err(e) = socket.write_all(&buf[0..n]).await {\n                    eprintln!(\"failed to write to socket; err = {:?}\", e);\n                    return;\n                }\n            }\n        });\n    }\n}"
+}

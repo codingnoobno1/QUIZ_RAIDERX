@@ -1,0 +1,56 @@
+[
+  {
+    "type": "mcq",
+    "text": "What is the capital of France?",
+    "options": ["Paris", "London", "Berlin", "Madrid"],
+    "answer": "Paris"
+  },
+  {
+    "type": "mcq",
+    "text": "Which language is primarily used for Android development?",
+    "options": ["Java", "Python", "C#", "Ruby"],
+    "answer": "Java"
+  },
+  {
+    "type": "fillup",
+    "text": "The chemical formula of water is ____.",
+    "answer": "H2O"
+  },
+  {
+    "type": "truefalse",
+    "text": "The Sun revolves around the Earth.",
+    "answer": false
+  },
+  {
+    "type": "mcq",
+    "text": "Which planet is known as the Red Planet?",
+    "options": ["Earth", "Mars", "Venus", "Jupiter"],
+    "answer": "Mars"
+  },
+  {
+    "type": "fillup",
+    "text": "The process by which plants make food using sunlight is called ____.",
+    "answer": "Photosynthesis"
+  },
+  {
+    "type": "truefalse",
+    "text": "Light travels faster than sound.",
+    "answer": true
+  },
+  {
+    "type": "mcq",
+    "text": "Which programming language is used for web development along with HTML and CSS?",
+    "options": ["JavaScript", "Python", "C++", "Swift"],
+    "answer": "JavaScript"
+  },
+  {
+    "type": "fillup",
+    "text": "The largest mammal in the world is the ____.",
+    "answer": "Blue Whale"
+  },
+  {
+    "type": "truefalse",
+    "text": "The boiling point of water at sea level is 100°C.",
+    "answer": true
+  }
+]

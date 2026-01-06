@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vehicle Monitoring Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #f0f2f5;
+      padding: 20px;
+    }
+    .video-card {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .card-title i {
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    #stats {
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="mb-4 text-center">🚗 Vehicle Detection Dashboard</h1>
+
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card video-card">
+          <img id="video-feed" class="card-img-top" src="http://localhost:8000/video_feed" alt="Live Feed">
+
+          <div class="card-body">
+            <h5 class="card-title"><i class="material-icons">analytics</i>Live Stats</h5>
+            <div id="stats" class="text-muted">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    async function updateStats() {
+      try {
+        const [countRes, speedsRes] = await Promise.all([
+          fetch("http://localhost:8000/count"),
+          fetch("http://localhost:8000/speeds")
+        ]);
+        
+        const countData = await countRes.json();
+        const speedsData = await speedsRes.json();
+
+        const speedEntries = Object.entries(speedsData.vehicle_speeds_kmph);
+        const speedsFormatted = speedEntries.length
+          ? speedEntries.map(([id, speed]) => `ID ${id}: ${speed} km/h`).join("<br>")
+          : "No vehicles in motion.";
+
+        document.getElementById("stats").innerHTML = `
+          <strong>Cars Detected:</strong> ${countData.cars_detected} <br>
+          <strong>Speeds:</strong><br>${speedsFormatted}
+        `;
+      } catch (error) {
+        document.getElementById("stats").innerText = "Unable to fetch data.";
+        console.error(error);
+      }
+    }
+
+    setInterval(updateStats, 1000);
+  </script>
+</body>
+</html>

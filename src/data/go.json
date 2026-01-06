@@ -1,0 +1,5 @@
+{
+    "title": "Go Concurrency",
+    "subtitle": "Scalable cloud-native services with Goroutines and Channels",
+    "code": "package main\n\nimport (\n\t\"context\"\n\t\"fmt\"\n\t\"time\"\n)\n\nfunc worker(ctx context.Context, id int, jobs <-chan int, results chan<- int) {\n\tfor {\n\t\tselect {\n\t\tcase <-ctx.Done():\n\t\t\treturn\n\t\tcase j := <-jobs:\n\t\t\tfmt.Printf(\"worker %d processing job %d\\n\", id, j)\n\t\t\ttime.Sleep(time.Millisecond * 500)\n\t\t\tresults <- j * 2\n\t\t}\n\t}\n}\n\nfunc main() {\n\tctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)\n\tdefer cancel()\n\n\tjobs := make(chan int, 100)\n\tresults := make(chan int, 100)\n\n\tfor w := 1; w <= 3; w++ {\n\t\tgo worker(ctx, w, jobs, results)\n\t}\n\n\tfor j := 1; j <= 5; j++ {\n\t\tjobs <- j\n\t}\n\tclose(jobs)\n\n\tfor a := 1; a <= 5; a++ {\n\t\tfmt.Println(<-results)\n\t}\n}"
+}
