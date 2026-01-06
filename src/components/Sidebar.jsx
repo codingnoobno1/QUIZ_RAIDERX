@@ -26,7 +26,8 @@ import {
   Menu,
   ChevronLeft,
 } from 'lucide-react';
-import RotatingCube from './RotatingCube'; // Re-add RotatingCube import
+import dynamic from 'next/dynamic';
+const RotatingCube = dynamic(() => import('./RotatingCube'), { ssr: false }); // Re-add RotatingCube import
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react'; // Import useState and useEffect
 

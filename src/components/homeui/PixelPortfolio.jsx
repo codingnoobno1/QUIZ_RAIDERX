@@ -16,8 +16,11 @@ import GlowCursor from './animations/GlowCursor';
 import FloatingCodeOverlay from './animations/FloatingCodeOverlay';
 import CodeSpectrum from '../code-spectrum/CodeSpectrum';
 import TechMarquee from './animations/TechMarquee';
-import SplashLoader from './animations/SplashLoader';
-import InteractiveRobot from './animations/InteractiveRobot';
+import TechMarquee from './animations/TechMarquee';
+import dynamic from 'next/dynamic';
+
+const SplashLoader = dynamic(() => import('./animations/SplashLoader'), { ssr: false });
+const InteractiveRobot = dynamic(() => import('./animations/InteractiveRobot'), { ssr: false });
 
 const PixelPortfolio = () => {
     const [loading, setLoading] = useState(true);
