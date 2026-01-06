@@ -16,7 +16,7 @@ import GlowCursor from './animations/GlowCursor';
 import FloatingCodeOverlay from './animations/FloatingCodeOverlay';
 import CodeSpectrum from '../code-spectrum/CodeSpectrum';
 import TechMarquee from './animations/TechMarquee';
-import TechMarquee from './animations/TechMarquee';
+
 import dynamic from 'next/dynamic';
 
 const SplashLoader = dynamic(() => import('./animations/SplashLoader'), { ssr: false });
