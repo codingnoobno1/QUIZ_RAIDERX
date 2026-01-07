@@ -1,0 +1,101 @@
+@* blazorapp/Components/BlinkNotification.razor *@
+
+<div class="notif @(Visible ? "show" : "")" style="--color: @(Type == "alert" ? "#FF1493" : "#00FFFF")">
+    <div class="notif-glow"></div>
+    <div class="notif-content">
+        <div class="icon">@(Type == "alert" ? "⚠" : "ℹ")</div>
+        <div class="text">
+            <strong>@Title</strong>
+            <span>@Message</span>
+        </div>
+        <button class="close" @onclick="Close">×</button>
+    </div>
+</div>
+
+<style>
+    .notif {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 300px;
+        transform: translateX(400px);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 10000;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .notif.show {
+        transform: translateX(0);
+    }
+
+    .notif-glow {
+        position: absolute;
+        inset: -2px;
+        background: var(--color);
+        filter: blur(8px);
+        opacity: 0.2;
+        border-radius: 4px;
+        animation: blink-pulse 2s infinite alternate;
+    }
+
+    .notif-content {
+        position: relative;
+        background: #050505;
+        border: 1px solid var(--color);
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        color: white;
+        border-radius: 4px;
+    }
+
+    .icon {
+        font-size: 1.5rem;
+        color: var(--color);
+        text-shadow: 0 0 10px var(--color);
+    }
+
+    .text {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .text strong {
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .text span {
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+
+    .close {
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        opacity: 0.5;
+        transition: opacity 0.3s;
+    }
+
+    .close:hover { opacity: 1; }
+
+    @keyframes blink-pulse {
+        0% { opacity: 0.1; }
+        100% { opacity: 0.4; }
+    }
+</style>
+
+@code {
+    [Parameter] public string Title { get; set; } = "SYSTEM ALERT";
+    [Parameter] public string Message { get; set; } = "New encrypted data detected.";
+    [Parameter] public string Type { get; set; } = "info"; // alert or info
+    [Parameter] public bool Visible { get; set; } = true;
+
+    private void Close() => Visible = false;
+}

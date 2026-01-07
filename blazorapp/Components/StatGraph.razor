@@ -1,0 +1,112 @@
+@* blazorapp/Components/StatGraph.razor *@
+
+<div class="graph-container" style="--color: @Color; --width: @(Width)px; --height: @(Height)px;">
+    <div class="graph-header">
+        <span class="label">@Title</span>
+        <span class="value">@DataPoints.LastOrDefault() @Unit</span>
+    </div>
+    <div class="svg-container">
+        <svg viewBox="0 0 200 100" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="grad-@Title" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color: @Color; stop-opacity: 0.2" />
+                    <stop offset="100%" style="stop-color: @Color; stop-opacity: 0" />
+                </linearGradient>
+            </defs>
+            <!-- Area Fill -->
+            <path d="@GeneratePath(true)" fill="url(#grad-@Title)" />
+            <!-- Line -->
+            <path d="@GeneratePath(false)" fill="none" class="graph-line" />
+        </svg>
+    </div>
+    <div class="glow-layer"></div>
+</div>
+
+<style>
+    .graph-container {
+        width: var(--width);
+        background: #050505;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        position: relative;
+        overflow: hidden;
+        border-radius: 4px;
+    }
+
+    .graph-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .label { font-size: 0.65rem; color: var(--color); letter-spacing: 2px; text-transform: uppercase; }
+    .value { font-size: 1.1rem; font-weight: 800; color: #fff; }
+
+    .svg-container {
+        height: var(--height);
+        width: 100%;
+    }
+
+    svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .graph-line {
+        stroke: var(--color);
+        stroke-width: 2px;
+        filter: drop-shadow(0 0 5px var(--color));
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        animation: draw-line 2s ease-out forwards;
+    }
+
+    .glow-layer {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 10% 50%, rgba(0, 255, 255, 0.05) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    @keyframes draw-line {
+        to { stroke-dashoffset: 0; }
+    }
+</style>
+
+@code {
+    [Parameter] public string Title { get; set; } = "SYSTEM LOAD";
+    [Parameter] public string Unit { get; set; } = "TPS";
+    [Parameter] public List<int> DataPoints { get; set; } = new() { 20, 45, 30, 60, 55, 80, 75 };
+    [Parameter] public int Width { get; set; } = 300;
+    [Parameter] public int Height { get; set; } = 80;
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+
+    private string GeneratePath(bool area)
+    {
+        if (DataPoints.Count < 2) return "";
+
+        var max = DataPoints.Max();
+        var min = 0;
+        var range = max - min;
+        var stepX = 200.0 / (DataPoints.Count - 1);
+        
+        var points = new List<string>();
+        for (int i = 0; i < DataPoints.Count; i++)
+        {
+            var x = i * stepX;
+            var y = 100 - ((DataPoints[i] - min) * 100.0 / range);
+            points.Add($"{x.ToString("F1")},{y.ToString("F1")}");
+        }
+
+        var line = "M " + string.Join(" L ", points);
+        
+        if (area)
+        {
+            return line + " L 200,100 L 0,100 Z";
+        }
+        
+        return line;
+    }
+}

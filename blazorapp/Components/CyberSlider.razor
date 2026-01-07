@@ -1,0 +1,92 @@
+@* blazorapp/Components/CyberSlider.razor *@
+
+<div class="slider-container" style="--color: @Color; --percent: @(Value);">
+    <div class="slider-label">@Label: @Value%</div>
+    <div class="slider-track">
+        <input type="range" min="0" max="100" value="@Value" 
+               @oninput="OnInput"
+               class="cyber-range" />
+        <div class="slider-fill"></div>
+        <div class="slider-glow"></div>
+    </div>
+</div>
+
+<style>
+    .slider-container {
+        width: 100%;
+        margin-bottom: 20px;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .slider-label {
+        font-size: 0.7rem;
+        color: var(--color);
+        margin-bottom: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        opacity: 0.8;
+    }
+
+    .slider-track {
+        position: relative;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+    }
+
+    .cyber-range {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 5;
+    }
+
+    .slider-fill {
+        position: absolute;
+        height: 100%;
+        width: calc(var(--percent) * 1%);
+        background: var(--color);
+        border-radius: 3px;
+        z-index: 2;
+    }
+
+    .slider-glow {
+        position: absolute;
+        height: 100%;
+        width: calc(var(--percent) * 1%);
+        background: var(--color);
+        filter: blur(8px);
+        opacity: 0.3;
+        z-index: 1;
+    }
+
+    /* Target the thumb in standard CSS for visualization (though hidden by opacity 0) */
+    .cyber-range::-webkit-slider-thumb {
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border: 2px solid var(--color);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+</style>
+
+@code {
+    [Parameter] public int Value { get; set; } = 50;
+    [Parameter] public string Label { get; set; } = "SYSTEM VOLUME";
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    [Parameter] public EventCallback<int> OnValueChanged { get; set; }
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var val))
+        {
+            Value = val;
+            await OnValueChanged.InvokeAsync(val);
+        }
+    }
+}

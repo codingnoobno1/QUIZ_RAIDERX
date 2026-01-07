@@ -1,0 +1,88 @@
+@* blazorapp/Components/CyberCheckbox.razor *@
+
+<div class="checkbox-container" @onclick="Toggle" style="--color: @Color;">
+    <div class="box @(Checked ? "checked" : "")">
+        @if (Checked)
+        {
+            <div class="check-mark"></div>
+            <div class="box-glow"></div>
+        }
+    </div>
+    <span class="label">@Label</span>
+</div>
+
+<style>
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        padding: 5px;
+        font-family: 'Space Grotesk', sans-serif;
+        user-select: none;
+    }
+
+    .box {
+        width: 22px;
+        height: 22px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        background: #050505;
+        position: relative;
+        transition: all 0.3s;
+        border-radius: 4px;
+    }
+
+    .box.checked {
+        border-color: var(--color);
+    }
+
+    .check-mark {
+        position: absolute;
+        top: 2px;
+        left: 6px;
+        width: 6px;
+        height: 12px;
+        border: solid var(--color);
+        border-width: 0 3px 3px 0;
+        transform: rotate(45deg);
+        filter: drop-shadow(0 0 5px var(--color));
+    }
+
+    .box-glow {
+        position: absolute;
+        inset: -2px;
+        box-shadow: 0 0 10px var(--color);
+        opacity: 0.3;
+    }
+
+    .label {
+        color: white;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+        opacity: 0.8;
+        transition: color 0.3s;
+    }
+
+    .checkbox-container:hover .label {
+        color: var(--color);
+        opacity: 1;
+    }
+
+    .checkbox-container:hover .box {
+        border-color: var(--color);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+    }
+</style>
+
+@code {
+    [Parameter] public bool Checked { get; set; }
+    [Parameter] public string Label { get; set; } = "SYSTEM ENCRYPTION ENABLED";
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    [Parameter] public EventCallback<bool> OnCheckedChanged { get; set; }
+
+    private async Task Toggle()
+    {
+        Checked = !Checked;
+        await OnCheckedChanged.InvokeAsync(Checked);
+    }
+}

@@ -1,0 +1,52 @@
+@* blazorapp/Components/StatusPill.razor *@
+
+<div class="pill @(Pulse ? "pulse" : "")" style="--color: @Color;">
+    <div class="glow"></div>
+    <span class="text">@Label</span>
+</div>
+
+<style>
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--color);
+        border-radius: 100px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .glow {
+        position: absolute;
+        inset: 0;
+        background: var(--color);
+        opacity: 0.1;
+    }
+
+    .text {
+        color: var(--color);
+        font-family: monospace;
+        font-size: 0.65rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .pill.pulse {
+        animation: pill-pulse 2s infinite alternate;
+    }
+
+    @keyframes pill-pulse {
+        0% { box-shadow: 0 0 5px var(--color); border-color: var(--color); }
+        100% { box-shadow: 0 0 15px var(--color); border-color: #fff; }
+    }
+</style>
+
+@code {
+    [Parameter] public string Label { get; set; } = "ONLINE";
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    [Parameter] public bool Pulse { get; set; } = true;
+}

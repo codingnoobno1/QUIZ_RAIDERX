@@ -1,0 +1,77 @@
+@* blazorapp/Components/DigitalClock.razor *@
+@using System.Timers
+
+<div class="clock-container" style="--color: @Color;">
+    <div class="clock-glow"></div>
+    <div class="time">@_currentTime</div>
+    <div class="date">@_currentDate</div>
+</div>
+
+<style>
+    .clock-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px 30px;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 8px;
+        border: 1px solid var(--color);
+        position: relative;
+        font-family: 'Fira Code', monospace;
+        min-width: 200px;
+    }
+
+    .clock-glow {
+        position: absolute;
+        inset: 0;
+        box-shadow: 0 0 20px var(--color);
+        opacity: 0.2;
+        pointer-events: none;
+    }
+
+    .time {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #fff;
+        text-shadow: 0 0 10px var(--color);
+        letter-spacing: 2px;
+    }
+
+    .date {
+        font-size: 0.65rem;
+        color: var(--color);
+        opacity: 0.6;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        margin-top: 5px;
+    }
+</style>
+
+@code {
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    
+    private string _currentTime = "";
+    private string _currentDate = "";
+    private Timer _timer;
+
+    protected override void OnInitialized()
+    {
+        UpdateClock(null, null);
+        _timer = new Timer(1000);
+        _timer.Elapsed += UpdateClock;
+        _timer.AutoReset = true;
+        _timer.Enabled = true;
+    }
+
+    private void UpdateClock(object source, ElapsedEventArgs e)
+    {
+        _currentTime = DateTime.Now.ToString("HH:mm:ss");
+        _currentDate = DateTime.Now.ToString("ddd | MMM dd | yyyy");
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}

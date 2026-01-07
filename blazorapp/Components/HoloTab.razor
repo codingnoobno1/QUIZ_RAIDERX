@@ -1,0 +1,94 @@
+@* blazorapp/Components/HoloTab.razor *@
+
+<div class="tabs-container" style="--color: @Color;">
+    <div class="tabs-header">
+        @foreach (var tab in Tabs)
+        {
+            <div class="tab-item @(ActiveTab == tab ? "active" : "")" 
+                 @onclick="() => SelectTab(tab)">
+                @tab
+                @if (ActiveTab == tab)
+                {
+                    <div class="tab-glitch"></div>
+                    <div class="tab-underline"></div>
+                }
+            </div>
+        }
+    </div>
+    <div class="tabs-content">
+        @ChildContent
+    </div>
+</div>
+
+<style>
+    .tabs-container {
+        width: 100%;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .tabs-header {
+        display: flex;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .tab-item {
+        padding: 8px 20px;
+        color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        position: relative;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        transition: color 0.3s;
+    }
+
+    .tab-item:hover, .tab-item.active {
+        color: var(--color);
+    }
+
+    .tab-underline {
+        position: absolute;
+        bottom: -11px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--color);
+        box-shadow: 0 0 10px var(--color);
+    }
+
+    .tab-glitch {
+        position: absolute;
+        inset: 0;
+        background: var(--color);
+        opacity: 0.1;
+        animation: tab-glitch-anim 0.2s infinite alternate;
+    }
+
+    @keyframes tab-glitch-anim {
+        0% { transform: translate(0); }
+        100% { transform: translate(2px, -2px); }
+    }
+</style>
+
+@code {
+    [Parameter] public List<string> Tabs { get; set; } = new() { "OVERVIEW", "DETAILS", "ARCHIVES" };
+    [Parameter] public string ActiveTab { get; set; }
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public EventCallback<string> OnTabChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrEmpty(ActiveTab) && Tabs.Count > 0)
+            ActiveTab = Tabs[0];
+    }
+
+    private async Task SelectTab(string tab)
+    {
+        ActiveTab = tab;
+        await OnTabChanged.InvokeAsync(tab);
+    }
+}

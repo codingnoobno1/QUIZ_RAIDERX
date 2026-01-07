@@ -1,0 +1,120 @@
+@* blazorapp/Components/TimelineEvent.razor *@
+
+<div class="timeline-item" style="--color: @Color;">
+    <div class="timeline-dot">
+        <div class="dot-inner"></div>
+        <div class="dot-glow"></div>
+    </div>
+    <GlassCard Class="timeline-card">
+        <div class="timeline-date">@Date</div>
+        <h4 class="timeline-title">@Title</h4>
+        <p class="timeline-desc">@Description</p>
+        <div class="timeline-tags">
+            @foreach (var tag in Tags)
+            {
+                <span class="tag">#@tag</span>
+            }
+        </div>
+    </GlassCard>
+</div>
+
+<style>
+    .timeline-item {
+        position: relative;
+        padding-left: 50px;
+        margin-bottom: 40px;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 14px;
+        top: 30px;
+        bottom: -50px;
+        width: 1px;
+        background: linear-gradient(to bottom, var(--color), transparent);
+        opacity: 0.3;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: 0;
+        top: 10px;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dot-inner {
+        width: 10px;
+        height: 10px;
+        background: var(--color);
+        border-radius: 50%;
+        z-index: 2;
+        box-shadow: 0 0 10px var(--color);
+    }
+
+    .dot-glow {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border: 1px solid var(--color);
+        border-radius: 50%;
+        animation: dot-pulse 2s infinite;
+    }
+
+    .timeline-card {
+        padding: 20px !important;
+    }
+
+    .timeline-date {
+        font-family: monospace;
+        color: var(--color);
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+    }
+
+    .timeline-title {
+        color: white;
+        margin: 0 0 10px;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+    }
+
+    .timeline-desc {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin-bottom: 15px;
+    }
+
+    .timeline-tags {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .tag {
+        font-size: 0.65rem;
+        color: var(--color);
+        opacity: 0.8;
+        font-family: monospace;
+    }
+
+    @keyframes dot-pulse {
+        0% { transform: scale(0.5); opacity: 1; }
+        100% { transform: scale(2); opacity: 0; }
+    }
+</style>
+
+@code {
+    [Parameter] public string Date { get; set; } = "JAN 2026";
+    [Parameter] public string Title { get; set; } = "SYSTEM INITIATED";
+    [Parameter] public string Description { get; set; } = "Successful deployment of the first autonomous matrix node.";
+    [Parameter] public List<string> Tags { get; set; } = new() { "MAUI", "BLAZOR", "CYBER" };
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+}

@@ -1,0 +1,77 @@
+@* blazorapp/Components/SocialLink.razor *@
+
+<a href="@Url" target="_blank" class="social-link" style="--color: @Color;">
+    <div class="social-icon">
+        @Icon
+    </div>
+    <div class="social-glow"></div>
+    <div class="social-ring"></div>
+</a>
+
+<style>
+    .social-link {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        text-decoration: none;
+        color: white;
+        transition: transform 0.3s;
+    }
+
+    .social-icon {
+        font-size: 1.2rem;
+        z-index: 2;
+        transition: all 0.3s;
+    }
+
+    .social-glow {
+        position: absolute;
+        inset: 0;
+        background: var(--color);
+        border-radius: 50%;
+        opacity: 0;
+        filter: blur(10px);
+        transition: opacity 0.3s;
+    }
+
+    .social-ring {
+        position: absolute;
+        inset: -2px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transition: all 0.3s;
+    }
+
+    .social-link:hover {
+        transform: translateY(-5px);
+    }
+
+    .social-link:hover .social-icon {
+        color: var(--color);
+        text-shadow: 0 0 10px var(--color);
+    }
+
+    .social-link:hover .social-glow {
+        opacity: 0.3;
+    }
+
+    .social-link:hover .social-ring {
+        border-color: var(--color);
+        box-shadow: 0 0 10px var(--color);
+        animation: rotate-ring 4s linear infinite;
+    }
+
+    @keyframes rotate-ring {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+@code {
+    [Parameter] public string Icon { get; set; } = "🔗";
+    [Parameter] public string Url { get; set; } = "#";
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+}

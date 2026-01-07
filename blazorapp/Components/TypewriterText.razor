@@ -1,0 +1,42 @@
+@* blazorapp/Components/TypewriterText.razor *@
+
+<div class="tw-container" style="--color: @Color;">
+    <span class="tw-text">@_displayText</span><span class="tw-cursor">_</span>
+</div>
+
+<style>
+    .tw-container {
+        font-family: 'Fira Code', monospace;
+        color: var(--color);
+        font-size: @FontSize;
+        letter-spacing: 1px;
+    }
+
+    .tw-cursor {
+        animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+</style>
+
+@code {
+    [Parameter] public string Text { get; set; } = "SYSTEM_INITIALIZING...";
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    [Parameter] public string FontSize { get; set; } = "1rem";
+    [Parameter] public int Speed { get; set; } = 50;
+
+    private string _displayText = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        foreach (var c in Text)
+        {
+            _displayText += c;
+            StateHasChanged();
+            await Task.Delay(Speed);
+        }
+    }
+}

@@ -1,0 +1,99 @@
+@* blazorapp/Components/SearchOrb.razor *@
+
+<div class="search-container @(IsFocused ? "focused" : "")" style="--color: @Color;">
+    <div class="search-orb">
+        <div class="orb-inner"></div>
+        <div class="orb-pulse"></div>
+        <span class="icon">🔍</span>
+    </div>
+    <input type="text" placeholder="QUERY SYSTEM..." 
+           @onfocus="() => IsFocused = true" 
+           @onblur="() => IsFocused = false" />
+    <div class="search-underline"></div>
+</div>
+
+<style>
+    .search-container {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 100px;
+        padding: 5px 15px;
+        position: relative;
+        transition: all 0.3s;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .search-container.focused {
+        border-color: var(--color);
+        background: rgba(0, 255, 255, 0.05);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+    }
+
+    .search-orb {
+        width: 30px;
+        height: 30px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+
+    .orb-inner {
+        position: absolute;
+        inset: 4px;
+        background: var(--color);
+        border-radius: 50%;
+        opacity: 0.4;
+        z-index: 1;
+    }
+
+    .orb-pulse {
+        position: absolute;
+        inset: 0;
+        border: 1px solid var(--color);
+        border-radius: 50%;
+        animation: orb-pulse 2s infinite;
+    }
+
+    .search-orb .icon { font-size: 0.8rem; z-index: 2; }
+
+    input {
+        background: transparent;
+        border: none;
+        color: white;
+        font-family: monospace;
+        letter-spacing: 2px;
+        font-size: 0.8rem;
+        width: 100%;
+        outline: none;
+    }
+
+    .search-underline {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 1px;
+        background: var(--color);
+        transition: all 0.3s;
+        box-shadow: 0 0 10px var(--color);
+    }
+
+    .focused .search-underline {
+        left: 10%;
+        width: 80%;
+    }
+
+    @keyframes orb-pulse {
+        0% { transform: scale(0.8); opacity: 1; }
+        100% { transform: scale(1.5); opacity: 0; }
+    }
+</style>
+
+@code {
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    private bool IsFocused { get; set; }
+}

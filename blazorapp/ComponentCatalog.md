@@ -67,11 +67,26 @@ This catalog serves as the master reference for building the full-scale Cyber Hy
 | `KeywordsStrip.razor` | Scrolling tech-keywords bar. |
 | `CiteButton.razor` | One-click citation format generator. |
 
-## 🛡️ 6. Admin & Auth (5)
-| Component | Description |
-|-----------|-------------|
-| `LoginPortal.razor` | Centered glass box with floating cubes. |
-| `RegisterForm.razor` | Multi-step registration flow. |
-| `AdminStats.razor` | Advanced user-count and server health dashboard. |
-| `UserRow.razor` | Management row for student verification. |
-| `APIMonitor.razor` | Live latency tracker for the Next.js backend. |
+## ✨ 7. New Portfolio & Utility (20+)
+| Component | Status | Description |
+|-----------|--------|-------------|
+| `CyberProgressBar.razor` | [NEW] | Enhanced loading bar with glow and scanlines. |
+| `BlinkNotification.razor` | [NEW] | Cyber-themed alert notifications. |
+| `TypewriterText.razor` | [NEW] | Matrix-style text reveal with cursor. |
+| `StatusPill.razor` | [NEW] | Pulsing status tags for system states. |
+| `DigitalClock.razor` | [NEW] | Thematic time and date display. |
+| `HoloTab.razor` | [NEW] | Tabbed navigation with glitch effects. |
+| `FloatingMenu.razor` | [NEW] | FAB-style menu for mobile focus. |
+| `HoloTooltip.razor` | [NEW] | Depth-based contextual information. |
+| `CyberSlider.razor` | [NEW] | Themed range slider for system settings. |
+| `CyberCheckbox.razor` | [NEW] | Styled checkbox for user preferences. |
+| `SkillHex.razor` | [NEW] | Hexagonal skill display for portfolios. |
+| `StatGraph.razor` | [NEW] | SVG area chart for performance trends. |
+| `MatrixLoader.razor` | [NEW] | Infinite scrolling character loader. |
+| `ProgressHex.razor` | [NEW] | Hexagonal progress indicator. |
+| `InteractiveRadar.razor` | [NEW] | Scanning sweep monitoring interface. |
+| `TimelineEvent.razor` | [NEW] | Visual history of projects/experience. |
+| `SocialLink.razor` | [NEW] | Animated social icons with ring rotation. |
+| `CodeSnippet.razor` | [NEW] | Styled block for technical solutions. |
+| `SearchOrb.razor` | [NEW] | Interactive search bar with orb pulse. |
+| `CyberToast.razor` | [NEW] | Stackable notification system for UI feedback. |

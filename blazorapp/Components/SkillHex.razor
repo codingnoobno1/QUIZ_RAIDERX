@@ -1,0 +1,91 @@
+@* blazorapp/Components/SkillHex.razor *@
+
+<div class="hex-container" style="--size: @(Size)px; --color: @Color;">
+    <div class="hex-outer">
+        <div class="hex-glow"></div>
+        <div class="hex-inner">
+            <div class="hex-content">
+                <span class="icon">@Icon</span>
+                <span class="label">@Name</span>
+            </div>
+            <div class="hex-level" style="height: @(Level)%"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hex-container {
+        width: var(--size);
+        height: var(--size);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .hex-outer {
+        width: 100%;
+        height: 100%;
+        clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        background: var(--color);
+        padding: 2px;
+        position: relative;
+    }
+
+    .hex-glow {
+        position: absolute;
+        inset: -2px;
+        background: var(--color);
+        filter: blur(10px);
+        opacity: 0.3;
+        animation: hex-pulse 3s infinite alternate;
+    }
+
+    .hex-inner {
+        width: 100%;
+        height: 100%;
+        clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        background: #050505;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .hex-content {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+    }
+
+    .icon { font-size: 1.5rem; margin-bottom: 5px; filter: drop-shadow(0 0 5px var(--color)); }
+    .label { font-size: 0.6rem; letter-spacing: 1px; font-weight: bold; opacity: 0.7; }
+
+    .hex-level {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: var(--color);
+        opacity: 0.15;
+        transition: height 1s ease;
+    }
+
+    @keyframes hex-pulse {
+        0% { opacity: 0.2; transform: scale(0.98); }
+        100% { opacity: 0.5; transform: scale(1.02); }
+    }
+</style>
+
+@code {
+    [Parameter] public string Name { get; set; } = "C# / .NET";
+    [Parameter] public string Icon { get; set; } = "⚡";
+    [Parameter] public int Level { get; set; } = 85;
+    [Parameter] public int Size { get; set; } = 120;
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+}

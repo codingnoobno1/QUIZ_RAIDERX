@@ -1,0 +1,71 @@
+@* blazorapp/Components/MatrixLoader.razor *@
+
+<div class="matrix-container" style="--color: @Color; --size: @(Size)px;">
+    @for (int i = 0; i < _columns; i++)
+    {
+        <div class="matrix-col" style="animation-duration: @(GetSpeed())s; animation-delay: @(GetDelay())s;">
+            @foreach (var c in GetChars())
+            {
+                <span>@c</span>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .matrix-container {
+        width: var(--size);
+        height: var(--size);
+        background: #000;
+        overflow: hidden;
+        display: flex;
+        justify-content: space-around;
+        position: relative;
+        border: 1px solid rgba(0, 255, 255, 0.1);
+    }
+
+    .matrix-col {
+        display: flex;
+        flex-direction: column;
+        color: var(--color);
+        font-family: monospace;
+        font-size: 0.6rem;
+        transform: translateY(-100%);
+        animation: matrix-scroll linear infinite;
+        text-shadow: 0 0 5px var(--color);
+    }
+
+    .matrix-col span {
+        height: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @keyframes matrix-scroll {
+        0% { transform: translateY(-100%); opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { transform: translateY(100%); opacity: 0; }
+    }
+</style>
+
+@code {
+    [Parameter] public int Size { get; set; } = 150;
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    
+    private int _columns = 8;
+    private Random _rnd = new();
+
+    private double GetSpeed() => _rnd.NextDouble() * 3 + 2;
+    private double GetDelay() => _rnd.NextDouble() * 5;
+
+    private IEnumerable<char> GetChars()
+    {
+        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@%&*あいうえお";
+        for (int i = 0; i < 20; i++)
+        {
+            yield return chars[_rnd.Next(chars.Length)];
+        }
+    }
+}

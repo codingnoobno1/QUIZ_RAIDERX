@@ -1,0 +1,152 @@
+@* blazorapp/Components/FloatingMenu.razor *@
+
+<div class="fab-container @(IsOpen ? "open" : "")" style="--color: @Color;">
+    <div class="fab-options">
+        @foreach (var item in MenuItems)
+        {
+            <div class="fab-item" @onclick="() => OnItemClicked.InvokeAsync(item)">
+                <span class="fab-label">@item</span>
+                <div class="fab-icon-placeholder"></div>
+            </div>
+        }
+    </div>
+    <div class="fab-trigger" @onclick="Toggle">
+        <div class="trigger-icon @(IsOpen ? "close" : "")"></div>
+        <div class="trigger-glow"></div>
+    </div>
+</div>
+
+<style>
+    .fab-container {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .fab-trigger {
+        width: 60px;
+        height: 60px;
+        background: #050505;
+        border: 2px solid var(--color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .trigger-icon {
+        width: 25px;
+        height: 2px;
+        background: var(--color);
+        position: relative;
+        transition: transform 0.3s;
+    }
+
+    .trigger-icon::before, .trigger-icon::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background: var(--color);
+        transition: transform 0.3s;
+    }
+
+    .trigger-icon::before { top: -8px; }
+    .trigger-icon::after { bottom: -8px; }
+
+    .trigger-icon.close { background: transparent; }
+    .trigger-icon.close::before { transform: rotate(45deg); top: 0; }
+    .trigger-icon.close::after { transform: rotate(-45deg); bottom: 0; }
+
+    .trigger-glow {
+        position: absolute;
+        inset: -2px;
+        background: var(--color);
+        border-radius: 50%;
+        filter: blur(8px);
+        opacity: 0.3;
+        animation: fab-pulse 2s infinite alternate;
+    }
+
+    .fab-options {
+        position: absolute;
+        bottom: 70px;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .fab-container.open .fab-options {
+        pointer-events: auto;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .fab-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        justify-content: flex-end;
+    }
+
+    .fab-label {
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid var(--color);
+        padding: 4px 12px;
+        border-radius: 4px;
+        color: white;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateX(10px);
+        transition: all 0.3s;
+    }
+
+    .fab-item:hover .fab-label {
+        opacity: 1;
+        transform: translateX(0);
+        box-shadow: 0 0 10px var(--color);
+    }
+
+    .fab-icon-placeholder {
+        width: 40px;
+        height: 40px;
+        background: #050505;
+        border: 1px solid var(--color);
+        border-radius: 50%;
+        transition: all 0.3s;
+    }
+
+    .fab-item:hover .fab-icon-placeholder {
+        background: var(--color);
+        box-shadow: 0 0 15px var(--color);
+    }
+
+    @keyframes fab-pulse {
+        0% { transform: scale(0.95); opacity: 0.2; }
+        100% { transform: scale(1.1); opacity: 0.4; }
+    }
+</style>
+
+@code {
+    [Parameter] public List<string> MenuItems { get; set; } = new() { "PROFILE", "QUIZ", "SUBMIT", "SETTINGS" };
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    [Parameter] public EventCallback<string> OnItemClicked { get; set; }
+
+    private bool IsOpen { get; set; }
+
+    private void Toggle() => IsOpen = !IsOpen;
+}

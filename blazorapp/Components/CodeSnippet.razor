@@ -1,0 +1,80 @@
+@* blazorapp/Components/CodeSnippet.razor *@
+
+<div class="code-container" style="--color: @Color;">
+    <div class="code-header">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="file-name">@FileName</span>
+        <button class="copy-btn" @onclick="CopyCode">COPY</button>
+    </div>
+    <div class="code-body">
+        <pre><code>@Code</code></pre>
+        <div class="code-glow"></div>
+    </div>
+</div>
+
+<style>
+    .code-container {
+        background: #000;
+        border: 1px solid rgba(0, 255, 255, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        font-family: 'Fira Code', monospace;
+    }
+
+    .code-header {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .dots { display: flex; gap: 5px; }
+    .dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+
+    .file-name { font-size: 0.65rem; color: var(--color); letter-spacing: 1px; }
+
+    .copy-btn {
+        background: transparent;
+        border: 1px solid var(--color);
+        color: var(--color);
+        font-size: 0.6rem;
+        padding: 2px 8px;
+        border-radius: 2px;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.3s;
+    }
+
+    .copy-btn:hover { opacity: 1; box-shadow: 0 0 10px var(--color); }
+
+    .code-body {
+        padding: 20px;
+        position: relative;
+        overflow-x: auto;
+    }
+
+    pre { margin: 0; }
+    code { font-size: 0.8rem; color: #fff; line-height: 1.5; }
+
+    .code-glow {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle at bottom right, var(--color) 0%, transparent 70%);
+        opacity: 0.05;
+        pointer-events: none;
+    }
+</style>
+
+@code {
+    [Parameter] public string FileName { get; set; } = "CyberCore.cs";
+    [Parameter] public string Code { get; set; } = "public class Core {\n  public void Init() {\n    Console.WriteLine(\"System Online\");\n  }\n}";
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+
+    private void CopyCode() { /* JS Interop for clipboard */ }
+}

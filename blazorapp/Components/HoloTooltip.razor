@@ -1,0 +1,79 @@
+@* blazorapp/Components/HoloTooltip.razor *@
+
+<div class="tooltip-wrapper" 
+     @onmouseenter="Show" 
+     @onmouseleave="Hide"
+     style="--color: @Color;">
+    @ChildContent
+    
+    @if (_isVisible)
+    {
+        <div class="tooltip-box">
+            <div class="tooltip-glow"></div>
+            <div class="tooltip-content">
+                <span class="tooltip-text">@Text</span>
+            </div>
+            <div class="tooltip-arrow"></div>
+        </div>
+    }
+</div>
+
+<style>
+    .tooltip-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .tooltip-box {
+        position: absolute;
+        bottom: 120%;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 8px 15px;
+        background: #050505;
+        border: 1px solid var(--color);
+        z-index: 1000;
+        white-space: nowrap;
+        animation: tooltip-fade-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .tooltip-glow {
+        position: absolute;
+        inset: -1px;
+        box-shadow: 0 0 10px var(--color);
+        opacity: 0.3;
+        pointer-events: none;
+    }
+
+    .tooltip-text {
+        font-family: monospace;
+        font-size: 0.7rem;
+        color: #fff;
+        letter-spacing: 1px;
+    }
+
+    .tooltip-arrow {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: var(--color);
+    }
+
+    @keyframes tooltip-fade-in {
+        from { opacity: 0; transform: translate(-50%, 10px); }
+        to { opacity: 1; transform: translate(-50%, 0); }
+    }
+</style>
+
+@code {
+    [Parameter] public string Text { get; set; } = "SYSTEM DATA HUB";
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    [Parameter] public RenderFragment ChildContent { get; set; }
+
+    private bool _isVisible;
+
+    private void Show() => _isVisible = true;
+    private void Hide() => _isVisible = false;
+}

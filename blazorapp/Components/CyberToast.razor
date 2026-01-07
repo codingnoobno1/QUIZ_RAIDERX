@@ -1,0 +1,109 @@
+@* blazorapp/Components/CyberToast.razor *@
+
+<div class="toast-stack">
+    @foreach (var toast in _toasts)
+    {
+        <div class="toast-item @(toast.FadeOut ? "fade-out" : "")" style="--color: @toast.Color;">
+            <div class="toast-accent"></div>
+            <div class="toast-inner">
+                <span class="toast-id">ID: @toast.Id</span>
+                <span class="toast-msg">@toast.Message</span>
+            </div>
+            <div class="toast-progress" style="animation-duration: @(toast.Duration)ms"></div>
+        </div>
+    }
+</div>
+
+<style>
+    .toast-stack {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 10px;
+        z-index: 11000;
+        max-width: 350px;
+    }
+
+    .toast-item {
+        background: rgba(0, 0, 0, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px 20px;
+        position: relative;
+        overflow: hidden;
+        animation: toast-slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        flex-direction: column;
+        min-width: 250px;
+        border-radius: 4px;
+    }
+
+    .toast-item.fade-out {
+        animation: toast-slide-out 0.4s forwards;
+    }
+
+    .toast-accent {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--color);
+        box-shadow: 0 0 10px var(--color);
+    }
+
+    .toast-inner {
+        display: flex;
+        flex-direction: column;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .toast-id { font-size: 0.6rem; color: var(--color); letter-spacing: 2px; opacity: 0.6; }
+    .toast-msg { color: #fff; font-size: 0.85rem; margin-top: 5px; letter-spacing: 0.5px; }
+
+    .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 2px;
+        background: var(--color);
+        width: 100%;
+        animation: toast-timer linear forwards;
+    }
+
+    @keyframes toast-slide-in {
+        from { transform: translateX(-100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes toast-slide-out {
+        to { transform: translateX(-100%); opacity: 0; }
+    }
+
+    @keyframes toast-timer {
+        from { width: 100%; }
+        to { width: 0%; }
+    }
+</style>
+
+@code {
+    private class Toast { public string Id; public string Message; public string Color; public int Duration; public bool FadeOut; }
+    private List<Toast> _toasts = new();
+    private int _counter = 0;
+
+    public async Task Show(string message, string color = "#00FFFF", int duration = 5000)
+    {
+        var toast = new Toast { Id = (++_counter).ToString("D3"), Message = message, Color = color, Duration = duration };
+        _toasts.Add(toast);
+        StateHasChanged();
+
+        await Task.Delay(duration - 400);
+        toast.FadeOut = true;
+        StateHasChanged();
+
+        await Task.Delay(400);
+        _toasts.Remove(toast);
+        StateHasChanged();
+    }
+}

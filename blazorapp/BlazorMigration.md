@@ -33,8 +33,16 @@ I have built the following high-fidelity components with "Extreme Depth":
 Detailed specifications for colors, typography, and animation logic can be found in `CyberDesignSystem.md`.
 
 ## 📦 Suggested UI Libraries
-- **MudBlazor**: (https://mudblazor.com/) Best for highly customizable Material Design.
-- **Radzen.Blazor**: Good for tables and data-heavy dashboards.
+
+### 1. **[Microsoft Fluent UI for Blazor](https://www.fluentui-blazor.net/)**
+- **Purpose**: Official Microsoft library for a native, accessible, and high-performance design system. Perfect for consistent buttons, inputs, and layouts.
+- **Integration**: `dotnet add package Microsoft.FluentUI.AspNetCore.Components`
+- **Why**: Ensures your app feels professional and follows platform standards while being extremely customizable.
+
+### 2. **[SkiaSharp](https://github.com/mono/SkiaSharp)**
+- **Purpose**: High-performance 2D graphics engine. Use this for the "Extreme Depth" animations (like the Orb or custom charts) when you need hardware acceleration beyond CSS.
+- **Integration**: `dotnet add package SkiaSharp.Views.Blazor` (for Hybrid apps, use `SkiaSharp.Views.Maui.Controls`).
+- **Use Case**: Drawing complex procedural backgrounds, smooth energy orbs, and real-time data visualizations with absolute precision.
 
 ## 🎨 Asset Mapping
-Copy your CSS glow and glassmorphism styles from `CommonUI.jsx` and `index.css` directly into `wwwroot/css/app.css`.
+Copy your CSS glow and glassmorphism styles from `CommonUI.jsx` and `index.css` directly into `wwwroot/css/app.css`. Use CSS variables for the HSL colors as defined in `CyberDesignSystem.md`.
