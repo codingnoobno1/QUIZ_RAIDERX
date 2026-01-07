@@ -1,24 +1,29 @@
 @* blazorapp/Components/RotatingCube.razor *@
 
-<div class="cube-container" style="--size: @(Size)px; --half-size: @(Size/2)px; --perspective: @(Size*10)px;">
+<div class="cube-scene" style="--size: @(Size)px; --half-size: @(Size/2)px; --perspective: @(Size*10)px;">
     <div class="cube">
-        <div class="cube-face front"><img src="pixel.jpg" alt="Pixel Logo" /></div>
-        <div class="cube-face back"><img src="pixel.jpg" alt="Pixel Logo" /></div>
-        <div class="cube-face left"><img src="pixel.jpg" alt="Pixel Logo" /></div>
-        <div class="cube-face right"><img src="pixel.jpg" alt="Pixel Logo" /></div>
-        <div class="cube-face top"><img src="pixel.jpg" alt="Pixel Logo" /></div>
-        <div class="cube-face bottom"><img src="pixel.jpg" alt="Pixel Logo" /></div>
+        @foreach (var face in _faces)
+        {
+            <div class="cube-face @face">
+                <div class="face-content">
+                    <img src="pixel.jpg" alt="Pixel Logo" />
+                    <div class="face-reflection"></div>
+                </div>
+                <div class="face-glow"></div>
+            </div>
+        }
     </div>
 </div>
 
 <style>
-    .cube-container {
-        width: calc(var(--size) * 2);
-        height: calc(var(--size) * 2);
+    .cube-scene {
+        width: calc(var(--size) * 1.5);
+        height: calc(var(--size) * 1.5);
         perspective: var(--perspective);
         display: flex;
         justify-content: center;
         align-items: center;
+        filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.2));
     }
 
     .cube {
@@ -26,36 +31,82 @@
         height: var(--size);
         position: relative;
         transform-style: preserve-3d;
-        animation: rotate3D-cube 10s infinite linear;
+        animation: rotate3D-extreme 12s infinite linear;
+        /* Tilt for better initial depth */
+        transform: rotateX(-15deg) rotateY(15deg);
     }
 
     .cube-face {
         position: absolute;
         width: var(--size);
         height: var(--size);
-        background: rgba(0, 0, 0, 0.95);
-        border: 2px solid #FF1493;
-        box-shadow: 0px 0px 10px 2px rgba(255, 20, 147, 0.7);
+        background: rgba(5, 5, 5, 0.98);
+        border: 1px solid rgba(255, 20, 147, 0.5);
+        overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
-        animation: colorCycle-cube 10s infinite alternate;
+        /* Face positioning logic */
+        backface-visibility: visible;
     }
 
-    .cube-face img {
-        width: 90%;
-        height: 90%;
+    .face-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+
+    .face-content img {
+        width: 85%;
+        height: 85%;
         object-fit: contain;
+        filter: drop-shadow(0 0 10px rgba(255, 20, 147, 0.5));
     }
 
+    /* Lighting / Reflection Layer */
+    .face-reflection {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%);
+        pointer-events: none;
+    }
+
+    /* Inner Glow for Depth */
+    .face-glow {
+        position: absolute;
+        inset: -2px;
+        border: 2px solid #00FFFF;
+        opacity: 0.2;
+        box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.3);
+        animation: neon-pulse 4s infinite alternate;
+    }
+
+    /* Standard Cube Face Mapping */
     .front  { transform: translateZ(var(--half-size)); }
     .back   { transform: rotateY(180deg) translateZ(var(--half-size)); }
     .left   { transform: rotateY(-90deg) translateZ(var(--half-size)); }
     .right  { transform: rotateY(90deg) translateZ(var(--half-size)); }
     .top    { transform: rotateX(90deg) translateZ(var(--half-size)); }
     .bottom { transform: rotateX(-90deg) translateZ(var(--half-size)); }
+
+    @keyframes rotate3D-extreme {
+        0% { transform: rotateX(-15deg) rotateY(0deg); }
+        50% { transform: rotateX(15deg) rotateY(180deg); }
+        100% { transform: rotateX(-15deg) rotateY(360deg); }
+    }
+
+    @keyframes neon-pulse {
+        0% { border-color: #FF1493; opacity: 0.2; box-shadow: inset 0 0 10px #FF149344; }
+        100% { border-color: #00FFFF; opacity: 0.4; box-shadow: inset 0 0 25px #00FFFF66; }
+    }
 </style>
 
 @code {
-    [Parameter] public int Size { get; set; } = 200;
+    [Parameter] public int Size { get; set; } = 150;
+    
+    private readonly string[] _faces = { "front", "back", "left", "right", "top", "bottom" };
 }

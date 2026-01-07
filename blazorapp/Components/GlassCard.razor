@@ -1,18 +1,120 @@
 @* blazorapp/Components/GlassCard.razor *@
 
-<div class="glass-card @Class" style="@Style">
-    <div class="corner-accent"></div>
-    @ChildContent
+<div class="glass-card-wrapper @Class" style="@Style">
+    <div class="glass-card">
+        @* Corner Accents *@
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+        
+        @* The Scanline Effect *@
+        <div class="scanline"></div>
+
+        @* Holographic Shine *@
+        <div class="holo-shine"></div>
+
+        <div class="glass-content">
+            @ChildContent
+        </div>
+    </div>
 </div>
 
 <style>
-    .corner-accent {
+    .glass-card-wrapper {
+        position: relative;
+        padding: 5px; /* Space for the pulse overflow */
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .glass-card {
+        position: relative;
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 24px;
+        height: 100%;
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+
+    .glass-card-wrapper:hover {
+        transform: translateY(-8px) scale(1.02);
+    }
+
+    .glass-card-wrapper:hover .glass-card {
+        border-color: rgba(0, 255, 255, 0.5);
+        box-shadow: 
+            0 10px 40px -10px rgba(0, 0, 0, 0.5),
+            0 0 20px rgba(0, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    /* Scanline Logic */
+    .scanline {
         position: absolute;
-        top: 0; left: 0;
-        width: 15px; height: 15px;
-        border-top: 2px solid #FF1493;
-        border-left: 2px solid #FF1493;
-        opacity: 0.6;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background: linear-gradient(
+            to bottom,
+            transparent 0%,
+            rgba(0, 255, 255, 0.05) 50%,
+            transparent 100%
+        );
+        background-size: 100% 4px;
+        pointer-events: none;
+        opacity: 0.3;
+        animation: scanline-move 8s linear infinite;
+    }
+
+    /* Holographic Layer */
+    .holo-shine {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.05) 45%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 55%, transparent 100%);
+        background-size: 200% 200%;
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+        pointer-events: none;
+    }
+
+    .glass-card-wrapper:hover .holo-shine {
+        transform: translateX(100%);
+    }
+
+    /* Cyber Corners */
+    .corner {
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+    .tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+    .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+    .br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
+    .glass-card-wrapper:hover .corner {
+        border-color: #00FFFF;
+        width: 25px;
+        height: 25px;
+        box-shadow: 0 0 10px #00FFFF;
+    }
+
+    .glass-content {
+        position: relative;
+        z-index: 5;
+    }
+
+    @keyframes scanline-move {
+        from { background-position: 0 0; }
+        to { background-position: 0 100%; }
     }
 </style>
 

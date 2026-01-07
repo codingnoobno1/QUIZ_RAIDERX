@@ -1,0 +1,42 @@
+@* blazorapp/Components/CyberGrid.razor *@
+
+<div class="grid-container">
+    <div class="grid-mesh"></div>
+    <div class="grid-glow"></div>
+</div>
+
+<style>
+    .grid-container {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background: #000;
+        overflow: hidden;
+        perspective: 1000px;
+    }
+
+    .grid-mesh {
+        position: absolute;
+        width: 200vw;
+        height: 200vh;
+        top: -50%;
+        left: -50%;
+        background-image: 
+            linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 50px 50px;
+        transform: rotateX(45deg);
+        animation: grid-move 20s linear infinite;
+    }
+
+    .grid-glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 50%, transparent 0%, #000 80%);
+    }
+
+    @keyframes grid-move {
+        0% { transform: rotateX(45deg) translateY(0); }
+        100% { transform: rotateX(45deg) translateY(50px); }
+    }
+</style>

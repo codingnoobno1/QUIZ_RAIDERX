@@ -1,0 +1,42 @@
+@* blazorapp/Components/CyberTeamGrid.razor *@
+
+<div class="team-container">
+    <SectionTitle Title="ELITE SQUAD" />
+    
+    <div class="team-grid">
+        @foreach (var member in TeamMembers)
+        {
+            <CyberProfileCard Name="@member.Name" Role="@member.Role" />
+        }
+    </div>
+</div>
+
+<style>
+    .team-container {
+        padding: 4rem 1rem;
+    }
+
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+</style>
+
+@code {
+    public class Member { public string Name { get; set; } public string Role { get; set; } }
+
+    private List<Member> TeamMembers = new()
+    {
+        new Member { Name = "Tushar", Role = "Core Lead" },
+        new Member { Name = "Komal", Role = "Student Member" },
+        new Member { Name = "Lakshay Sharma", Role = "Student Member" },
+        new Member { Name = "Shivam Goyal", Role = "Student Member" },
+        new Member { Name = "Aman Verma", Role = "Student Member" },
+        new Member { Name = "Raghav Arora", Role = "Student Member" }
+        // ... more can be added here
+    };
+}

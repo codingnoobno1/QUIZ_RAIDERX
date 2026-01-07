@@ -16,6 +16,18 @@ This project folder contains the foundation for migrating the **QUIZ RAIDER X** 
 3. **Animations**: CSS animations work identically. Pure CSS animations are preferred for performance on mobile.
 4. **Icons**: You can use `Radzen` or `MudBlazor` icons, or continue using SVG/Font-icons via standard HTML.
 
+## 🎨 Extreme Component Portfolio
+
+I have built the following high-fidelity components with "Extreme Depth":
+
+- **`RotatingCube.razor`**: Enhanced with lighting reflections, dual-axis rotation, and neon-pulse borders.
+- **`GlassCard.razor`**: Upgraded with holographic shines, scrolling scanlines, and animated cyber-corners.
+- **`CyberGrid.razor`**: A moving 3D matrix background for that immersive "Digital Frontier" feel.
+- **`CyberHero.razor`**: A template that combines all extreme elements into a stunning landing section.
+
+## 📐 Design System Specs
+Detailed specifications for colors, typography, and animation logic can be found in `CyberDesignSystem.md`.
+
 ## 📦 Suggested UI Libraries
 - **MudBlazor**: (https://mudblazor.com/) Best for highly customizable Material Design.
 - **Radzen.Blazor**: Good for tables and data-heavy dashboards.

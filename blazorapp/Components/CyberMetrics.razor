@@ -1,0 +1,87 @@
+@* blazorapp/Components/CyberMetrics.razor *@
+
+<div class="metrics-dashboard">
+    <div class="main-orb-wrapper">
+        <InteractiveOrb Size="180" Label="CPU CORE" Value="72" />
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-item">
+            <GlassCard>
+                <div class="m-header">MEMORY</div>
+                <div class="m-value">4.2<small>GB</small></div>
+                <div class="m-bar"><div class="fill" style="width: 45%;"></div></div>
+            </GlassCard>
+        </div>
+        <div class="metric-item">
+            <GlassCard>
+                <div class="m-header">UPLINK</div>
+                <div class="m-value">128<small>MS</small></div>
+                <div class="m-bar"><div class="fill alt" style="width: 20%;"></div></div>
+            </GlassCard>
+        </div>
+    </div>
+</div>
+
+<style>
+    .metrics-dashboard {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        padding: 1rem;
+    }
+
+    .main-orb-wrapper {
+        margin: 2rem 0;
+        filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.2));
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .m-header {
+        font-family: monospace;
+        font-size: 0.65rem;
+        color: rgba(255,255,255,0.4);
+        letter-spacing: 2px;
+        margin-bottom: 0.5rem;
+    }
+
+    .m-value {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #fff;
+        margin-bottom: 1rem;
+    }
+
+    .m-value small {
+        font-size: 0.8rem;
+        color: #00FFFF;
+        margin-left: 5px;
+    }
+
+    .m-bar {
+        height: 2px;
+        background: rgba(255,255,255,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .m-bar .fill {
+        position: absolute;
+        height: 100%;
+        background: #00FFFF;
+        box-shadow: 0 0 10px #00FFFF;
+    }
+
+    .m-bar .fill.alt {
+        background: #FF1493;
+        box-shadow: 0 0 10px #FF1493;
+    }
+</style>

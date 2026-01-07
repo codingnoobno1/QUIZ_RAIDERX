@@ -1,32 +1,105 @@
 @* blazorapp/Components/Index.razor *@
 @page "/"
 
-<SectionTitle Title="DASHBOARD" />
+<CyberHero />
 
-<div class="grid">
-    <GlassCard>
-        <h3>Upcoming Quizzes</h3>
-        <p>You have 3 quizzes pending this week.</p>
-        <button class="neon-button">Start Now</button>
-    </GlassCard>
+<div class="main-content">
+    <div class="row">
+        <div class="col-left">
+            <CyberMetrics />
+        </div>
+        <div class="col-right">
+            <GlassCard>
+                <div class="content-header">
+                    <span class="icon">⚡</span>
+                    <h2>ACTIVE OPERATIONS</h2>
+                </div>
+                <ul class="ops-list">
+                    <li><span class="tag">01</span> Neural Network Training... <span class="status">RUNNING</span></li>
+                    <li><span class="tag">02</span> Encryption Protocol Delta... <span class="status">RUNNING</span></li>
+                    <li><span class="tag">03</span> Database Sync Alpha... <span class="status pulse">PENDING</span></li>
+                </ul>
+                <button class="neon-button full">GENERATE REPORT</button>
+            </GlassCard>
+        </div>
+    </div>
 
-    <GlassCard>
-        <h3>Recent Projects</h3>
-        <p>PIXEL DROID AI is now 80% complete.</p>
-        <button class="neon-button">View Details</button>
-    </GlassCard>
+    <CyberTeamGrid />
 </div>
 
 <style>
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-top: 3rem;
+    .main-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
     }
 
-    h3 {
-        color: #00FFFF;
-        margin-top: 0;
+    .row {
+        display: flex;
+        flex-direction: column;
+        gap: 3rem;
+        margin-bottom: 5rem;
+    }
+
+    @@media (min-width: 960px) {
+        .row {
+            flex-direction: row;
+            align-items: flex-start;
+        }
+        .col-left { flex: 1; }
+        .col-right { flex: 1.5; }
+    }
+
+    .content-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+        padding-bottom: 1rem;
+    }
+
+    .content-header h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        color: #fff;
+        font-size: 1.2rem;
+        letter-spacing: 3px;
+        margin: 0;
+    }
+
+    .ops-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 2rem;
+    }
+
+    .ops-list li {
+        background: rgba(255,255,255,0.02);
+        margin-bottom: 10px;
+        padding: 15px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        font-family: monospace;
+        font-size: 0.85rem;
+        border-left: 2px solid transparent;
+        transition: all 0.3s;
+    }
+
+    .ops-list li:hover {
+        background: rgba(0, 255, 255, 0.05);
+        border-left-color: #00FFFF;
+        padding-left: 20px;
+    }
+
+    .tag { color: #FF1493; margin-right: 15px; font-weight: bold; }
+    .status { margin-left: auto; color: #00FFFF; font-weight: bold; font-size: 0.7rem; }
+    .status.pulse { animation: flicker 1s infinite; color: #FF1493; }
+
+    .neon-button.full { width: 100%; margin-top: 1rem; }
+
+    @keyframes flicker {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
     }
 </style>

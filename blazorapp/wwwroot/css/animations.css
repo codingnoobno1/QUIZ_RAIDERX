@@ -1,46 +1,121 @@
 /* blazorapp/wwwroot/css/animations.css */
 
+/* 🌌 Core Cyber Animations */
+
 @keyframes pulse-orb {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
-    box-shadow: 0 0 60px 30px rgba(0, 255, 255, 0.4), 
-                0 0 100px 60px rgba(0, 255, 255, 0.2),
-                0 0 140px 90px rgba(0, 255, 255, 0.1);
+    box-shadow: 0 0 60px 30px rgba(0, 255, 255, 0.4),
+      0 0 100px 60px rgba(0, 255, 255, 0.2),
+      0 0 140px 90px rgba(0, 255, 255, 0.1);
   }
+
   50% {
     transform: scale(1.1);
-    box-shadow: 0 0 80px 40px rgba(0, 255, 255, 0.6), 
-                0 0 120px 80px rgba(0, 255, 255, 0.3),
-                0 0 160px 100px rgba(0, 255, 255, 0.15);
+    box-shadow: 0 0 80px 40px rgba(0, 255, 255, 0.6),
+      0 0 120px 80px rgba(0, 255, 255, 0.3),
+      0 0 160px 100px rgba(0, 255, 255, 0.15);
   }
 }
 
 @keyframes rotate-ring {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-@keyframes rotate3D-cube {
-    from { transform: rotateY(0deg); }
-    to { transform: rotateY(360deg); }
+/* 🧊 Extreme Cube Rotation */
+@keyframes rotate3D-extreme {
+  0% {
+    transform: rotateX(-15deg) rotateY(0deg);
+  }
+
+  50% {
+    transform: rotateX(15deg) rotateY(180deg);
+  }
+
+  100% {
+    transform: rotateX(-15deg) rotateY(360deg);
+  }
 }
 
-@keyframes colorCycle-cube {
-    0% { border-color: #FF1493; color: #FF1493; }
-    50% { border-color: #00FFFF; color: #00FFFF; }
-    100% { border-color: #FF1493; color: #FF1493; }
+@keyframes neon-pulse {
+  0% {
+    border-color: #FF1493;
+    opacity: 0.2;
+    box-shadow: inset 0 0 10px #FF149344;
+  }
+
+  100% {
+    border-color: #00FFFF;
+    opacity: 0.4;
+    box-shadow: inset 0 0 25px #00FFFF66;
+  }
 }
 
-@keyframes scanline-effect {
-  0% { top: -100%; }
-  100% { top: 100%; }
+/* 📟 Glitch & Scanline */
+@keyframes scanline-move {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 0 100%;
+  }
 }
 
 @keyframes glitch-text {
-  0% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
-  100% { transform: translate(0); }
+  0% {
+    transform: translate(0);
+  }
+
+  20% {
+    transform: translate(-2px, 2px);
+  }
+
+  40% {
+    transform: translate(-2px, -2px);
+  }
+
+  60% {
+    transform: translate(2px, 2px);
+  }
+
+  80% {
+    transform: translate(2px, -2px);
+  }
+
+  100% {
+    transform: translate(0);
+  }
+}
+
+/* 🌐 Grid Movement */
+@keyframes grid-move {
+  0% {
+    transform: rotateX(45deg) translateY(0);
+  }
+
+  100% {
+    transform: rotateX(45deg) translateY(50px);
+  }
+}
+
+/* ✨ Floating Interaction */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
 }

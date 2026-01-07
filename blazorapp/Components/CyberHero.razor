@@ -1,0 +1,100 @@
+@* blazorapp/Components/CyberHero.razor *@
+
+<div class="hero-section">
+    <CyberGrid />
+    
+    <div class="hero-content">
+        <div class="cube-wrapper">
+            <RotatingCube Size="180" />
+        </div>
+
+        <div class="text-wrapper">
+            <SectionTitle Title="QUIZ RAIDER X" />
+            <p class="subtitle">THE NEXT EVOLUTION OF CODE MASTERY</p>
+            
+            <div class="cta-group">
+                <button class="neon-button primary">INITIALIZE CORE</button>
+                <button class="neon-button secondary">VIEW ARCHIVES</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hero-section {
+        position: relative;
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        overflow: hidden;
+    }
+
+    .hero-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4rem;
+        z-index: 10;
+        max-width: 1200px;
+        width: 100%;
+    }
+
+    @@media (min-width: 960px) {
+        .hero-content {
+            flex-direction: row-reverse;
+            justify-content: space-around;
+            text-align: left;
+        }
+        
+        .hero-content .text-wrapper {
+            align-items: flex-start;
+            text-align: left;
+        }
+    }
+
+    .text-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-family: monospace;
+        letter-spacing: 4px;
+        font-size: 1.1rem;
+        margin-top: -1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .cta-group {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .neon-button.secondary {
+        border-color: #FF1493;
+        color: #FF1493;
+    }
+
+    .neon-button.secondary:hover {
+        background-color: #FF1493;
+        color: #000;
+        box-shadow: 0 0 25px rgba(255, 20, 147, 0.5);
+    }
+
+    .cube-wrapper {
+        filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.3));
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+</style>

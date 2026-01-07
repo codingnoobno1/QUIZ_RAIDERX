@@ -1,0 +1,171 @@
+@* blazorapp/Components/CyberProfileCard.razor *@
+
+<div class="profile-card-container">
+    <GlassCard>
+        <div class="card-inner">
+            <div class="avatar-section">
+                <div class="avatar-frame">
+                    <div class="frame-spin"></div>
+                    <div class="initials">@GetInitials(Name)</div>
+                </div>
+                <div class="badge">PRO</div>
+            </div>
+
+            <div class="info-section">
+                <h4 class="name">@Name</h4>
+                <p class="role">@Role</p>
+                
+                <div class="stats-row">
+                    <div class="stat">
+                        <span class="val">12</span>
+                        <span class="lab">Projects</span>
+                    </div>
+                    <div class="sep"></div>
+                    <div class="stat">
+                        <span class="val">88%</span>
+                        <span class="lab">Rank</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-footer">
+                <button class="neon-button-mini">VIEW PROFILE</button>
+            </div>
+        </div>
+    </GlassCard>
+</div>
+
+<style>
+    .profile-card-container {
+        width: 100%;
+        max-width: 320px;
+        margin: 10px auto;
+    }
+
+    .card-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .avatar-section {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .avatar-frame {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .frame-spin {
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        border-top-color: #00FFFF;
+        border-right-color: #FF1493;
+        animation: rotate-ring 3s linear infinite;
+    }
+
+    .initials {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #fff;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .badge {
+        position: absolute;
+        bottom: 0;
+        right: -5px;
+        background: #FF1493;
+        color: white;
+        font-size: 0.6rem;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #FF1493;
+    }
+
+    .info-section {
+        width: 100%;
+    }
+
+    .name {
+        color: #fff;
+        font-size: 1.25rem;
+        margin: 0;
+        font-family: 'Space Grotesk', sans-serif;
+        letter-spacing: 1px;
+    }
+
+    .role {
+        color: #00FFFF;
+        font-family: monospace;
+        font-size: 0.8rem;
+        margin: 5px 0 15px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .stats-row {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        background: rgba(0,0,0,0.3);
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .stat {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .val { color: #fff; font-weight: 800; font-size: 0.9rem; }
+    .lab { color: rgba(255,255,255,0.4); font-size: 0.6rem; text-transform: uppercase; }
+
+    .sep { width: 1px; background: rgba(255,255,255,0.1); }
+
+    .neon-button-mini {
+        background: transparent;
+        border: 1px solid #00FFFF;
+        color: #00FFFF;
+        font-size: 0.7rem;
+        padding: 8px 20px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .neon-button-mini:hover {
+        background: #00FFFF;
+        color: #000;
+        box-shadow: 0 0 15px #00FFFF;
+    }
+</style>
+
+@code {
+    [Parameter] public string Name { get; set; } = "SYSTEM ADMIN";
+    [Parameter] public string Role { get; set; } = "LEVEL 1 CORE";
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "??";
+        var parts = name.Split(' ');
+        if (parts.Length == 1) return name.Substring(0, Math.Min(2, name.Length)).ToUpper();
+        return (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper();
+    }
+}
