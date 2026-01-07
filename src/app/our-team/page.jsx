@@ -22,7 +22,21 @@ const studentMembers = [
     { name: 'Pranav Bali', role: 'Student Member' },
     { name: 'Ishan Dua', role: 'Student Member' },
     { name: 'Harks Kaur', role: 'Student Member' },
-    { name: 'Ayush Patial', role: 'Student Member' }
+    { name: 'Ayush Patial', role: 'Student Member' },
+    { name: 'Sanchit', role: 'Student Member' },
+    { name: 'Parth', role: 'Student Member' },
+    { name: 'Pavneet', role: 'Student Member' },
+    { name: 'Shivam Goyal', role: 'Student Member' },
+    { name: 'Aman Verma', role: 'Student Member' },
+    { name: 'Sparsh Chopra', role: 'Student Member' },
+    { name: 'Avneet Kaushal', role: 'Student Member' },
+    { name: 'Chand Suri', role: 'Student Member' },
+    { name: 'Yash Singal', role: 'Student Member' },
+    { name: 'Anant Shrivastav', role: 'Student Member' },
+    { name: 'Aastik', role: 'Student Member' },
+    { name: 'Harshitpal', role: 'Student Member' },
+    { name: 'Arnav Gupta', role: 'Student Member' },
+    { name: 'Rahul Brajatia', role: 'Student Member' },
 ];
 
 // Helper to get initials
