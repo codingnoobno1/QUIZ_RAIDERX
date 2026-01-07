@@ -2,18 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  IconButton,
-  Divider,
-  Box,
-  Typography,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import IconButton from '@mui/material/IconButton';
+import Divider from '@mui/material/Divider';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import {
   LayoutDashboard,
   HelpCircle,

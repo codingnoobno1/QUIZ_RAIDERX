@@ -1,15 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import {
-    Box,
-    Card,
-    CardContent,
-    Typography,
-    Chip,
-    Button,
-    Stack,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
 import { motion } from 'framer-motion';
 import { BookOpen, Clock, Award, Calendar, Play } from 'lucide-react';
 import { useRouter } from 'next/navigation';

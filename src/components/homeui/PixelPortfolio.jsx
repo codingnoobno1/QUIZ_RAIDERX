@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+'use client';
+
+import dynamic from 'next/dynamic';
+import React from 'react';
 import { Box } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+
+// Section Imports
 import Header from './sections/Header';
 import Hero from './sections/Hero';
 import Features from './sections/Features';
@@ -10,6 +15,8 @@ import Research from './sections/Research';
 import PortfolioResearches from './sections/PortfolioResearches';
 import GMeets from './sections/GMeets';
 import Footer from './sections/Footer';
+
+// Animation Imports
 import CodeFlowBackground from './animations/CodeFlowBackground';
 import FloatingBlobs from './animations/FloatingBlobs';
 import GlowCursor from './animations/GlowCursor';
@@ -17,14 +24,10 @@ import FloatingCodeOverlay from './animations/FloatingCodeOverlay';
 import CodeSpectrum from '../code-spectrum/CodeSpectrum';
 import TechMarquee from './animations/TechMarquee';
 
-import dynamic from 'next/dynamic';
-
-const SplashLoader = dynamic(() => import('./animations/SplashLoader'), { ssr: false });
+// Dynamic Imports with SSR disabled (InteractiveRobot only)
 const InteractiveRobot = dynamic(() => import('./animations/InteractiveRobot'), { ssr: false });
 
 const PixelPortfolio = () => {
-    const [loading, setLoading] = useState(true);
-
     return (
         <Box sx={{
             backgroundColor: '#050505',
@@ -34,40 +37,30 @@ const PixelPortfolio = () => {
             overflowX: 'hidden',
             position: 'relative'
         }}>
-            <AnimatePresence mode="wait">
-                {loading && (
-                    <Box key="loader" sx={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
-                        <SplashLoader onComplete={() => setLoading(false)} />
-                    </Box>
-                )}
-            </AnimatePresence>
-
             <CodeFlowBackground />
             <FloatingBlobs />
             <GlowCursor />
             <FloatingCodeOverlay />
 
-            {!loading && (
-                <motion.div
-                    key="content"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 1.2 }}
-                >
-                    <Header />
-                    <TechMarquee />
-                    <Hero />
-                    <Features />
-                    <CodeSpectrum />
-                    <Stats />
-                    <Projects />
-                    <Research />
-                    <PortfolioResearches />
-                    <GMeets />
-                    <Footer />
-                    <InteractiveRobot />
-                </motion.div>
-            )}
+            <motion.div
+                key="content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.2 }}
+            >
+                <Header />
+                <TechMarquee />
+                <Hero />
+                <Features />
+                <CodeSpectrum />
+                <Stats />
+                <Projects />
+                <Research />
+                <PortfolioResearches />
+                <GMeets />
+                <Footer />
+                <InteractiveRobot />
+            </motion.div>
         </Box>
     );
 };

@@ -1,7 +1,8 @@
 // /app/layouts/ResponsiveLayout.jsx
 'use client';
 
-import { useMediaQuery, useTheme } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import DesktopLayout from './DesktopLayout';
 import MobileLayout from './MobileLayout';
 

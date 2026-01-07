@@ -65,11 +65,12 @@ const LottieWrapper = ({ animationData, width = '100%', height = 'auto', loop = 
                 border: '2px solid rgba(0, 255, 255, 0.1)',
                 borderTopColor: '#00FFFF',
                 borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
+                animation: 'spin 1s linear infinite',
+                '@keyframes spin': {
+                    '0%': { transform: 'rotate(0deg)' },
+                    '100%': { transform: 'rotate(360deg)' }
+                }
             }} />
-            <style jsx>{`
-                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            `}</style>
         </Box>
     );
 

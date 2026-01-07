@@ -2,18 +2,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Typography,
-  Paper,
-  Box,
-  TextField,
-  Button,
-  Grid,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
-} from '@mui/material';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 export default function UploadNotes() {

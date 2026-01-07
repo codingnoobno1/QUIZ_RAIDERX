@@ -2,26 +2,24 @@
 import EventQuizSection from './EventQuizSection';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Grid,
-  Button,
-  Typography,
-  CircularProgress,
-  Box,
-  Dialog,
-  DialogContent,
-  DialogActions,
-  DialogTitle,
-  Alert,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Stack,
-  Chip,
-  Fade,
-  Paper
-} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import DialogTitle from '@mui/material/DialogTitle';
+import Alert from '@mui/material/Alert';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import Fade from '@mui/material/Fade';
+import Paper from '@mui/material/Paper';
 import { School, Class, Subject as SubjectIcon } from '@mui/icons-material';
 import FacultyCard from '@/components/ui/profilecard';
 import QuizCard from '@/components/ui/QuizCard';

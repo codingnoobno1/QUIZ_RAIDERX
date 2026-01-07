@@ -1,20 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Grid,
-  Paper,
-  Button,
-  Card,
-  CardContent,
-  CardActions,
-  Chip,
-  CircularProgress,
-  Alert,
-  CardMedia,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import CardMedia from '@mui/material/CardMedia';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 
 export default function EventsPage() {
@@ -77,7 +75,7 @@ export default function EventsPage() {
               />
               <CardContent>
                 <Typography variant="h6" fontWeight="bold" mb={1}>{event.title}</Typography>
-                
+
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#aaa' }}>
                   <Calendar size={16} />
                   <Typography variant="body2">{new Date(event.date).toLocaleDateString()}</Typography>

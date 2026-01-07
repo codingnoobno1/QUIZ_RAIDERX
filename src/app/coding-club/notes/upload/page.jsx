@@ -2,7 +2,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Paper, Alert } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Paper from '@mui/material/Paper';
+import Alert from '@mui/material/Alert';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';

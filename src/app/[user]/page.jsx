@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import {
-  Box,
-  Typography,
-  Button,
-  CircularProgress,
-  Paper,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Paper from '@mui/material/Paper';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import LogoutIcon from '@mui/icons-material/Logout';
 
 export default function DashboardPage() {

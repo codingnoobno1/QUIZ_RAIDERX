@@ -1,7 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, IconButton, Avatar, Menu, MenuItem, Fade } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Avatar from '@mui/material/Avatar';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Fade from '@mui/material/Fade';
 import {
     Login as LoginIcon,
     Dashboard as DashboardIcon,

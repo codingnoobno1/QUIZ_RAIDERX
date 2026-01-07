@@ -1,16 +1,14 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Typography,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogActions,
-  Chip,
-  Stack,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
 import { useState } from 'react';
 
 export default function QuizSelection({ selectedFaculty, setSelectedFaculty }) {

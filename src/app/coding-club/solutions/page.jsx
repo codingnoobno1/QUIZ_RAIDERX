@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
-import { Typography, Box } from '@mui/material';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 
 export default function SolutionsPage() {
   return (

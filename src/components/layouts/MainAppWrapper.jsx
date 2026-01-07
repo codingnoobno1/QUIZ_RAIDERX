@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { Box, CssBaseline } from '@mui/material';
+import Box from '@mui/material/Box';
+import CssBaseline from '@mui/material/CssBaseline';
 import UserSidebar from '@/components/UserSidebar';
 import { LayoutDashboard, ClipboardCheck, User, Code, FolderKanban, FileText, Calendar, Notebook } from 'lucide-react';
 
@@ -27,7 +28,7 @@ export default function MainAppWrapper({ children }) {
   // Don't show the sidebar and main layout on login/register pages
   // For debugging, you can uncomment the line below to see the current pathname
   // console.log('Current pathname:', pathname);
-  if (NO_LAYOUT_PAGES.some(p => pathname.startsWith(p))) {
+  if (NO_LAYOUT_PAGES.includes(pathname)) {
     return <>{children}</>;
   }
 

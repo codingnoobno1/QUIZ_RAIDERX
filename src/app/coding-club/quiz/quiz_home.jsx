@@ -1,16 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
-import {
-  Grid,
-  CircularProgress,
-  Box,
-  Typography,
-  Alert,
-  Container,
-  Avatar,
-  Tooltip,
-  Badge,
-} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import Container from '@mui/material/Container';
+import Avatar from '@mui/material/Avatar';
+import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import FacultyCard from '@/components/ui/profilecard'; // Make sure this uses the Unacademy style

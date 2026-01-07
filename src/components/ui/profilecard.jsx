@@ -1,16 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Avatar,
-  Chip,
-  Grid,
-  Button,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Avatar from '@mui/material/Avatar';
+import Chip from '@mui/material/Chip';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
 import { motion } from 'framer-motion';
 import { Sparkles, User, BookOpenCheck } from 'lucide-react';
 import CardFullscreen from './CardFullscreen';

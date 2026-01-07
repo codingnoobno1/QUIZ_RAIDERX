@@ -2,16 +2,15 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Box,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Divider,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -69,8 +68,7 @@ export default function UserSidebar({
               enterDelay={500}
               leaveDelay={200}
             >
-              <ListItem
-                button
+              <ListItemButton
                 component={Link}
                 href={path}
                 sx={{
@@ -117,7 +115,7 @@ export default function UserSidebar({
                     }
                   />
                 )}
-              </ListItem>
+              </ListItemButton>
             </Tooltip>
           );
         })}

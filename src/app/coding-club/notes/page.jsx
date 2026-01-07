@@ -2,7 +2,11 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, Paper, Button, Divider } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
 import Link from 'next/link';
 import NotesList from './NotesList';
 import PixelAdminNotes from './PixelAdminNotes';

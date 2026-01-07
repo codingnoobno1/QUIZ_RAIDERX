@@ -1,7 +1,5 @@
-'use client';
-
-import PixelPortfolio from '@/components/homeui/PixelPortfolio';
+import HomeClientWrapper from './HomeClientWrapper';
 
 export default function Home() {
-    return <PixelPortfolio />;
+    return <HomeClientWrapper />;
 }

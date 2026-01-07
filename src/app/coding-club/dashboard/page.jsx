@@ -1,15 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Grid,
-  Paper,
-  Avatar,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Avatar from '@mui/material/Avatar';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 import { useSession } from 'next-auth/react';
 import { Book, Code, Calendar, Award } from 'lucide-react';
 

@@ -1,14 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Toolbar,
-  Typography,
-  Button,
-  IconButton,
-  Box,
-  Container,
-} from '@mui/material';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
 import { LayoutDashboard, Terminal, SlidersHorizontal } from 'lucide-react';
 
 import QuestionCard from '@/components/code/QuestionCard';
@@ -31,7 +29,7 @@ export default function HomePage() {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#fff' }}>
-      
+
 
       {/* Main Content */}
       <Container maxWidth="lg" sx={{ py: 4, flexGrow: 1, overflowY: 'auto' }}>

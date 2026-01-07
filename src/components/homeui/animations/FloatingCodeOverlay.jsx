@@ -20,6 +20,14 @@ const snippets = [
 ];
 
 const FloatingCodeOverlay = () => {
+    const [isMounted, setIsMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) return null;
+
     return (
         <Box sx={{
             position: 'fixed',

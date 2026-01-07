@@ -55,13 +55,19 @@ const LiveTerminalFeed = () => {
             ))}
             <Box sx={{ display: 'flex', mt: 1 }}>
                 <Typography sx={{ fontSize: 'inherit', fontFamily: 'inherit', color: '#FF1493' }}>&gt;</Typography>
-                <Box sx={{ width: 6, height: 12, bgcolor: '#00FFFF', ml: 1, animation: 'blink 1s step-end infinite' }} />
+                <Box
+                    sx={{
+                        width: 6,
+                        height: 12,
+                        bgcolor: '#00FFFF',
+                        ml: 1,
+                        animation: 'blink 1s step-end infinite',
+                        '@keyframes blink': {
+                            '50%': { opacity: 0 }
+                        }
+                    }}
+                />
             </Box>
-            <style jsx>{`
-              @keyframes blink {
-                50% { opacity: 0; }
-              }
-            `}</style>
         </Box>
     );
 };

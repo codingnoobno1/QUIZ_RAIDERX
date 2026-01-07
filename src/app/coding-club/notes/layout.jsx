@@ -2,15 +2,13 @@
 'use client';
 
 import React from 'react';
-import {
-  Box,
-  CssBaseline,
-  Paper,
-  BottomNavigation,
-  BottomNavigationAction,
-  Typography,
-  Container,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import CssBaseline from '@mui/material/CssBaseline';
+import Paper from '@mui/material/Paper';
+import BottomNavigation from '@mui/material/BottomNavigation';
+import BottomNavigationAction from '@mui/material/BottomNavigationAction';
+import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
 import {
   AdminPanelSettings as AdminIcon,
   People as PeopleIcon,
