@@ -1,0 +1,59 @@
+@* blazorapp/Components/SectionTitle.razor *@
+
+<div class="section-title-container">
+    <h2 class="glitch-title" data-text="@Title">
+        @Title
+    </h2>
+    <div class="title-underline"></div>
+</div>
+
+<style>
+    .section-title-container {
+        position: relative;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .glitch-title {
+        font-weight: 900;
+        font-family: 'Space Grotesk', sans-serif;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 8px;
+        position: relative;
+        display: inline-block;
+        font-size: 3rem;
+    }
+
+    .glitch-title::before, .glitch-title::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: black;
+    }
+
+    .glitch-title::before {
+        color: #00FFFF;
+        z-index: -1;
+        left: -2px;
+        animation: glitch-text 0.4s cubic-bezier(.25,.46,.45,.94) both infinite;
+    }
+
+    .glitch-title::after {
+        color: #FF1493;
+        z-index: -2;
+        left: 2px;
+        animation: glitch-text 0.4s cubic-bezier(.25,.46,.45,.94) reverse both infinite;
+    }
+
+    .title-underline {
+        width: 100px; height: 1px;
+        background: linear-gradient(90deg, transparent, #FF1493, #00FFFF, transparent);
+        margin: 0.5rem auto 0;
+        box-shadow: 0 0 15px rgba(255, 20, 147, 0.5);
+    }
+</style>
+
+@code {
+    [Parameter] public string Title { get; set; }
+}

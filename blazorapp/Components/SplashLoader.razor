@@ -1,0 +1,124 @@
+@* blazorapp/Components/SplashLoader.razor *@
+@using System.Timers
+
+@if (Show)
+{
+    <div class="splash-overlay @(FadeOut ? "fade-out" : "")">
+        <div class="animated-orb">
+            <div class="outer-ring"></div>
+            <div class="inner-core"></div>
+            <div class="center-glow"></div>
+        </div>
+
+        <div class="loading-text">
+            INITIATING_PIXEL_DROID_@Progress%
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" style="width: @(Progress)%"></div>
+        </div>
+    </div>
+}
+
+<style>
+    .splash-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: #050505;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.6s ease;
+    }
+
+    .fade-out {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .animated-orb {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .outer-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #00ffff;
+        animation: rotate-ring 2s linear infinite;
+    }
+
+    .inner-core {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #00ffff, #006666, #003333);
+        animation: pulse-orb 2s ease-in-out infinite;
+    }
+
+    .center-glow {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #ffffff, #00ffff);
+        filter: blur(5px);
+    }
+
+    .loading-text {
+        color: #00ffff;
+        margin-top: 2rem;
+        font-family: monospace;
+        letter-spacing: 2px;
+    }
+
+    .progress-container {
+        width: 300px;
+        margin-top: 1.5rem;
+        height: 4px;
+        background: rgba(0, 255, 255, 0.2);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: #00ffff;
+        transition: width 0.1s ease-out;
+        box-shadow: 0 0 10px #00ffff;
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnComplete { get; set; }
+    private int Progress { get; set; } = 0;
+    private bool Show { get; set; } = true;
+    private bool FadeOut { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        while (Progress < 100)
+        {
+            await Task.Delay(40);
+            Progress++;
+            StateHasChanged();
+        }
+
+        await Task.Delay(600);
+        FadeOut = true;
+        StateHasChanged();
+        
+        await Task.Delay(600);
+        Show = false;
+        await OnComplete.InvokeAsync();
+    }
+}

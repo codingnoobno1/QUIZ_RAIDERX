@@ -1,0 +1,23 @@
+@* blazorapp/Components/GlassCard.razor *@
+
+<div class="glass-card @Class" style="@Style">
+    <div class="corner-accent"></div>
+    @ChildContent
+</div>
+
+<style>
+    .corner-accent {
+        position: absolute;
+        top: 0; left: 0;
+        width: 15px; height: 15px;
+        border-top: 2px solid #FF1493;
+        border-left: 2px solid #FF1493;
+        opacity: 0.6;
+    }
+</style>
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public string Class { get; set; }
+    [Parameter] public string Style { get; set; }
+}

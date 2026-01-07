@@ -1,0 +1,74 @@
+@* blazorapp/Shared/MainLayout.razor *@
+@inherits LayoutComponentBase
+
+<div class="page">
+    <SplashLoader OnComplete="OnLoadingFinished" />
+
+    @if (LoadingFinished)
+    {
+        <div class="sidebar">
+            <RotatingCube Size="40" />
+            <nav>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        Dashboard
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="quiz">
+                        Quiz
+                    </NavLink>
+                </div>
+            </nav>
+        </div>
+
+        <main>
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    }
+</div>
+
+<style>
+    .sidebar {
+        width: 260px;
+        background: #111;
+        height: 100vh;
+        position: fixed;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 2rem;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    main {
+        margin-left: 260px;
+        padding: 2rem;
+        min-height: 100vh;
+    }
+
+    .nav-link {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        padding: 1rem;
+        display: block;
+        transition: all 0.3s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        color: #00FFFF;
+        text-shadow: 0 0 10px #00FFFF;
+    }
+</style>
+
+@code {
+    private bool LoadingFinished { get; set; } = false;
+
+    private void OnLoadingFinished()
+    {
+        LoadingFinished = true;
+        StateHasChanged();
+    }
+}

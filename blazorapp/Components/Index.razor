@@ -1,0 +1,32 @@
+@* blazorapp/Components/Index.razor *@
+@page "/"
+
+<SectionTitle Title="DASHBOARD" />
+
+<div class="grid">
+    <GlassCard>
+        <h3>Upcoming Quizzes</h3>
+        <p>You have 3 quizzes pending this week.</p>
+        <button class="neon-button">Start Now</button>
+    </GlassCard>
+
+    <GlassCard>
+        <h3>Recent Projects</h3>
+        <p>PIXEL DROID AI is now 80% complete.</p>
+        <button class="neon-button">View Details</button>
+    </GlassCard>
+</div>
+
+<style>
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    h3 {
+        color: #00FFFF;
+        margin-top: 0;
+    }
+</style>
