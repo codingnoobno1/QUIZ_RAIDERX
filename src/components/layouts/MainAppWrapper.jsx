@@ -8,7 +8,28 @@ import UserSidebar from '@/components/UserSidebar';
 import { LayoutDashboard, ClipboardCheck, User, Code, FolderKanban, FileText, Calendar, Notebook } from 'lucide-react';
 
 // Pages where the main layout (including sidebar) should NOT be shown
-const NO_LAYOUT_PAGES = ['/', '/login', '/Login', '/Register', '/coding-club'];
+// These are public pages accessible without login OR pages with their own layout
+const NO_LAYOUT_PAGES = [
+  '/',
+  '/login',
+  '/Login',
+  '/Register',
+  '/coding-club',
+  '/our-team',
+  '/submit-research',
+];
+
+// Additional check for dynamic routes that have their own layout (like [user])
+const hasOwnLayout = (pathname) => {
+  // The [user] dynamic route has its own ResponsiveLayout with Sidebar
+  // Check if it's a single-segment path that's not in NO_LAYOUT_PAGES
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length === 1 && !NO_LAYOUT_PAGES.includes(pathname)) {
+    // This catches /welcome, /username, etc. which go to [user] route
+    return true;
+  }
+  return false;
+};
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/coding-club/dashboard' },
@@ -25,10 +46,10 @@ const navItems = [
 export default function MainAppWrapper({ children }) {
   const pathname = usePathname();
 
-  // Don't show the sidebar and main layout on login/register pages
-  // For debugging, you can uncomment the line below to see the current pathname
-  // console.log('Current pathname:', pathname);
-  if (NO_LAYOUT_PAGES.includes(pathname)) {
+  // Don't show the sidebar and main layout on:
+  // 1. Explicitly listed pages (login, register, public pages)
+  // 2. Pages that have their own layout (like [user] dynamic routes)
+  if (NO_LAYOUT_PAGES.includes(pathname) || hasOwnLayout(pathname)) {
     return <>{children}</>;
   }
 
