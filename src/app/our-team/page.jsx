@@ -37,6 +37,8 @@ const studentMembers = [
     { name: 'Harshitpal', role: 'Student Member' },
     { name: 'Arnav Gupta', role: 'Student Member' },
     { name: 'Rahul Brajatia', role: 'Student Member' },
+    { name: 'Raghav Arora', role: 'Student Member' },
+    { name: 'Karan Prashar', role: 'Student Member' },
 ];
 
 // Helper to get initials
