@@ -1,0 +1,163 @@
+@* blazorapp/Components/BlazorDashboard.razor *@
+@page "/dashboard-reference"
+
+<div class="dashboard-root">
+    <CyberGrid />
+
+    <div class="content-wrapper">
+        <SectionTitle Title="CORE COMMAND" />
+
+        <div class="top-metrics">
+            <div class="metric-card">
+                <CyberGauge Size="150" Value="85" Label="UPLINK" Color="#00FFFF" />
+            </div>
+            <div class="metric-card">
+                <InteractiveOrb Size="120" Label="POWER" Value="92" />
+            </div>
+            <div class="metric-card">
+                <CyberGauge Size="150" Value="64" Label="MEMORY" Color="#FF1493" />
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Column: Operations -->
+            <div class="col">
+                <GlassCard Style="height: auto;">
+                    <div class="header">
+                        <span class="pulse-dot"></span>
+                        <h4>ACTIVE OPERATIONS</h4>
+                    </div>
+                    <ul class="status-list">
+                        <li><span class="id">Q-784</span> Quiz Engine Alpha <span class="tag">ACTIVE</span></li>
+                        <li><span class="id">P-102</span> Project Raider Sync <span class="tag">SYNCING</span></li>
+                        <li><span class="id">R-009</span> Research Pipeline <span class="tag ok">COMPLETE</span></li>
+                    </ul>
+                    <MatrixTerminal MaxLines="6" />
+                </GlassCard>
+            </div>
+
+            <!-- Right Column: Elite Team -->
+            <div class="col">
+                <GlassCard>
+                    <div class="header">
+                        <h4>ELITE SQUAD</h4>
+                        <span class="count">26 ACTIVE</span>
+                    </div>
+                    <div class="team-mini-grid">
+                        <CyberProfileCard Name="Tushar" Role="Core Admin" />
+                        <CyberProfileCard Name="Komal" Role="Lead Member" />
+                    </div>
+                    <button class="neon-button full-width">ACCESS ALL FILES</button>
+                </GlassCard>
+            </div>
+        </div>
+        
+        <div class="footer-stats">
+            <GlassCard Style="padding: 10px 20px;">
+                <div class="stat-line">
+                    <span>SYSTEM_UPTIME: 14:02:44:88</span>
+                    <span class="divider">|</span>
+                    <span>LATENCY: 12ms</span>
+                    <span class="divider">|</span>
+                    <span>USER_AUTH: VERIFIED</span>
+                </div>
+            </GlassCard>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-root {
+        position: relative;
+        min-height: 100vh;
+        color: white;
+        padding: 2rem;
+    }
+
+    .content-wrapper {
+        position: relative;
+        z-index: 10;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .top-metrics {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        flex-wrap: wrap;
+        margin-bottom: 4rem;
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+
+    .header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 10px;
+    }
+
+    .header h4 {
+        margin: 0;
+        font-family: 'Space Grotesk', sans-serif;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background: #00FFFF;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #00FFFF;
+        animation: pulse 1.5s infinite;
+    }
+
+    .status-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1.5rem;
+        font-family: monospace;
+        font-size: 0.8rem;
+    }
+
+    .status-list li {
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        border-radius: 4px;
+    }
+
+    .id { color: #FF1493; margin-right: 10px; font-weight: bold; }
+    .tag { margin-left: auto; color: #00FFFF; font-size: 0.7rem; font-weight: bold; }
+    .tag.ok { color: #50fa7b; }
+
+    .full-width { width: 100%; margin-top: 1rem; }
+
+    .footer-stats {
+        margin-top: 2rem;
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        text-align: center;
+    }
+
+    .divider { margin: 0 15px; color: #FF1493; }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.5); opacity: 0.5; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>

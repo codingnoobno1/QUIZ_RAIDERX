@@ -1,0 +1,89 @@
+@* blazorapp/Components/CyberGauge.razor *@
+
+<div class="gauge-wrapper" style="--size: @(Size)px; --percent: @(Value); --color: @(Color);">
+    <svg viewBox="0 0 100 100">
+        <!-- Background Track -->
+        <circle class="track" cx="50" cy="50" r="45" />
+        <!-- Progress Bar -->
+        <circle class="progress" cx="50" cy="50" r="45" 
+                style="stroke-dasharray: @(2 * Math.PI * 45); 
+                       stroke-dashoffset: @(2 * Math.PI * 45 * (1 - Value / 100.0));" />
+    </svg>
+    <div class="gauge-inner">
+        <span class="gauge-value">@Value%</span>
+        <span class="gauge-label">@Label</span>
+    </div>
+    
+    <!-- Cyber Decos -->
+    <div class="deco d1"></div>
+    <div class="deco d2"></div>
+</div>
+
+<style>
+    .gauge-wrapper {
+        position: relative;
+        width: var(--size);
+        height: var(--size);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    svg {
+        transform: rotate(-90deg);
+        filter: drop-shadow(0 0 5px var(--color));
+    }
+
+    .track {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.05);
+        stroke-width: 4;
+    }
+
+    .progress {
+        fill: none;
+        stroke: var(--color);
+        stroke-width: 4;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1s ease-out;
+    }
+
+    .gauge-inner {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .gauge-value {
+        font-size: calc(var(--size) * 0.15px);
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .gauge-label {
+        font-size: calc(var(--size) * 0.05px);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--color);
+        opacity: 0.8;
+    }
+
+    .deco {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border: 2px solid var(--color);
+    }
+
+    .d1 { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+    .d2 { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+</style>
+
+@code {
+    [Parameter] public int Size { get; set; } = 200;
+    [Parameter] public int Value { get; set; } = 75;
+    [Parameter] public string Label { get; set; } = "UPLOAD";
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+}

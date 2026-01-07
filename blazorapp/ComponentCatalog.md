@@ -1,0 +1,77 @@
+# 🏗️ QUIZ RAIDER X: Blazor Component Catalog (50+ Components)
+
+This catalog serves as the master reference for building the full-scale Cyber Hybrid Mobile App.
+
+## 📊 1. Core Layout & Navigation (5)
+| Component | Description |
+|-----------|-------------|
+| `MainLayout.razor` | Root shell with unified sidebar and content area. |
+| `SideNav.razor` | Collapsible sidebar with active scanline effects. |
+| `TopBar.razor` | Mobile-first header with profile quick-access. |
+| `CyberMenu.razor` | Drawer-style menu for small screens. |
+| `Footer.razor` | Minimal stats footer with live "System Up" heartbeat. |
+
+## 🎨 2. Atomic Cyber UI (12)
+| Component | Description |
+|-----------|-------------|
+| `NeonButton.razor` | Button with dual-layer glow and hover-scale. |
+| `CyberInput.razor` | Input field with glowing focus borders. |
+| `HoloModal.razor` | Deep-blur overlay for popups and alerts. |
+| `GlitchText.razor` | Controlled text glitch effect (Triggerable). |
+| `ScanlineLayer.razor` | Global/Local scanline filter for components. |
+| `MatrixRain.razor` | Background asset for loading/empty states. |
+| `CornerAccent.razor` | Reusable L-shaped deco for any box. |
+| `GlowingDivider.razor` | Horizontal/Vertical neon line separator. |
+| `PulseStatus.razor` | Small dot or ring with health status pulse. |
+| `GlassCard.razor` | The standard high-depth container. |
+| `CyberChip.razor` | Small tag/badge with tech aesthetics. |
+| `NeonToggle.razor` | Animated switch with glow transition. |
+
+## 📈 3. Data & Visualization (10)
+| Component | Description |
+|-----------|-------------|
+| `InteractiveOrb.razor` | Multi-layered 3D energy core for main stats. |
+| `CyberGauge.razor` | Hexagonal/Radial gauge for real-time metrics. |
+| `HexGridLink.razor` | Interactive hex-cells for dashboard navigation. |
+| `LiveIndicator.razor` | Blinking "CONNECTED" or "SYNCING" tag. |
+| `ActivityStream.razor` | Vertical list of system events/notifications. |
+| `CyberChart.razor` | Line/Bar chart wrapper with neon data lines. |
+| `MetricTile.razor` | Small tile for quick glance stats (e.g., "Quizzes: 4"). |
+| `ProgressHex.razor` | Hexagonal progress bar for module completion. |
+| `MatrixTerminal.razor` | Scrolling log for system output simulation. |
+| `DataOrb.razor` | Smaller version of the main orb for side-stats. |
+
+## ✍️ 4. Quiz & Learning Modules (10)
+| Component | Description |
+|-----------|-------------|
+| `QuizCard.razor` | Modern card for subject-wise quiz selection. |
+| `OptionButton.razor` | Interactive choice button for questions. |
+| `TimerOrb.razor` | Circular countdown with color transition (Green -> Red). |
+| `QuestionProgress.razor` | Segmented bar showing current question status. |
+| `LeaderboardRow.razor` | High-score listing with rank animations. |
+| `ResultSplash.razor` | Full-screen "SUCCESS/FAILURE" animation. |
+| `SubjectBadge.razor` | Iconic badge for specific academic modules. |
+| `SolutionEditor.razor` | Mock terminal for coding solutions. |
+| `NoteTile.razor` | Downloadable note card from faculty. |
+| `UploadZone.razor` | Drag-and-drop zone for student notes. |
+
+## 📁 5. Project & Research (8)
+| Component | Description |
+|-----------|-------------|
+| `ProjectPanel.razor` | Detailed project showcase with GitHub/Live links. |
+| `ResearchRow.razor` | Clean, high-readability row for papers. |
+| `DOIChip.razor` | Link specialized for DOI verification. |
+| `TagCloud.razor` | Interactive tags (AI, ML, React, C#). |
+| `AuthorAvatar.razor` | Circular avatar with rotating "Verified" ring. |
+| `PaperAbstract.razor` | Collapsible abstract text with blur-fade. |
+| `KeywordsStrip.razor` | Scrolling tech-keywords bar. |
+| `CiteButton.razor` | One-click citation format generator. |
+
+## 🛡️ 6. Admin & Auth (5)
+| Component | Description |
+|-----------|-------------|
+| `LoginPortal.razor` | Centered glass box with floating cubes. |
+| `RegisterForm.razor` | Multi-step registration flow. |
+| `AdminStats.razor` | Advanced user-count and server health dashboard. |
+| `UserRow.razor` | Management row for student verification. |
+| `APIMonitor.razor` | Live latency tracker for the Next.js backend. |

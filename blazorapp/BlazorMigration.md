@@ -20,6 +20,10 @@ This project folder contains the foundation for migrating the **QUIZ RAIDER X** 
 
 I have built the following high-fidelity components with "Extreme Depth":
 
+- **`ComponentCatalog.md`**: A master reference of 50+ components for the full app.
+- **`BlazorDashboard.razor`**: A complete dashboard reference page combining 10+ custom components.
+- **`CyberGauge.razor`**: SVG-based animated metric gauge.
+- **`MatrixTerminal.razor`**: Real-time simulated system log terminal.
 - **`RotatingCube.razor`**: Enhanced with lighting reflections, dual-axis rotation, and neon-pulse borders.
 - **`GlassCard.razor`**: Upgraded with holographic shines, scrolling scanlines, and animated cyber-corners.
 - **`CyberGrid.razor`**: A moving 3D matrix background for that immersive "Digital Frontier" feel.

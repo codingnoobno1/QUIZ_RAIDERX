@@ -1,0 +1,109 @@
+@* blazorapp/Components/MatrixTerminal.razor *@
+
+<div class="terminal-container" style="--lines: @(MaxLines);">
+    <div class="terminal-header">
+        <span class="dot"></span>
+        <span class="title">SYSTEM_LOG_CORE</span>
+    </div>
+    <div class="terminal-body" id="terminal-body">
+        @foreach (var line in _logs)
+        {
+            <div class="log-line">
+                <span class="timestamp">[@GetTimestamp()]</span>
+                <span class="prefix">>></span>
+                <span class="content">@line</span>
+            </div>
+        }
+        <div class="cursor-line">
+            <span class="prefix">>></span>
+            <span class="cursor">_</span>
+        </div>
+    </div>
+</div>
+
+<style>
+    .terminal-container {
+        background: #000;
+        border: 1px solid rgba(0, 255, 255, 0.2);
+        border-radius: 8px;
+        overflow: hidden;
+        font-family: 'Fira Code', monospace;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .terminal-header {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #FF1493;
+        box-shadow: 0 0 8px #FF1493;
+    }
+
+    .title {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.7rem;
+        letter-spacing: 2px;
+    }
+
+    .terminal-body {
+        padding: 15px;
+        height: calc(var(--lines) * 22px);
+        overflow-y: auto;
+        color: #00FFFF;
+        font-size: 0.85rem;
+    }
+
+    .log-line { margin-bottom: 4px; display: flex; gap: 8px; }
+    .timestamp { color: rgba(255, 255, 255, 0.3); font-size: 0.75rem; }
+    .prefix { color: #FF1493; }
+    .content { letter-spacing: 0.5px; }
+
+    .cursor {
+        animation: blink 1s step-end infinite;
+        color: #00FFFF;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+</style>
+
+@code {
+    [Parameter] public int MaxLines { get; set; } = 10;
+    
+    private List<string> _logs = new() 
+    { 
+        "Initializing Neural Uplink...",
+        "Handshake Verified. Status 200.",
+        "Buffer Overflow check... [OK]",
+        "Entering Sub-layer 7..."
+    };
+
+    private string GetTimestamp() => DateTime.Now.ToString("HH:mm:ss");
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate real-time log arrival
+        _ = Task.Run(async () => {
+            var commands = new[] { "Syncing Database...", "Scanning for vulnerabilities...", "Access Granted.", "Kernel Panic avoided.", "Proxy rotate: 127.0.0.1" };
+            var rnd = new Random();
+            while(true)
+            {
+                await Task.Delay(rnd.Next(2000, 5000));
+                _logs.Add(commands[rnd.Next(commands.Length)]);
+                if(_logs.Count > 100) _logs.RemoveAt(0);
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+    }
+}
