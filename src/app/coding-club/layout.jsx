@@ -1,6 +1,6 @@
 // /app/coding-club/layout.jsx
-import ResponsiveLayout from '@/layouts/ResponsiveLayout';
+// Using a simple pass-through layout since MainAppWrapper already provides the sidebar
 
 export default function CodingClubLayout({ children }) {
-  return <ResponsiveLayout>{children}</ResponsiveLayout>;
+  return <>{children}</>;
 }
