@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
-import { Typography, Paper } from '@mui/material';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
 
 export default function ProfilePage() {
   return (
