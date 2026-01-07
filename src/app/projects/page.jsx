@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Grid, Typography, CircularProgress, Alert, MenuItem, TextField } from '@mui/material';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
 import { SectionTitle } from '@/components/homeui/sections/CommonUI';
 import ProjectCard from '@/components/cards/ProjectCard';
 

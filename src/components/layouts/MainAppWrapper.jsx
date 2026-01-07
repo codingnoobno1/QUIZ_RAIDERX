@@ -17,6 +17,10 @@ const NO_LAYOUT_PAGES = [
   '/coding-club',
   '/our-team',
   '/submit-research',
+  '/submit-project',
+  '/research-papers',
+  '/request-research',
+  '/projects',
 ];
 
 // Additional check for dynamic routes that have their own layout (like [user])
