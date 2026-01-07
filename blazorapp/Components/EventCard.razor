@@ -1,0 +1,172 @@
+@* blazorapp/Components/EventCard.razor *@
+
+<div class="event-card-wrapper" style="--color: @Color;">
+    <GlassCard>
+        <div class="event-inner">
+            <div class="date-badge">
+                <span class="day">@Day</span>
+                <span class="month">@Month</span>
+            </div>
+
+            <div class="event-content">
+                <h4 class="event-title">@Title</h4>
+                <div class="event-info">
+                    <span class="info-item">📍 @Location</span>
+                    <span class="info-item">⏰ @Time</span>
+                </div>
+                
+                <p class="description">@Description</p>
+                
+                <div class="event-footer">
+                    <div class="registrations">
+                        <div class="user-avatars">
+                            <div class="av" style="background-image: url('https://i.pravatar.cc/30?u=1')"></div>
+                            <div class="av" style="background-image: url('https://i.pravatar.cc/30?u=2')"></div>
+                            <div class="av" style="background-image: url('https://i.pravatar.cc/30?u=3')"></div>
+                            <div class="av-more">+@(RegistrationsCount - 3)</div>
+                        </div>
+                        <span class="r-text">Joining</span>
+                    </div>
+                    <button class="neon-button-mini">SECURE SPOT</button>
+                </div>
+            </div>
+
+            @* Scanline Decoration *@
+            <div class="event-scanline"></div>
+        </div>
+    </GlassCard>
+</div>
+
+<style>
+    .event-card-wrapper {
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .event-inner {
+        display: flex;
+        gap: 20px;
+        position: relative;
+    }
+
+    .date-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 70px;
+        height: 70px;
+        background: #000;
+        border: 2px solid var(--color);
+        box-shadow: 0 0 15px var(--color);
+        border-radius: 8px;
+    }
+
+    .day { font-size: 1.5rem; font-weight: 900; color: #fff; line-height: 1; }
+    .month { font-size: 0.7rem; font-weight: bold; color: var(--color); text-transform: uppercase; letter-spacing: 2px; }
+
+    .event-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .event-title {
+        color: #fff;
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin: 0 0 8px;
+        letter-spacing: 0.5px;
+    }
+
+    .event-info {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .info-item {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-family: monospace;
+    }
+
+    .description {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin-bottom: 20px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .event-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
+
+    .registrations {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .user-avatars {
+        display: flex;
+        margin-left: 5px;
+    }
+
+    .av {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 2px solid #0a0a0a;
+        margin-left: -8px;
+        background-size: cover;
+    }
+
+    .av-more {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #1a1a1a;
+        color: var(--color);
+        font-size: 0.6rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: -10px;
+        border: 2px solid #000;
+    }
+
+    .r-text {
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .event-scanline {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(rgba(0, 255, 255, 0.02) 2px, transparent 2px);
+        background-size: 100% 4px;
+        pointer-events: none;
+        opacity: 0.4;
+    }
+</style>
+
+@code {
+    [Parameter] public string Day { get; set; } = "24";
+    [Parameter] public string Month { get; set; } = "JAN";
+    [Parameter] public string Title { get; set; } = "NEURAL HACKATHON 2026";
+    [Parameter] public string Location { get; set; } = "LAB-X / VIRTUAL";
+    [Parameter] public string Time { get; set; } = "14:00 - 22:00";
+    [Parameter] public string Description { get; set; } = "A 24-hour intense coding session to build the next generation of neural network fabric controllers.";
+    [Parameter] public int RegistrationsCount { get; set; } = 42;
+    [Parameter] public string Color { get; set; } = "#FF1493";
+}

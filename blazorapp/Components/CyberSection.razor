@@ -1,0 +1,43 @@
+@* blazorapp/Components/CyberSection.razor *@
+
+<section class="cyber-section" id="@Id" style="--bg-opacity: @BgOpacity;">
+    <SectionHeader Title="@Title" Subtitle="@Subtitle" PrimaryColor="@Color" />
+    
+    <div class="section-content">
+        @ChildContent
+    </div>
+</section>
+
+<style>
+    .cyber-section {
+        padding: 6rem 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .section-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 10;
+    }
+
+    /* Background Decos */
+    .cyber-section::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at center, rgba(255, 255, 255, 0.02) 0%, transparent 70%);
+        opacity: var(--bg-opacity);
+        pointer-events: none;
+    }
+</style>
+
+@code {
+    [Parameter] public string Id { get; set; }
+    [Parameter] public string Title { get; set; } = "SECTION";
+    [Parameter] public string Subtitle { get; set; }
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+    [Parameter] public double BgOpacity { get; set; } = 0.5;
+    [Parameter] public RenderFragment ChildContent { get; set; }
+}

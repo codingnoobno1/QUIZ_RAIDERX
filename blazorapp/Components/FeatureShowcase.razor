@@ -1,0 +1,106 @@
+@* blazorapp/Components/FeatureShowcase.razor *@
+@page "/features"
+
+<div class="showcase-root">
+    <CyberGrid />
+
+    <!-- 1. Our Team Section -->
+    <CyberSection Title="THE ELITE SQUAD" Subtitle="ARCHITECTS OF THE VOID" Color="#00FFFF">
+        <div class="grid-3">
+            <CyberProfileCard Name="Tushar" Role="Core Admin" />
+            <CyberProfileCard Name="Komal" Role="Lead Scout" />
+            <CyberProfileCard Name="Lakshay Sharma" Role="Logic Engine" />
+        </div>
+        <div class="center-btn">
+            <button class="neon-button">VIEW ALL 26 OPERATIVES</button>
+        </div>
+    </CyberSection>
+
+    <!-- 2. Researches Section -->
+    <CyberSection Title="RESEARCH HUB" Subtitle="NEURAL PAPERS & DATA" Color="#FF1493">
+        <div class="grid-2">
+            <ResearchCard Title="Quantum Protocol Delta" Authors="@(new List<string>{"Tushar", "Dr. Law"})" Abstract="A study on the synchronization of quantum bits across distributed neural networks." />
+            <ResearchCard Title="Neural Fabric Latency" Category="Conference" Color="#FF1493" />
+            <ResearchCard Title="Autonomous Mesh Nodes" Color="#FF1493" />
+            <ResearchCard Title="Cyber-Organic Interfaces" Color="#FF1493" />
+        </div>
+    </CyberSection>
+
+    <!-- 3. Coding Section -->
+    <CyberSection Title="CODING TERMINAL" Subtitle="EXECUTE THE UNTHINKABLE" Color="#50fa7b">
+        <div class="coding-layout">
+            <div class="side-challenges">
+                <CodingChallengeCard Title="Array Burst Mode" Difficulty="1" Color="#50fa7b" />
+                <CodingChallengeCard Title="Memory Leak Hunter" Difficulty="3" Color="#50fa7b" />
+            </div>
+            <div class="main-editor">
+                <GlassCard>
+                    <CodeSnippet FileName="NeuralControl.cs" Color="#50fa7b" Code="void Process() {\n  var nodes = System.Scan();\n  nodes.SyncWith(Fabric.Core);\n}" />
+                    <MatrixTerminal MaxLines="8" />
+                </GlassCard>
+            </div>
+        </div>
+    </CyberSection>
+
+    <!-- 4. Our Events Section -->
+    <CyberSection Title="MISSION LOGS" Subtitle="UPCOMING OPERATIONAL EVENTS" Color="#FFD700">
+        <div class="events-stack">
+            <EventCard Title="Cyber Summit 2026" Day="12" Month="FEB" Color="#FFD700" />
+            <EventCard Title="Protocol Breach Simulation" Day="28" Month="MAR" Color="#FFD700" />
+            <EventCard Title="Algorithmic Warfare" Day="05" Month="APR" Color="#FFD700" />
+        </div>
+    </CyberSection>
+</div>
+
+<style>
+    .showcase-root {
+        position: relative;
+        min-height: 100vh;
+        background: #000;
+        color: #fff;
+    }
+
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 3rem;
+        margin-bottom: 3rem;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 2rem;
+    }
+
+    .center-btn {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .coding-layout {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+    }
+
+    .side-challenges {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .events-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    @@media (max-width: 960px) {
+        .coding-layout { grid-template-columns: 1fr; }
+        .grid-2 { grid-template-columns: 1fr; }
+    }
+</style>

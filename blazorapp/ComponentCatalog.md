@@ -67,7 +67,7 @@ This catalog serves as the master reference for building the full-scale Cyber Hy
 | `KeywordsStrip.razor` | Scrolling tech-keywords bar. |
 | `CiteButton.razor` | One-click citation format generator. |
 
-## ✨ 7. New Portfolio & Utility (20+)
+## ✨ 7. Portfolio & Utility (20+)
 | Component | Status | Description |
 |-----------|--------|-------------|
 | `CyberProgressBar.razor` | [NEW] | Enhanced loading bar with glow and scanlines. |
@@ -90,3 +90,13 @@ This catalog serves as the master reference for building the full-scale Cyber Hy
 | `CodeSnippet.razor` | [NEW] | Styled block for technical solutions. |
 | `SearchOrb.razor` | [NEW] | Interactive search bar with orb pulse. |
 | `CyberToast.razor` | [NEW] | Stackable notification system for UI feedback. |
+
+## 🚀 8. In-Depth Feature Sections (NEW)
+| Component | Status | Description |
+|-----------|--------|-------------|
+| `SectionHeader.razor` | [NEW] | Universal header with multi-layer glitch and cyber-accents. |
+| `CyberSection.razor` | [NEW] | Full-width container with spacing, grid focus, and background glow. |
+| `ResearchCard.razor` | [NEW] | High-depth card for papers with DOI, abstract, and category pills. |
+| `CodingChallengeCard.razor`| [NEW] | Dashboard-style card for coding puzzles with difficulty/XP bars. |
+| `EventCard.razor` | [NEW] | Time-centric card with date-badges and attendee stack visuals. |
+| `FeatureShowcase.razor` | [NEW] | Master page template integrating all the above sections. |

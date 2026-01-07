@@ -1,0 +1,127 @@
+@* blazorapp/Components/SectionHeader.razor *@
+
+<div class="section-header-container" style="--color-p: @PrimaryColor; --color-s: @SecondaryColor;">
+    <div class="header-glitch">
+        <h2 class="title" data-text="@Title">@Title</h2>
+        <div class="glitch-layers">
+            <div class="glitch-layer l1">@Title</div>
+            <div class="glitch-layer l2">@Title</div>
+        </div>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(Subtitle))
+    {
+        <p class="subtitle">@Subtitle</p>
+    }
+
+    <div class="header-accent">
+        <div class="line"></div>
+        <div class="orb"></div>
+        <div class="line"></div>
+    </div>
+</div>
+
+<style>
+    .section-header-container {
+        text-align: center;
+        margin-bottom: 4rem;
+        padding-top: 2rem;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .header-glitch {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    .title {
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 12px;
+        position: relative;
+        z-index: 5;
+    }
+
+    .glitch-layers {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .glitch-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        font-size: 3.5rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 12px;
+        opacity: 0.8;
+    }
+
+    .l1 { color: var(--color-p); animation: glitch-anim-1 2s infinite linear alternate-reverse; }
+    .l2 { color: var(--color-s); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
+
+    .subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-family: monospace;
+        letter-spacing: 4px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        margin-bottom: 2rem;
+    }
+
+    .header-accent {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .line {
+        width: 100px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--color-p), transparent);
+    }
+
+    .orb {
+        width: 8px;
+        height: 8px;
+        background: var(--color-p);
+        border-radius: 50%;
+        box-shadow: 0 0 15px var(--color-p);
+    }
+
+    @keyframes glitch-anim-1 {
+        0% { transform: translate(0); }
+        20% { transform: translate(-3px, 2px); }
+        40% { transform: translate(-3px, -2px); }
+        60% { transform: translate(3px, 2px); }
+        80% { transform: translate(3px, -2px); }
+        100% { transform: translate(0); }
+    }
+
+    @keyframes glitch-anim-2 {
+        0% { transform: translate(0); }
+        25% { transform: translate(3px, -2px); }
+        50% { transform: translate(-3px, 2px); }
+        75% { transform: translate(3px, 2px); }
+        100% { transform: translate(0); }
+    }
+</style>
+
+@code {
+    [Parameter] public string Title { get; set; } = "SYSTEM CORE";
+    [Parameter] public string Subtitle { get; set; }
+    [Parameter] public string PrimaryColor { get; set; } = "#00FFFF";
+    [Parameter] public string SecondaryColor { get; set; } = "#FF1493";
+}

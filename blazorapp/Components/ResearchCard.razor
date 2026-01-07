@@ -1,0 +1,164 @@
+@* blazorapp/Components/ResearchCard.razor *@
+
+<div class="research-card-wrapper" style="--color: @Color;">
+    <GlassCard>
+        <div class="research-inner">
+            <div class="card-top">
+                <StatusPill Label="@Category" Color="@Color" />
+                <div class="doi-link">
+                    <span>DOI:</span>
+                    <a href="@Url" target="_blank">@Doi</a>
+                </div>
+            </div>
+
+            <h3 class="paper-title">@Title</h3>
+            
+            <div class="authors">
+                @foreach (var author in Authors)
+                {
+                    <span class="author-tag">@author</span>
+                }
+            </div>
+
+            <div class="abstract-preview">
+                @Abstract
+            </div>
+
+            <div class="card-footer">
+                <div class="meta">
+                    <span class="year">@Year</span>
+                    <span class="divider"></span>
+                    <span class="journal">@Journal</span>
+                </div>
+                <button class="neon-button-mini">ACCESS DATA</button>
+            </div>
+            
+            @* Visual Depth Effects *@
+            <div class="corner-accent tr"></div>
+            <div class="corner-accent bl"></div>
+            <div class="side-lighting"></div>
+        </div>
+    </GlassCard>
+</div>
+
+<style>
+    .research-card-wrapper {
+        height: 100%;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .research-inner {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .doi-link {
+        font-family: monospace;
+        font-size: 0.6rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .doi-link a {
+        color: var(--color);
+        text-decoration: none;
+        margin-left: 5px;
+    }
+
+    .paper-title {
+        color: #fff;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 800;
+        line-height: 1.3;
+        margin-bottom: 1rem;
+        letter-spacing: 0.5px;
+    }
+
+    .authors {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .author-tag {
+        font-family: monospace;
+        font-size: 0.65rem;
+        color: var(--color);
+        background: rgba(0, 255, 255, 0.05);
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 255, 255, 0.1);
+    }
+
+    .abstract-preview {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        line-height: 1.5;
+        margin-bottom: 2rem;
+        flex-grow: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 1.5rem;
+    }
+
+    .meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: monospace;
+        font-size: 0.7rem;
+    }
+
+    .year { color: #fff; font-weight: bold; }
+    .divider { width: 1px; height: 10px; background: rgba(255, 255, 255, 0.2); }
+    .journal { color: rgba(255, 255, 255, 0.4); }
+
+    .corner-accent {
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        border: 2px solid var(--color);
+        opacity: 0.4;
+    }
+
+    .tr { top: -10px; right: -10px; border-left: 0; border-bottom: 0; }
+    .bl { bottom: -10px; left: -10px; border-right: 0; border-top: 0; }
+
+    .side-lighting {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(0, 255, 255, 0.05) 0%, transparent 50%);
+        pointer-events: none;
+    }
+</style>
+
+@code {
+    [Parameter] public string Title { get; set; } = "High-Performance Neural Fabric Interconnects";
+    [Parameter] public string Category { get; set; } = "Journal";
+    [Parameter] public List<string> Authors { get; set; } = new() { "Dr. Law Kumar", "Tushar" };
+    [Parameter] public string Abstract { get; set; } = "An exploration into the low-latency communications required for multi-layered neural network fabrics in autonomous environments.";
+    [Parameter] public string Year { get; set; } = "2026";
+    [Parameter] public string Journal { get; set; } = "IEEE CyberSystems";
+    [Parameter] public string Doi { get; set; } = "10.1000/xyz123";
+    [Parameter] public string Url { get; set; } = "#";
+    [Parameter] public string Color { get; set; } = "#00FFFF";
+}
