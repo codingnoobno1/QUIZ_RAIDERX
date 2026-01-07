@@ -23,15 +23,23 @@ const NO_LAYOUT_PAGES = [
   '/projects',
 ];
 
-// Additional check for dynamic routes that have their own layout (like [user])
+// Additional check for routes that have their own layout
 const hasOwnLayout = (pathname) => {
-  // The [user] dynamic route has its own ResponsiveLayout with Sidebar
-  // Check if it's a single-segment path that's not in NO_LAYOUT_PAGES
+  // Routes that have their own ResponsiveLayout with the cube Sidebar
+  // 1. [user] dynamic routes (single-segment paths like /welcome)
+  // 2. /coding-club/* routes (have ResponsiveLayout in their layout.jsx)
   const segments = pathname.split('/').filter(Boolean);
+
+  // Single-segment paths (like /welcome, /username) go to [user] route
   if (segments.length === 1 && !NO_LAYOUT_PAGES.includes(pathname)) {
-    // This catches /welcome, /username, etc. which go to [user] route
     return true;
   }
+
+  // /coding-club/* routes have their own ResponsiveLayout with cube sidebar
+  if (pathname.startsWith('/coding-club/')) {
+    return true;
+  }
+
   return false;
 };
 
