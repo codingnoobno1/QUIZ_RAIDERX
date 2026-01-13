@@ -1,38 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-  Card, CardContent, Typography, Grid, Dialog, DialogContent,
-  IconButton, Chip, Box, Tabs, Tab, Tooltip, Divider, Link, Avatar, CircularProgress
+  Card, CardContent, Typography, Dialog, DialogContent,
+  IconButton, Chip, Box, Tabs, Tab, Tooltip, Divider, Link, Avatar
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import DescriptionIcon from "@mui/icons-material/Description";
 import ArticleIcon from "@mui/icons-material/Article";
 import ScienceIcon from "@mui/icons-material/Science";
 
-export default function ResearchPaperCard() {
+// Single Research Card Component - accepts a paper object via props
+export default function ResearchCard({ data }) {
   const [open, setOpen] = useState(false);
-  const [currentPaper, setCurrentPaper] = useState(null);
   const [tab, setTab] = useState(0);
-  const [researchData, setResearchData] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Fetch all approved research papers from database
-    fetch('/api/research')
-      .then(res => res.json())
-      .then(data => {
-        setResearchData(data.papers || []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching research:', err);
-        setLoading(false);
-      });
-  }, []);
+  const paper = data;
 
-  const handleOpen = (paper) => {
-    setCurrentPaper(paper);
+  const handleOpen = () => {
     setTab(0);
     setOpen(true);
   };
@@ -60,53 +44,44 @@ export default function ResearchPaperCard() {
     },
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <CircularProgress sx={{ color: '#ffcb05' }} />
-      </Box>
-    );
-  }
+  if (!paper) return null;
 
   return (
     <>
-      <Grid container spacing={3} sx={{ px: 2, py: 4 }}>
-        {researchData.map((paper, idx) => (
-          <Grid item xs={12} sm={6} md={4} key={paper._id || idx}>
-            <Card sx={cardStyle} onClick={() => handleOpen(paper)}>
-              <CardContent>
-                <Box sx={{ textAlign: "center", mb: 2 }}>
-                  <ArticleIcon sx={{ fontSize: 40, color: "#ffcb05" }} />
-                </Box>
-                <Typography variant="h6" sx={{ ...goldenStyle, mb: 1 }}>
-                  {paper.title}
-                </Typography>
-                <Typography variant="body2" sx={{ color: "#9ca3af" }}>
-                  {paper.abstract?.slice(0, 70)}...
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Chip
-                    label={paper.publisher || paper.conference || paper.publicationType}
-                    size="small"
-                    color="secondary"
-                    sx={{ mr: 1, mb: 1 }}
-                  />
-                  <Chip
-                    label="Research"
-                    size="small"
-                    variant="outlined"
-                    sx={{ color: "#ffcb05", borderColor: "#ffcb05" }}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      <Card sx={cardStyle} onClick={handleOpen}>
+        <CardContent>
+          <Box sx={{ textAlign: "center", mb: 2 }}>
+            <ArticleIcon sx={{ fontSize: 40, color: "#ffcb05" }} />
+          </Box>
+          <Typography variant="h6" sx={{ ...goldenStyle, mb: 1 }}>
+            {paper.title}
+          </Typography>
+          <Typography variant="body2" sx={{ color: "#9ca3af" }}>
+            {paper.abstract?.slice(0, 70)}...
+          </Typography>
+          <Box sx={{ mt: 2 }}>
+            <Chip
+              label={paper.publisher || paper.conference || paper.publicationType || "Research"}
+              size="small"
+              color="secondary"
+              sx={{ mr: 1, mb: 1 }}
+            />
+            {paper.status && (
+              <Chip
+                label={paper.status}
+                size="small"
+                color={paper.status === 'approved' ? 'success' : paper.status === 'pending' ? 'warning' : 'default'}
+                sx={{ mr: 1, mb: 1 }}
+              />
+            )}
+          </Box>
+        </CardContent>
+      </Card>
 
+      {/* Detail Dialog */}
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
         <DialogContent sx={{ p: 0, bgcolor: tab === 0 ? "#0f172a" : "#fff", minHeight: "600px" }}>
-          <IconButton onClick={handleClose} sx={{ position: "absolute", top: 10, right: 10 }}>
+          <IconButton onClick={handleClose} sx={{ position: "absolute", top: 10, right: 10, zIndex: 1 }}>
             <CloseIcon sx={{ color: tab === 0 ? "#fff" : "#000" }} />
           </IconButton>
 
@@ -130,10 +105,10 @@ export default function ResearchPaperCard() {
           {tab === 0 && (
             <Box sx={{ p: 5, textAlign: "center", color: "#ffcb05" }}>
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
-                {currentPaper?.title}
+                {paper.title}
               </Typography>
               <Typography variant="body1" sx={{ color: "#ccc" }}>
-                {currentPaper?.abstract}
+                {paper.abstract}
               </Typography>
             </Box>
           )}
@@ -141,17 +116,17 @@ export default function ResearchPaperCard() {
           {tab === 1 && (
             <Box sx={{ p: 4 }}>
               <Typography variant="h6" sx={goldenStyle}>Authors</Typography>
-              {currentPaper?.authors?.map((author, i) => (
+              {paper.authors?.map((author, i) => (
                 <Box key={i} sx={{ display: "flex", alignItems: "center", mt: 1 }}>
                   <Avatar sx={{ width: 32, height: 32, mr: 1 }}>{author[0]}</Avatar>
                   <Typography>{author}</Typography>
                 </Box>
               ))}
-              {currentPaper?.coAuthors?.length > 0 && (
+              {paper.coAuthors?.length > 0 && (
                 <>
                   <Divider sx={{ my: 2 }} />
                   <Typography variant="h6" sx={goldenStyle}>Co-Authors</Typography>
-                  {currentPaper.coAuthors.map((co, i) => (
+                  {paper.coAuthors.map((co, i) => (
                     <Box key={i} sx={{ display: "flex", alignItems: "center", mt: 1 }}>
                       <Avatar sx={{ width: 32, height: 32, mr: 1 }}>{co[0]}</Avatar>
                       <Typography>{co}</Typography>
@@ -165,34 +140,48 @@ export default function ResearchPaperCard() {
           {tab === 2 && (
             <Box sx={{ p: 4 }}>
               <Typography variant="h6" sx={goldenStyle}>References</Typography>
-              <ul>
-                {currentPaper?.references?.map((ref, i) => (
-                  <li key={i}>
-                    <Typography variant="body2" sx={{ mb: 1 }}>{ref}</Typography>
-                  </li>
-                ))}
-              </ul>
+              {paper.references?.length > 0 ? (
+                <ul>
+                  {paper.references.map((ref, i) => (
+                    <li key={i}>
+                      <Typography variant="body2" sx={{ mb: 1 }}>{ref}</Typography>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <Typography sx={{ color: '#9ca3af', mt: 2 }}>No references listed.</Typography>
+              )}
             </Box>
           )}
 
           {tab === 3 && (
             <Box sx={{ p: 4 }}>
-              <Typography variant="body1"><strong>Conference:</strong> {currentPaper?.conference}</Typography>
+              <Typography variant="body1"><strong>Conference:</strong> {paper.conference || 'N/A'}</Typography>
               <Typography variant="body1" sx={{ mt: 1 }}>
-                <strong>Journal:</strong> {currentPaper?.journal}
+                <strong>Journal:</strong> {paper.journal || 'N/A'}
               </Typography>
-              {currentPaper?.doi && (
+              <Typography variant="body1" sx={{ mt: 1 }}>
+                <strong>Publisher:</strong> {paper.publisher || 'N/A'}
+              </Typography>
+              {paper.doi && (
                 <Typography sx={{ mt: 1 }}>
                   <Tooltip title="DOI Link">
-                    <Link href={currentPaper.doi} target="_blank" underline="hover">
+                    <Link href={paper.doi} target="_blank" underline="hover">
                       <ScienceIcon sx={{ mr: 0.5 }} /> DOI
                     </Link>
                   </Tooltip>
                 </Typography>
               )}
-              {currentPaper?.patent && (
+              {paper.patent && (
                 <Typography sx={{ mt: 1 }}>
-                  <strong>Related Patent:</strong> {currentPaper.patent}
+                  <strong>Related Patent:</strong> {paper.patent}
+                </Typography>
+              )}
+              {paper.pdfUrl && (
+                <Typography sx={{ mt: 1 }}>
+                  <Link href={paper.pdfUrl} target="_blank" underline="hover">
+                    📄 Download PDF
+                  </Link>
                 </Typography>
               )}
             </Box>

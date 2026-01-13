@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Box, Card, useTheme, Typography } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams } from "next/navigation";
 
 import AllProjects from "@components/project/AllProjects";
 import MyProjects from "@components/project/MyProjects";
@@ -10,7 +11,7 @@ import ResearchPapers from "@components/project/ResearchPapers";
 import MyResearch from "@components/project/MyResearch";
 import CourseProject from "@components/project/CourseProject";
 import InHouseInternshipForm from "@components/project/InHouseInternshipForm";
-import ProjectNavbar from "@components/project/ProjectNavbar"; // Import ProjectNavbar
+import ProjectNavbar from "@components/project/ProjectNavbar";
 
 // Tabs with associated component mapping
 const tabs = {
@@ -23,8 +24,18 @@ const tabs = {
 };
 
 export default function ProjectsPage() {
-  const [activeTab, setActiveTab] = useState('all'); // Use local state instead of URL params
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') || 'all';
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
   const theme = useTheme();
+
+  // Sync activeTab with URL changes
+  useEffect(() => {
+    const tab = searchParams.get('tab') || 'all';
+    if (tabs[tab]) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const ContentComponent = useMemo(() => {
     return tabs[activeTab] || (() => (
