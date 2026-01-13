@@ -1,19 +1,31 @@
 import { Suspense } from "react";
-import { Box, CircularProgress } from "@mui/material";
 import ProjectsClient from "./ProjectsClient";
 
-// Loading fallback component
+// Pure HTML/CSS loading fallback - NO MUI imports in server component!
 function ProjectsLoading() {
   return (
-    <Box sx={{
+    <div style={{
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '50vh',
-      bgcolor: 'transparent'
+      backgroundColor: 'transparent'
     }}>
-      <CircularProgress sx={{ color: '#00FFFF' }} />
-    </Box>
+      <div style={{
+        width: '40px',
+        height: '40px',
+        border: '4px solid rgba(0, 255, 255, 0.3)',
+        borderTop: '4px solid #00FFFF',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite'
+      }} />
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
   );
 }
 
