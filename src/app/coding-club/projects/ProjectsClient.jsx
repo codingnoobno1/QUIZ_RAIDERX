@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Box, Card, useTheme, Typography } from "@mui/material";
+import { Box, Card, Typography } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 
@@ -27,7 +27,6 @@ export default function ProjectsClient() {
     const searchParams = useSearchParams();
     const tabFromUrl = searchParams.get('tab') || 'all';
     const [activeTab, setActiveTab] = useState(tabFromUrl);
-    const theme = useTheme();
 
     // Sync activeTab with URL changes
     useEffect(() => {
@@ -55,8 +54,8 @@ export default function ProjectsClient() {
                 p: { xs: 2, md: 4 },
                 borderRadius: 4,
                 overflow: "auto",
-                backgroundColor: theme.palette.background.paper,
-                boxShadow: theme.shadows[5],
+                backgroundColor: '#1a1a2e',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
             }}
         >
             <ProjectNavbar />
