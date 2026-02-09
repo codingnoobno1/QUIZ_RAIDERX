@@ -23,6 +23,7 @@ const studentMembers = [
     { name: 'Ishan Dua', role: 'Student Member' },
     { name: 'Harks Kaur', role: 'Student Member' },
     { name: 'Ayush Patial', role: 'Student Member' },
+    { name: 'Jashandeep', role: 'Student Member' },
     { name: 'Sanchit', role: 'Student Member' },
     { name: 'Parth', role: 'Student Member' },
     { name: 'Pavneet', role: 'Student Member' },
