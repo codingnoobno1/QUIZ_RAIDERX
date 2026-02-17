@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import UserSidebar from '@/components/UserSidebar';
+import Topbar from '@/components/Topbar';
 import { LayoutDashboard, ClipboardCheck, User, Code, FolderKanban, FileText, Calendar, Notebook } from 'lucide-react';
 
 // Pages where the main layout (including sidebar) should NOT be shown
@@ -66,21 +67,46 @@ export default function MainAppWrapper({ children }) {
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#121212' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#0b0b0b' }}>
       <CssBaseline />
 
-      <UserSidebar routes={navItems} title="Pixel Club" />
-
+      {/* SIDEBAR FIXED WIDTH 240px */}
       <Box
-        component="main"
+        component="aside"
         sx={{
-          flexGrow: 1,
-          p: 3,
-          width: `calc(100% - 260px)`,
-          color: 'white',
+          width: 240,
+          flexShrink: 0,
+          borderRight: '1px solid #1f1f1f',
+          bgcolor: '#0d0d0d',
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+          zIndex: 1200,
         }}
       >
-        {children}
+        <UserSidebar routes={navItems} title="Pixel Club" />
+      </Box>
+
+      {/* MAIN AREA */}
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        {/* TOPBAR */}
+        <Topbar />
+
+        {/* CONTENT */}
+        <Box
+          component="main"
+          sx={{
+            flex: 1,
+            p: 0,
+            px: 2.5, // Enterprise padding
+            py: 2,
+            width: '100%',
+            overflowY: 'auto',
+          }}
+        >
+          {children}
+        </Box>
       </Box>
     </Box>
   );

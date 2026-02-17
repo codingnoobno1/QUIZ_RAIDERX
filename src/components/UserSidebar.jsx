@@ -1,131 +1,86 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import React from 'react';
 import Box from '@mui/material/Box';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Divider from '@mui/material/Divider';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export default function UserSidebar({
   routes = [],
-  title = 'Dashboard',
+  title = 'PIXEL',
 }) {
-  const [expanded, setExpanded] = useState(true);
   const pathname = usePathname();
 
   return (
-    <motion.aside
-      initial={false}
-      animate={{ width: expanded ? 260 : 72 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-      style={{
-        position: 'relative',
-        height: '100vh',
-        background: '#121a2a',
-        color: '#cfd8dc',
-        borderRight: '1px solid #2f3a52',
-        zIndex: 1200,
-        paddingTop: 24,
+    <Box
+      component="aside"
+      sx={{
+        width: '100%',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '4px 0 12px rgba(0,0,0,0.3)',
-        userSelect: 'none',
-        overflow: 'hidden',
+        py: 3, // Industry standard padding
+        px: 2, // Industry standard padding
       }}
     >
-      <Box sx={{ p: 2, mb: 2, textAlign: 'center' }}>
+      <Box sx={{ mb: 4, px: 2 }}>
         <Typography
           variant="h6"
-          fontWeight="bold"
+          fontWeight="700"
           sx={{
             letterSpacing: 1,
-            opacity: expanded ? 1 : 0,
-            transition: 'opacity 0.3s',
-            whiteSpace: 'nowrap',
+            color: '#ededed',
+            fontSize: '1.1rem',
           }}
         >
           {title}
         </Typography>
       </Box>
 
-      <List sx={{ px: 0, mt: 0 }}>
+      <Box component="nav" sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
         {routes.map(({ id, label, icon: Icon, path }) => {
           const isActive = pathname === path;
           return (
-            <Tooltip
-              key={id}
-              title={!expanded ? label : ''}
-              placement="right"
-              arrow
-              enterDelay={500}
-              leaveDelay={200}
-            >
-              <ListItemButton
-                component={Link}
-                href={path}
+            <Link key={id} href={path} style={{ textDecoration: 'none' }}>
+              <Box
                 sx={{
-                  px: 2.5,
-                  py: 1.2,
-                  my: 0.5,
-                  mx: 1,
-                  borderRadius: 2,
-                  backgroundColor: isActive ? '#1976d2' : 'transparent',
-                  color: isActive ? '#e3f2fd' : '#90a4ae',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s ease, color 0.3s ease',
                   display: 'flex',
                   alignItems: 'center',
+                  gap: 1.5, // Industry standard gap 12px
+                  px: 2, // Industry standard inner padding 16px
+                  py: 1.2, // Industry standard vertical padding ~10px
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  bgcolor: isActive ? '#1a1a1a' : 'transparent',
+                  color: isActive ? '#ffffff' : '#a1a1a1',
+                  transition: 'background-color 0.2s, color 0.2s',
                   '&:hover': {
-                    backgroundColor: isActive ? '#1565c0' : '#1c2833',
-                    color: '#e3f2fd',
+                    bgcolor: '#1a1a1a',
+                    color: '#ffffff',
                   },
                 }}
               >
-                <ListItemIcon
+                <Icon size={18} />
+                <Typography
                   sx={{
-                    color: 'inherit',
-                    minWidth: 0,
-                    mr: expanded ? 2.5 : 'auto',
-                    display: 'flex',
-                    justifyContent: 'center',
+                    fontSize: '0.875rem', // 14px industry standard
+                    fontWeight: isActive ? 600 : 500,
                   }}
                 >
-                  <Icon size={22} />
-                </ListItemIcon>
-
-                {expanded && (
-                  <ListItemText
-                    primary={
-                      <Typography
-                        variant="body2"
-                        fontWeight={isActive ? 600 : 400}
-                        noWrap
-                        sx={{ fontSize: '0.95rem' }}
-                      >
-                        {label}
-                      </Typography>
-                    }
-                  />
-                )}
-              </ListItemButton>
-            </Tooltip>
+                  {label}
+                </Typography>
+              </Box>
+            </Link>
           );
         })}
-      </List>
-
-      <Divider sx={{ mt: 'auto', mx: 2, borderColor: '#2f3a52' }} />
-
-      <Box sx={{ p: 2, textAlign: 'center', fontSize: 12, color: '#666' }}>
-        {expanded ? `© ${new Date().getFullYear()} Pixel Club` : '©'}
       </Box>
-    </motion.aside>
+
+      <Box sx={{ mt: 'auto', px: 2, pt: 2, borderTop: '1px solid #1f1f1f' }}>
+        <Typography variant="caption" sx={{ color: '#555' }}>
+          © {new Date().getFullYear()} Pixel Club
+        </Typography>
+      </Box>
+    </Box>
   );
 }

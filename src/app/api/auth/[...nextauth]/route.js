@@ -65,6 +65,7 @@ const handler = NextAuth({
         token.enrollmentNumber = user.enrollmentNumber;
         token.course = user.course;
         token.semester = user.semester;
+        token.role = user.role; // Add role to token
       }
       return token;
     },
@@ -77,6 +78,7 @@ const handler = NextAuth({
           enrollmentNumber: token.enrollmentNumber,
           course: token.course,
           semester: token.semester,
+          role: token.role, // Add role to session
         };
         // Include expiry explicitly (ISO format)
         if (token.exp) {

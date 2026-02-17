@@ -52,12 +52,12 @@ const PixelPortfolio = () => {
                 <TechMarquee />
                 <Hero />
                 <Features />
+                <GMeets />
                 <CodeSpectrum />
                 <Stats />
                 <Projects />
                 <Research />
                 <PortfolioResearches />
-                <GMeets />
                 <Footer />
                 <InteractiveRobot />
             </motion.div>

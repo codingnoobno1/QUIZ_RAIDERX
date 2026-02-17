@@ -58,14 +58,13 @@ export default function Layout({ children }) {
         component="main"
         sx={{
           flexGrow: 1,
-          pt: isMobile ? 8 : 4,
-          px: { xs: 2, sm: 3, md: 4 },
+          pt: isMobile ? 8 : 3,
+          px: { xs: 2, md: 3 },
           width: '100%',
           minHeight: '100dvh',
           overflowY: 'auto',
-          ml: !isMobile ? (isSidebarOpen ? '240px' : '72px') : 0,
-          transition: 'margin 0.3s ease',
           color: '#fff',
+          transition: 'all .25s ease'
         }}
       >
         {children}

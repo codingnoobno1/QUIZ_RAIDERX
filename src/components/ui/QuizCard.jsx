@@ -38,37 +38,19 @@ const QuizCard = ({ quiz }) => {
                     position: 'relative',
                     width: '100%',
                     maxWidth: 400,
-                    minHeight: 320,
-                    borderRadius: '20px',
-                    backgroundColor: '#0e0e0e',
-                    color: '#FFD700',
-                    boxShadow: `0 0 20px ${getStatusColor()}40`,
-                    border: `1.5px solid ${getStatusColor()}80`,
+                    minHeight: 300,
+                    borderRadius: '12px',
+                    backgroundColor: '#111113',
+                    color: '#e5e7eb',
+                    border: '1px solid #232323',
                     overflow: 'hidden',
-                    backdropFilter: 'blur(12px)',
+                    transition: 'all 0.2s ease',
                     '&:hover': {
-                        boxShadow: `0 0 40px ${getStatusColor()}60`,
-                        transform: 'translateY(-4px)',
+                        borderColor: '#333',
+                        transform: 'translateY(-2px)',
                     },
                 }}
             >
-                {/* Background Pattern */}
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        backgroundImage:
-                            "url('https://img.freepik.com/premium-photo/circuit-board-patterns_198067-353259.jpg')",
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        opacity: 0.08,
-                        zIndex: 0,
-                        filter: 'contrast(1.3)',
-                    }}
-                />
 
                 {/* Status Indicator */}
                 <Box
@@ -85,9 +67,9 @@ const QuizCard = ({ quiz }) => {
                         sx={{
                             bgcolor: getStatusColor(),
                             color: '#fff',
-                            fontWeight: 700,
-                            fontSize: '0.7rem',
-                            boxShadow: `0 0 10px ${getStatusColor()}60`,
+                            fontWeight: 600,
+                            fontSize: '0.65rem',
+                            borderRadius: '4px',
                         }}
                     />
                 </Box>
@@ -98,18 +80,17 @@ const QuizCard = ({ quiz }) => {
                     <Box display="flex" justifyContent="center" mb={2}>
                         <Box
                             sx={{
-                                width: 70,
-                                height: 70,
-                                borderRadius: '50%',
-                                bgcolor: '#141414',
-                                border: '2px solid #FFD700',
+                                width: 48,
+                                height: 48,
+                                borderRadius: '8px',
+                                bgcolor: '#1a1a1a',
+                                border: '1px solid #333',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                boxShadow: '0 0 15px rgba(255,215,0,0.4)',
                             }}
                         >
-                            <BookOpen size={32} color="#FFD700" />
+                            <BookOpen size={20} color="#e5e7eb" />
                         </Box>
                     </Box>
 
@@ -117,14 +98,15 @@ const QuizCard = ({ quiz }) => {
                     <Typography
                         variant="h6"
                         sx={{
-                            fontWeight: 700,
-                            color: '#FFEB3B',
+                            fontWeight: 600,
+                            color: '#e5e7eb',
                             textAlign: 'center',
-                            mb: 1,
-                            minHeight: 60,
+                            mb: 0.5,
+                            minHeight: 50,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
+                            fontSize: '1.1rem',
                         }}
                     >
                         {quiz.title}
@@ -143,9 +125,9 @@ const QuizCard = ({ quiz }) => {
                             label={`${quiz.timeLimit} min`}
                             size="small"
                             sx={{
-                                bgcolor: '#141414',
-                                border: '1px solid #FFD700',
-                                color: '#FFD700',
+                                bgcolor: '#1a1a1a',
+                                border: '1px solid #333',
+                                color: '#9ca3af',
                                 fontSize: '0.75rem',
                             }}
                         />
@@ -154,9 +136,9 @@ const QuizCard = ({ quiz }) => {
                             label={`${quiz.maxMarks} marks`}
                             size="small"
                             sx={{
-                                bgcolor: '#141414',
-                                border: '1px solid #FFD700',
-                                color: '#FFD700',
+                                bgcolor: '#1a1a1a',
+                                border: '1px solid #333',
+                                color: '#9ca3af',
                                 fontSize: '0.75rem',
                             }}
                         />
@@ -165,9 +147,9 @@ const QuizCard = ({ quiz }) => {
                             label={`${quiz.questions?.length || 0} questions`}
                             size="small"
                             sx={{
-                                bgcolor: '#141414',
-                                border: '1px solid #FFD700',
-                                color: '#FFD700',
+                                bgcolor: '#1a1a1a',
+                                border: '1px solid #333',
+                                color: '#9ca3af',
                                 fontSize: '0.75rem',
                             }}
                         />
@@ -176,8 +158,8 @@ const QuizCard = ({ quiz }) => {
                     {/* Subject & Semester */}
                     <Box
                         sx={{
-                            borderTop: '1px solid rgba(255,215,0,0.25)',
-                            borderBottom: '1px solid rgba(255,215,0,0.25)',
+                            borderTop: '1px solid #232323',
+                            borderBottom: '1px solid #232323',
                             py: 1.5,
                             mb: 2,
                         }}
@@ -185,7 +167,7 @@ const QuizCard = ({ quiz }) => {
                         <Typography
                             variant="body2"
                             sx={{
-                                color: '#f3ce3c',
+                                color: '#9ca3af',
                                 textAlign: 'center',
                                 fontSize: '0.85rem',
                             }}
@@ -196,7 +178,7 @@ const QuizCard = ({ quiz }) => {
                             <Typography
                                 variant="caption"
                                 sx={{
-                                    color: '#ccc',
+                                    color: '#6b7280',
                                     textAlign: 'center',
                                     display: 'block',
                                     mt: 0.5,
@@ -217,24 +199,20 @@ const QuizCard = ({ quiz }) => {
                         onClick={handleStartQuiz}
                         disabled={quiz.availabilityStatus !== 'on'}
                         sx={{
-                            bgcolor: quiz.availabilityStatus === 'on' ? '#FFD700' : '#444',
-                            color: quiz.availabilityStatus === 'on' ? '#101010' : '#888',
-                            borderRadius: 3,
-                            fontWeight: 700,
+                            bgcolor: quiz.availabilityStatus === 'on' ? '#e5e7eb' : '#333',
+                            color: quiz.availabilityStatus === 'on' ? '#000' : '#666',
+                            borderRadius: 2,
+                            fontWeight: 600,
                             textTransform: 'none',
                             py: 1.2,
-                            fontSize: '0.95rem',
-                            boxShadow: quiz.availabilityStatus === 'on' ? '0 0 15px rgba(255,215,0,0.5)' : 'none',
+                            fontSize: '0.9rem',
+                            boxShadow: 'none',
                             '&:hover': {
-                                bgcolor: quiz.availabilityStatus === 'on' ? '#FFC700' : '#444',
-                                boxShadow: quiz.availabilityStatus === 'on' ? '0 0 25px rgba(255,215,0,0.7)' : 'none',
-                            },
-                            '&:disabled': {
-                                bgcolor: '#333',
-                                color: '#666',
+                                bgcolor: quiz.availabilityStatus === 'on' ? '#fff' : '#333',
+                                boxShadow: 'none',
                             },
                         }}
-                        startIcon={<Play size={18} />}
+                        startIcon={<Play size={16} />}
                     >
                         {quiz.availabilityStatus === 'on' ? 'Start Quiz' : 'Not Available'}
                     </Button>

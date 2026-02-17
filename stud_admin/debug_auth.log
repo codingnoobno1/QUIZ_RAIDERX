@@ -1,0 +1,90 @@
+[2026-02-10T06:46:12.110Z] Authorize: Found user "NOT FOUND"
+[2026-02-10T06:46:12.111Z] Authorize: Password mismatch or user not found/no password. 
+[2026-02-10T06:49:54.802Z] Authorize: Found user "NOT FOUND"
+[2026-02-10T06:49:54.803Z] Authorize: Password mismatch or user not found/no password. 
+[2026-02-10T06:50:05.129Z] Authorize: Found user "NOT FOUND"
+[2026-02-10T06:50:05.130Z] Authorize: Password mismatch or user not found/no password. 
+[2026-02-10T06:50:57.067Z] Authorize: Found user "NOT FOUND"
+[2026-02-10T06:50:57.068Z] Authorize: Password mismatch or user not found/no password. 
+[2026-02-10T06:51:18.556Z] Authorize: Found user "NOT FOUND"
+[2026-02-10T06:51:18.558Z] Authorize: Password mismatch or user not found/no password. 
+[2026-02-10T06:55:25.251Z] Authorize: Found user {
+  "email": "pixel.innovators36@gmail.com",
+  "role": "admin",
+  "uuid": "b98c2738-3fff-466f-9de5-32e1f83cfde1"
+}
+[2026-02-10T06:55:25.251Z] Authorize: User role: "admin"
+[2026-02-10T06:55:25.408Z] Authorize: Password match. Returning user object. 
+[2026-02-10T06:55:25.409Z] JWT Callback: User logged in. Role: "admin"
+[2026-02-10T06:55:25.468Z] Session Callback: Session user role: "admin"
+[2026-02-10T06:59:16.373Z] Session Callback: Session user role: "admin"
+[2026-02-10T06:59:16.472Z] Session Callback: Session user role: "admin"
+[2026-02-10T06:59:40.958Z] Authorize: Found user "NOT FOUND"
+[2026-02-10T06:59:40.958Z] Authorize: Password mismatch or user not found/no password. 
+[2026-02-10T07:00:41.772Z] Authorize: Found user "NOT FOUND"
+[2026-02-10T07:00:41.772Z] Authorize: Password mismatch or user not found/no password. 
+[2026-02-10T07:00:56.017Z] Authorize: Found user "NOT FOUND"
+[2026-02-10T07:00:56.018Z] Authorize: Password mismatch or user not found/no password. 
+[2026-02-10T07:01:01.826Z] Authorize: Found user "NOT FOUND"
+[2026-02-10T07:01:01.827Z] Authorize: Password mismatch or user not found/no password. 
+[2026-02-10T07:01:21.235Z] Authorize: Found user "NOT FOUND"
+[2026-02-10T07:01:21.236Z] Authorize: Password mismatch or user not found/no password. 
+[2026-02-10T07:02:23.172Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:02:23.212Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:03:01.763Z] Authorize: Found user {
+  "email": "pixel.innovators36@gmail.com",
+  "role": "admin",
+  "uuid": "891fcc45-3ce6-473b-953b-d5d2643ba816"
+}
+[2026-02-10T07:03:01.764Z] Authorize: User role: "admin"
+[2026-02-10T07:03:01.934Z] Authorize: Password match. Returning user object. 
+[2026-02-10T07:03:01.935Z] JWT Callback: User logged in. Role: "admin"
+[2026-02-10T07:03:02.008Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:03:05.587Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:03:07.134Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:05:26.515Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:05:26.586Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:05:44.896Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:05:44.941Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:05:49.755Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:05:50.975Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:05:55.186Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:06:31.964Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:06:33.041Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:06:42.320Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:06:42.383Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:07:42.927Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:07:42.967Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:07:51.063Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:07:51.108Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:07:56.755Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:07:56.817Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:08:01.216Z] Authorize: Found user {
+  "email": "pixel.innovators36@gmail.com",
+  "role": "admin",
+  "uuid": "891fcc45-3ce6-473b-953b-d5d2643ba816"
+}
+[2026-02-10T07:08:01.216Z] Authorize: User role: "admin"
+[2026-02-10T07:08:01.386Z] Authorize: Password match. Returning user object. 
+[2026-02-10T07:08:01.388Z] JWT Callback: User logged in. Role: "admin"
+[2026-02-10T07:08:01.442Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:08:43.054Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:08:43.113Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:11:11.684Z] Authorize: Found user {
+  "email": "pixel.innovators36@gmail.com",
+  "role": "admin",
+  "uuid": "891fcc45-3ce6-473b-953b-d5d2643ba816"
+}
+[2026-02-10T07:11:11.685Z] Authorize: User role: "admin"
+[2026-02-10T07:11:11.850Z] Authorize: Password match. Returning user object. 
+[2026-02-10T07:11:11.851Z] JWT Callback: User logged in. Role: "admin"
+[2026-02-10T07:11:11.893Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:12:02.439Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:12:02.500Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:15:59.288Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:15:59.361Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:17:24.977Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:17:25.022Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:28:14.807Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:53:41.476Z] Session Callback: Session user role: "admin"
+[2026-02-10T07:53:56.935Z] Session Callback: Session user role: "admin"

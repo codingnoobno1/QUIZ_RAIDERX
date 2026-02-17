@@ -56,6 +56,7 @@ const PortfolioResearches = () => {
                 borderRadius: '50%',
                 filter: 'blur(70px)',
                 zIndex: 0,
+                pointerEvents: 'none'
             }} />
             <Box sx={{
                 position: 'absolute',
@@ -67,6 +68,7 @@ const PortfolioResearches = () => {
                 borderRadius: '50%',
                 filter: 'blur(70px)',
                 zIndex: 0,
+                pointerEvents: 'none'
             }} />
 
             <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
@@ -77,7 +79,7 @@ const PortfolioResearches = () => {
                     sx={{
                         textAlign: 'center',
                         color: 'rgba(255, 255, 255, 0.7)',
-                        mb: 6,
+                        mb: 8,
                         maxWidth: '700px',
                         mx: 'auto',
                         lineHeight: 1.6,
@@ -87,7 +89,7 @@ const PortfolioResearches = () => {
                 </Typography>
 
                 {loading ? (
-                    <Grid container spacing={4}>
+                    <Grid container spacing={5}>
                         {[1, 2, 3, 4, 5, 6].map((i) => (
                             <Grid item xs={12} sm={6} md={4} key={i}>
                                 <ResearchCardSkeleton />
@@ -96,126 +98,155 @@ const PortfolioResearches = () => {
                     </Grid>
                 ) : researches.length > 0 ? (
                     <>
-                        <Grid container spacing={4}>
+                        <Grid container spacing={5} sx={{ perspective: '1000px' }}>
                             {researches.map((paper, idx) => (
-                                <Grid item xs={12} sm={6} md={4} key={paper._id || idx}>
+                                <Grid item xs={12} sm={6} md={4} key={paper._id || idx} sx={{ zIndex: 1, '&:hover': { zIndex: 10 } }}>
                                     <Grow in timeout={500 + idx * 100}>
-                                        <GlassCard
-                                            sx={{
-                                                p: 4,
-                                                height: '100%',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                                                border: '1px solid rgba(0, 255, 255, 0.2)',
-                                                '&:hover': {
-                                                    transform: 'translateY(-8px) scale(1.02)',
-                                                    background: 'rgba(0, 255, 255, 0.05)',
-                                                    boxShadow: '0 10px 40px rgba(0, 255, 255, 0.3), 0 0 20px rgba(255, 20, 147, 0.2)',
-                                                    borderColor: 'rgba(0, 255, 255, 0.6)',
-                                                },
-                                            }}
-                                            onClick={() => router.push('/research-papers')}
-                                        >
-                                            {/* Icon */}
-                                            <Box sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                width: '60px',
-                                                height: '60px',
-                                                borderRadius: '12px',
-                                                background: 'linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(255, 20, 147, 0.2) 100%)',
-                                                mb: 3,
-                                            }}>
-                                                <ArticleIcon sx={{ fontSize: 32, color: '#00FFFF' }} />
-                                            </Box>
-
-                                            {/* Title */}
-                                            <Typography
-                                                variant="h6"
+                                        <Box>
+                                            <GlassCard
                                                 sx={{
-                                                    fontWeight: 700,
-                                                    mb: 1.5,
-                                                    color: '#fff',
-                                                    lineHeight: 1.3,
-                                                    display: '-webkit-box',
-                                                    WebkitLineClamp: 2,
-                                                    WebkitBoxOrient: 'vertical',
+                                                    p: 4,
+                                                    height: '100%',
+                                                    minHeight: '380px',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+                                                    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.5)',
+                                                    backdropFilter: 'blur(10px)',
+                                                    position: 'relative',
                                                     overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
+                                                    '&::before': {
+                                                        content: '""',
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        background: 'radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 255, 255, 0.06), transparent 40%)',
+                                                        opacity: 0,
+                                                        transition: 'opacity 0.4s',
+                                                        zIndex: 0,
+                                                        pointerEvents: 'none'
+                                                    },
+                                                    '&:hover': {
+                                                        transform: 'translateY(-12px) scale(1.02)',
+                                                        background: 'linear-gradient(135deg, rgba(0, 255, 255, 0.05) 0%, rgba(255, 20, 147, 0.05) 100%)',
+                                                        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 255, 255, 0.15)',
+                                                        borderColor: 'rgba(0, 255, 255, 0.4)',
+                                                        '&::before': { opacity: 1 }
+                                                    },
+                                                }}
+                                                onClick={() => router.push('/research-papers')}
+                                                onMouseMove={(e) => {
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                                                    e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
                                                 }}
                                             >
-                                                {paper.title}
-                                            </Typography>
+                                                {/* Decorative top line */}
+                                                <Box sx={{
+                                                    position: 'absolute', top: 0, left: 0, width: '100%', height: '2px',
+                                                    background: 'linear-gradient(90deg, transparent, rgba(0,255,255,0.5), transparent)'
+                                                }} />
 
-                                            {/* Abstract Preview */}
-                                            <Typography
-                                                variant="body2"
-                                                sx={{
-                                                    color: 'rgba(255, 255, 255, 0.6)',
+                                                {/* Icon */}
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: '64px',
+                                                    height: '64px',
+                                                    borderRadius: '16px',
+                                                    background: 'rgba(0, 0, 0, 0.3)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                    boxShadow: 'inset 0 0 20px rgba(0, 255, 255, 0.05)',
                                                     mb: 3,
-                                                    flex: 1,
-                                                    lineHeight: 1.6,
-                                                    display: '-webkit-box',
-                                                    WebkitLineClamp: 3,
-                                                    WebkitBoxOrient: 'vertical',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                }}
-                                            >
-                                                {paper.abstract}
-                                            </Typography>
+                                                    position: 'relative',
+                                                    zIndex: 1
+                                                }}>
+                                                    <ArticleIcon sx={{ fontSize: 32, color: '#00FFFF', filter: 'drop-shadow(0 0 5px rgba(0,255,255,0.5))' }} />
+                                                </Box>
 
-                                            {/* Tags */}
-                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                                <Chip
-                                                    label={paper.publicationType}
-                                                    size="small"
+                                                {/* Title */}
+                                                <Typography
+                                                    variant="h6"
                                                     sx={{
-                                                        bgcolor: 'rgba(0, 255, 255, 0.15)',
-                                                        color: '#00FFFF',
-                                                        fontWeight: 600,
-                                                        fontSize: '0.75rem',
-                                                        border: '1px solid rgba(0, 255, 255, 0.3)',
+                                                        fontWeight: 700,
+                                                        mb: 2,
+                                                        color: '#fff',
+                                                        lineHeight: 1.3,
+                                                        minHeight: '3.9em', // Fixed height for alignment
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 3,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        zIndex: 1
                                                     }}
-                                                />
-                                                {paper.publisher && (
+                                                >
+                                                    {paper.title}
+                                                </Typography>
+
+                                                {/* Abstract Preview */}
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        color: 'rgba(255, 255, 255, 0.6)',
+                                                        mb: 3,
+                                                        flex: 1,
+                                                        lineHeight: 1.6,
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 3,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        zIndex: 1
+                                                    }}
+                                                >
+                                                    {paper.abstract}
+                                                </Typography>
+
+                                                {/* Tags */}
+                                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 'auto', zIndex: 1 }}>
                                                     <Chip
-                                                        label={paper.publisher}
+                                                        label={paper.publicationType}
                                                         size="small"
                                                         sx={{
-                                                            bgcolor: 'rgba(255, 20, 147, 0.15)',
-                                                            color: '#FF1493',
+                                                            bgcolor: 'rgba(0, 255, 255, 0.08)',
+                                                            color: '#00FFFF',
                                                             fontWeight: 600,
-                                                            fontSize: '0.75rem',
-                                                            border: '1px solid rgba(255, 20, 147, 0.3)',
+                                                            fontSize: '0.7rem',
+                                                            border: '1px solid rgba(0, 255, 255, 0.2)',
+                                                            backdropFilter: 'blur(4px)'
                                                         }}
                                                     />
-                                                )}
-                                                {paper.conference && (
-                                                    <Chip
-                                                        label={paper.conference}
-                                                        size="small"
-                                                        sx={{
-                                                            bgcolor: 'rgba(255, 20, 147, 0.15)',
-                                                            color: '#FF1493',
-                                                            fontWeight: 600,
-                                                            fontSize: '0.75rem',
-                                                            border: '1px solid rgba(255, 20, 147, 0.3)',
-                                                        }}
-                                                    />
-                                                )}
-                                            </Box>
-                                        </GlassCard>
+                                                    {paper.publisher && (
+                                                        <Chip
+                                                            label={paper.publisher}
+                                                            size="small"
+                                                            sx={{
+                                                                bgcolor: 'rgba(255, 20, 147, 0.08)',
+                                                                color: '#FF1493',
+                                                                fontWeight: 600,
+                                                                fontSize: '0.7rem',
+                                                                border: '1px solid rgba(255, 20, 147, 0.2)',
+                                                                backdropFilter: 'blur(4px)'
+                                                            }}
+                                                        />
+                                                    )}
+                                                </Box>
+                                            </GlassCard>
+                                        </Box>
                                     </Grow>
                                 </Grid>
                             ))}
                         </Grid>
 
                         {/* View All Button */}
-                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
                             <Button
                                 variant="outlined"
                                 endIcon={<ArrowForwardIcon />}

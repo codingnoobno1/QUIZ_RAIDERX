@@ -102,36 +102,26 @@ export default function FacultyPage() {
   return (
     <Box
       sx={{
-        backgroundColor: '#0a0a0a',
         minHeight: '100vh',
-        color: '#e6e6e6',
-        px: { xs: 2, md: 8 },
-        py: 6,
-        background: 'radial-gradient(circle at 50% 10%, #1a1a1a 0%, #0a0a0a 100%)'
+        color: '#e5e7eb',
+        px: { xs: 1.5, md: 2.5 },
+        py: 2,
+        width: '100%',
+        maxWidth: 1400,
+        ml: 0,
       }}
     >
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
         <Typography
-          variant="h2"
-          sx={{
-            textAlign: 'center',
-            fontWeight: 800,
-            letterSpacing: -2,
-            mb: 2,
-            background: 'linear-gradient(90deg, #00f260, #0575E6)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            textShadow: '0 0 40px rgba(5, 117, 230, 0.3)'
-          }}
+          variant="h4"
+          fontWeight={700}
+          sx={{ mb: 0.5, ml: 1, textAlign: 'left' }}
         >
-          QUIZ HUB
+          Quiz Hub
         </Typography>
 
-        <Typography
-          variant="h6"
-          sx={{ textAlign: 'center', color: '#888', mb: 8, maxWidth: 600, mx: 'auto', fontWeight: 300 }}
-        >
-          Select a mentor to access their specialized assessment modules.
+        <Typography sx={{ color: '#888', mb: 3 }}>
+          Select a mentor to access quizzes
         </Typography>
 
         {isLoading ? (
@@ -147,29 +137,45 @@ export default function FacultyPage() {
             No mentors found.
           </Typography>
         ) : (
-          <Grid container spacing={4} justifyContent="center">
-            {facultyData.map((faculty, idx) => (
-              <Grid item xs={12} sm={6} md={4} key={faculty.uuid || faculty.name}>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ y: -10 }}
+          <Box sx={{ mt: 2 }}>
+            <Grid
+              container
+              spacing={3}
+              sx={{
+                width: '100%',
+                maxWidth: 1400,
+              }}
+            >
+              {facultyData.map((faculty, idx) => (
+                <Grid
+                  item
+                  key={faculty.uuid || faculty.name}
+                  xs={6}
+                  sm={4}
+                  md={3}
+                  lg={3}
                 >
-                  <FacultyCard
-                    faculty={faculty}
-                    quizzes={faculty.quizzes}
-                    onClick={() => {
-                      setSelectedFaculty(faculty);
-                      setSelectedBatch('');
-                      setSelectedSubject('');
-                      setQuizzes([]);
-                    }}
-                  />
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ y: -4 }}
+                  >
+                    <FacultyCard
+                      faculty={faculty}
+                      quizzes={faculty.quizzes}
+                      onClick={() => {
+                        setSelectedFaculty(faculty);
+                        setSelectedBatch('');
+                        setSelectedSubject('');
+                        setQuizzes([]);
+                      }}
+                    />
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
         )}
       </motion.div>
 
@@ -182,8 +188,8 @@ export default function FacultyPage() {
         TransitionProps={{ timeout: 500 }}
         PaperProps={{
           sx: {
-            backgroundColor: 'rgba(15, 23, 42, 0.98)',
-            backdropFilter: 'blur(20px)',
+            backgroundColor: '#0b0b0c',
+            borderLeft: '1px solid #222',
             color: '#fff',
             p: 0,
           },
@@ -192,23 +198,33 @@ export default function FacultyPage() {
         {selectedFaculty && (
           <Box sx={{ maxWidth: 1200, mx: 'auto', width: '100%', height: '100%', p: { xs: 2, md: 6 }, overflowY: 'auto' }}>
 
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <Box display="flex" flexDirection="column" alignItems="center" mb={6}>
-                <Typography variant="h3" fontWeight="800" sx={{ background: 'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h5" fontWeight={700}>
                   {selectedFaculty.name}
                 </Typography>
-                <Chip label={selectedFaculty.department} sx={{ bgcolor: 'rgba(79, 172, 254, 0.2)', color: '#4facfe', fontWeight: 'bold' }} />
+                <Typography sx={{ color: '#888', fontSize: 14 }}>
+                  {selectedFaculty.department}
+                </Typography>
               </Box>
             </motion.div>
 
             <Grid container spacing={4}>
               {/* Left Panel: Selection */}
-              <Grid item xs={12} md={4}>
-                <Paper elevation={0} sx={{ p: 4, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <Typography variant="h6" color="primary" mb={3} display="flex" alignItems="center" gap={1}>
-                    <Class /> Filter Options
+              <Grid item xs={12} md={3}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    border: '1px solid #222',
+                    bgcolor: '#111113',
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography variant="subtitle2" fontWeight={600} color="#888" mb={2} display="flex" alignItems="center" gap={1}>
+                    Filter Options
                   </Typography>
-                  <Stack spacing={4}>
+                  <Stack spacing={2.5}>
                     <FormControl fullWidth>
                       <InputLabel sx={{ color: '#aaa' }}>Select Batch</InputLabel>
                       <Select
@@ -265,7 +281,7 @@ export default function FacultyPage() {
               </Grid>
 
               {/* Right Panel: Quizzes */}
-              <Grid item xs={12} md={8}>
+              <Grid item xs={12} md={9}>
 
                 {!selectedBatch || !selectedSubject ? (
                   <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%" minHeight={300} sx={{ opacity: 0.5 }}>
@@ -274,7 +290,7 @@ export default function FacultyPage() {
                   </Box>
                 ) : (
                   <Box>
-                    <Typography variant="h5" fontWeight="bold" mb={3} sx={{ color: '#fff' }}>
+                    <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
                       Available Quizzes
                     </Typography>
 
@@ -287,7 +303,7 @@ export default function FacultyPage() {
                         No quizzes currently available for this selection.
                       </Alert>
                     ) : (
-                      <Grid container spacing={3}>
+                      <Grid container spacing={2}>
                         <AnimatePresence>
                           {quizzes.map((quiz, i) => (
                             <Grid item xs={12} key={quiz._id}>
@@ -312,6 +328,6 @@ export default function FacultyPage() {
           </Box>
         )}
       </Dialog>
-    </Box>
+    </Box >
   );
 }
