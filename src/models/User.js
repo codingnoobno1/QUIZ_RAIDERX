@@ -71,4 +71,9 @@ BaseUserSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-export default mongoose.models.BaseUser || mongoose.model("BaseUser", BaseUserSchema);
+// Prevent model recompilation
+if (process.env.NODE_ENV !== 'production' && mongoose.models.User) {
+  delete mongoose.models.User;
+}
+
+export default mongoose.models.User || mongoose.model("User", BaseUserSchema);

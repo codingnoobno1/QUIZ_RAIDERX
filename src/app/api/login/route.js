@@ -1,5 +1,5 @@
 import { connectDB } from '@/lib/mongo';
-import BaseUser from '@/models/base_user';
+import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto'; // for sessionId generation
 
@@ -19,7 +19,7 @@ export async function POST(req) {
     const trimmedEmail = email.trim().toLowerCase();
 
     // Fetch user by email
-    const user = await BaseUser.findOne({ email: trimmedEmail });
+    const user = await User.findOne({ email: trimmedEmail });
 
     if (!user) {
       return new Response(JSON.stringify({ error: 'Invalid email or password' }), {

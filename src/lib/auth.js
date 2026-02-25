@@ -1,6 +1,6 @@
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectDB } from '@/lib/mongo';
-import BaseUser from '@/models/base_user';
+import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 
 export const authOptions = {
@@ -15,7 +15,7 @@ export const authOptions = {
         const { email, password } = credentials;
 
         await connectDB();
-        const user = await BaseUser.findOne({ email: email.trim().toLowerCase() });
+        const user = await User.findOne({ email: email.trim().toLowerCase() });
 
         if (user && await user.comparePassword(password)) {
           return {

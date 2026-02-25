@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
-import BaseUser from '@/models/base_user';
+import User from '@/models/User';
 
 export async function POST(req) {
   try {
@@ -45,7 +45,7 @@ export async function POST(req) {
     await connectDB();
 
     // --- 3. Check for existing user ---
-    const existingUser = await BaseUser.findOne({
+    const existingUser = await User.findOne({
       $or: [{ email: trimmedEmail }, { enrollmentNumber: trimmedEnrollment }],
     });
 
@@ -58,7 +58,7 @@ export async function POST(req) {
 
     // --- 4. Create and Save User ---
     // The BaseUser model handles UUID generation and Password Hashing via pre-save hook
-    const newUser = new BaseUser({
+    const newUser = new User({
       name: trimmedName,
       enrollmentNumber: trimmedEnrollment,
       course: trimmedCourse,
