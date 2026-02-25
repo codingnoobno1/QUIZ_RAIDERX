@@ -36,9 +36,31 @@ export default function EventDashboard() {
     const [events, setEvents] = useState([]);
     const [loadingEvents, setLoadingEvents] = useState(true);
 
+    const [userRegistrations, setUserRegistrations] = useState(new Set());
+    const [registeringId, setRegisteringId] = useState(null);
+
     useEffect(() => {
         hydrateUser();
     }, []);
+
+    // Fetch user registrations
+    useEffect(() => {
+        if (user?.email) {
+            const fetchRegistrations = async () => {
+                try {
+                    const res = await fetch(`/api/events/register?email=${user.email}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const registeredEventIds = new Set(data.data.map(r => r.eventId));
+                        setUserRegistrations(registeredEventIds);
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch registrations:', err);
+                }
+            };
+            fetchRegistrations();
+        }
+    }, [user]);
 
     // Protect route
     useEffect(() => {
@@ -74,6 +96,34 @@ export default function EventDashboard() {
         router.replace('/event');
     };
 
+    const handleRegister = async (eventId) => {
+        setRegisteringId(eventId);
+        try {
+            const res = await fetch('/api/events/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventId,
+                    name: user.name,
+                    email: user.email,
+                    enrollmentNumber: user.enrollmentNumber
+                })
+            });
+
+            if (res.ok) {
+                setUserRegistrations(prev => new Set([...prev, eventId]));
+                // Optional: show a success indicator
+            } else {
+                const error = await res.json();
+                console.error('Registration failed:', error.error);
+            }
+        } catch (err) {
+            console.error('Registration error:', err);
+        } finally {
+            setRegisteringId(null);
+        }
+    };
+
     if (!user) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', bgcolor: '#0a0a0f' }}>
@@ -85,7 +135,7 @@ export default function EventDashboard() {
     const statsCards = [
         { title: 'Events Available', value: events.length, icon: <CalendarMonth />, color: '#a855f7' },
         { title: 'Upcoming', value: events.filter((e) => new Date(e.date) > new Date()).length, icon: <TrendingUp />, color: '#6366f1' },
-        { title: 'Attended', value: 0, icon: <EmojiEvents />, color: '#22c55e' },
+        { title: 'Attended', value: userRegistrations.size, icon: <EmojiEvents />, color: '#22c55e' },
         { title: 'Certificates', value: 0, icon: <WorkspacePremium />, color: '#f59e0b' },
     ];
 
@@ -98,7 +148,7 @@ export default function EventDashboard() {
                 p: { xs: 2, md: 4 },
             }}
         >
-            {/* Top bar */}
+            {/* ... Top bar ... */}
             <Box
                 sx={{
                     display: 'flex',
@@ -252,7 +302,6 @@ export default function EventDashboard() {
                                         border: '1px solid rgba(168,85,247,0.12)',
                                         backdropFilter: 'blur(10px)',
                                         transition: 'all 0.3s ease',
-                                        cursor: 'pointer',
                                         '&:hover': {
                                             transform: 'translateY(-3px)',
                                             boxShadow: '0 12px 30px rgba(168,85,247,0.15)',
@@ -285,7 +334,7 @@ export default function EventDashboard() {
 
                                     <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)', mb: 1.5 }} />
 
-                                    <Stack spacing={0.8}>
+                                    <Stack spacing={0.8} sx={{ mb: 2 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <CalendarMonth sx={{ fontSize: 16, color: '#a855f7' }} />
                                             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)' }}>
@@ -310,23 +359,39 @@ export default function EventDashboard() {
                                         </Box>
                                     </Stack>
 
-                                    {event.tags?.length > 0 && (
-                                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1.5 }}>
-                                            {event.tags.map((tag, i) => (
-                                                <Chip
-                                                    key={i}
-                                                    label={tag}
-                                                    size="small"
-                                                    sx={{
-                                                        bgcolor: 'rgba(168,85,247,0.1)',
-                                                        color: '#c084fc',
-                                                        fontSize: '0.7rem',
-                                                        height: 22,
-                                                        border: '1px solid rgba(168,85,247,0.2)',
-                                                    }}
-                                                />
-                                            ))}
-                                        </Box>
+                                    {userRegistrations.has(event._id) ? (
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            disabled
+                                            sx={{
+                                                borderRadius: '10px',
+                                                py: 1.2,
+                                                bgcolor: 'rgba(34,197,94,0.2) !important',
+                                                color: '#4ade80 !important',
+                                                border: '1px solid rgba(34,197,94,0.3)',
+                                            }}
+                                        >
+                                            Registered
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            onClick={() => handleRegister(event._id)}
+                                            disabled={registeringId === event._id}
+                                            sx={{
+                                                borderRadius: '10px',
+                                                py: 1.2,
+                                                background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+                                                fontWeight: 700,
+                                                '&:hover': {
+                                                    boxShadow: '0 8px 20px rgba(124,58,237,0.3)',
+                                                },
+                                            }}
+                                        >
+                                            {registeringId === event._id ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : 'Register for Event'}
+                                        </Button>
                                     )}
                                 </Paper>
                             </Grid>
