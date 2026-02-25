@@ -12,8 +12,10 @@ import {
     Login as LoginIcon,
     Dashboard as DashboardIcon,
     Logout as LogoutIcon,
-    AccountCircle as AccountIcon
+    AccountCircle as AccountIcon,
+    Event as EventIcon
 } from '@mui/icons-material';
+import Button from '@mui/material/Button';
 import { useRouter } from 'next/navigation';
 import useUserStore from '@/store/useUserStore';
 import { NeonButton } from './CommonUI';
@@ -129,11 +131,37 @@ const Header = () => {
                         </Menu>
                     </>
                 ) : (
-                    <MagneticButton>
-                        <NeonButton startIcon={<LoginIcon />} onClick={handleLoginClick}>
-                            Attendee Login
-                        </NeonButton>
-                    </MagneticButton>
+                    <>
+                        <MagneticButton>
+                            <NeonButton startIcon={<LoginIcon />} onClick={handleLoginClick}>
+                                Attendee Login
+                            </NeonButton>
+                        </MagneticButton>
+                        <MagneticButton>
+                            <Button
+                                startIcon={<EventIcon />}
+                                onClick={() => router.push('/event')}
+                                sx={{
+                                    borderRadius: '4px',
+                                    padding: '12px 32px',
+                                    fontWeight: 'bold',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '2px',
+                                    border: '1px solid #a855f7',
+                                    color: '#a855f7',
+                                    background: 'transparent',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                        backgroundColor: '#a855f7',
+                                        color: '#000',
+                                        boxShadow: '0 0 25px rgba(168, 85, 247, 0.5)',
+                                    },
+                                }}
+                            >
+                                Event Login
+                            </Button>
+                        </MagneticButton>
+                    </>
                 )}
             </Box>
         </Box>

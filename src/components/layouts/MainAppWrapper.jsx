@@ -15,6 +15,7 @@ const NO_LAYOUT_PAGES = [
   '/login',
   '/Login',
   '/Register',
+  '/event',
   '/coding-club',
   '/our-team',
   '/submit-research',
@@ -29,6 +30,7 @@ const hasOwnLayout = (pathname) => {
   // Routes that have their own ResponsiveLayout with the cube Sidebar
   // 1. [user] dynamic routes (single-segment paths like /welcome)
   // 2. /coding-club/* routes (have ResponsiveLayout in their layout.jsx)
+  // 3. /event/* routes (have their own fullscreen layout)
   const segments = pathname.split('/').filter(Boolean);
 
   // Single-segment paths (like /welcome, /username) go to [user] route
@@ -38,6 +40,11 @@ const hasOwnLayout = (pathname) => {
 
   // /coding-club/* routes have their own ResponsiveLayout with cube sidebar
   if (pathname.startsWith('/coding-club/')) {
+    return true;
+  }
+
+  // /event/* routes have their own fullscreen layout
+  if (pathname.startsWith('/event/')) {
     return true;
   }
 

@@ -1,13 +1,16 @@
 'use client';
 
-import { Box, Typography, CircularProgress, Alert, Grid, Container } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Grid, Container, Button } from '@mui/material';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import EventCard from '@/components/ui/EventCard';
+import LoginIcon from '@mui/icons-material/Login';
 
 export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -63,9 +66,31 @@ export default function EventsPage() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom textAlign="center" fontWeight={700}>
-        Upcoming Events
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, mb: 2 }}>
+        <Typography variant="h4" component="h1" fontWeight={700}>
+          Upcoming Events
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<LoginIcon />}
+          onClick={() => router.push('/event')}
+          sx={{
+            background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+            borderRadius: '10px',
+            fontWeight: 600,
+            px: 2.5,
+            boxShadow: '0 4px 15px rgba(124,58,237,0.35)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #6d28d9, #9333ea)',
+              boxShadow: '0 6px 20px rgba(124,58,237,0.5)',
+              transform: 'translateY(-1px)',
+            },
+            transition: 'all 0.3s ease',
+          }}
+        >
+          Event Login
+        </Button>
+      </Box>
       <Grid container spacing={4}>
         {events.map((event) => (
           <Grid item key={event._id} xs={12} sm={6} md={4}>
