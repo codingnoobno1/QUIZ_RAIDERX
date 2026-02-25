@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 import { getServerSession } from 'next-auth';
-import { GET as authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '../auth/[...nextauth]/route';
 
 // Helper to check admin role
 async function isAdmin() {

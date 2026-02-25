@@ -4,7 +4,7 @@ import { connectDB } from '@/lib/mongo';
 import BaseUser from '@/models/base_user';
 import bcrypt from 'bcryptjs';
 
-const handler = NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -26,6 +26,7 @@ const handler = NextAuth({
             enrollmentNumber: user.enrollmentNumber,
             course: user.course,
             semester: user.semester,
+            role: user.role,
           };
         }
 
@@ -89,6 +90,8 @@ const handler = NextAuth({
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

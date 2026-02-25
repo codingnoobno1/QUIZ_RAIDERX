@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import Research from '@/models/Research';
 import { getServerSession } from 'next-auth';
-import { GET as authOptions } from '../auth/[...nextauth]/route'; // Adjust path if needed
+import { authOptions } from '../../auth/[...nextauth]/route'; // Corrected path to point to src/app/api/auth/..
 
 // Helper to check admin role
 async function isAdmin() {
