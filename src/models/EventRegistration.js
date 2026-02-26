@@ -6,6 +6,22 @@ const EventRegistrationSchema = new mongoose.Schema({
         ref: 'Event',
         required: true
     },
+    registrationType: {
+        type: String,
+        enum: ['solo', 'team'],
+        required: true,
+        default: 'solo'
+    },
+    teamName: {
+        type: String,
+        trim: true
+    },
+    teamId: {
+        type: String,
+        unique: true,
+        sparse: true // Only unique among those that have it
+    },
+    // The person who registers the entry
     name: {
         type: String,
         required: true
@@ -16,6 +32,22 @@ const EventRegistrationSchema = new mongoose.Schema({
     },
     enrollmentNumber: {
         type: String
+    },
+    semester: {
+        type: String
+    },
+    // Additional members for team registration (up to 5 others, total 6)
+    members: [{
+        name: String,
+        email: String,
+        enrollmentNumber: String,
+        semester: String,
+        inviteStatus: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' }
+    }],
+    status: {
+        type: String,
+        enum: ['pending', 'attended', 'cancelled'],
+        default: 'pending'
     }
 }, {
     timestamps: true

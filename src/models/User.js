@@ -50,6 +50,7 @@ const BaseUserSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    collection: "student_users"
   }
 );
 
