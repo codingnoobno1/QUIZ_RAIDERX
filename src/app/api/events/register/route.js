@@ -111,7 +111,7 @@ export async function GET(req) {
                     { email: email.toLowerCase() },
                     { 'members.email': email.toLowerCase(), 'members.inviteStatus': 'accepted' }
                 ]
-            });
+            }).lean();
             return NextResponse.json({ data: registrations }, { status: 200 });
         }
 

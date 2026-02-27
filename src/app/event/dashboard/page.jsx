@@ -87,7 +87,7 @@ export default function EventDashboard() {
                     const res = await fetch(`/api/events/register?email=${user.email}`);
                     if (res.ok) {
                         const data = await res.json();
-                        const registeredEventIds = new Set(data.data.map(r => r.eventId));
+                        const registeredEventIds = new Set(data.data.map(r => (r.eventId?._id || r.eventId)?.toString()));
                         setUserRegistrations(registeredEventIds);
                     }
                 } catch (err) {
@@ -242,7 +242,7 @@ export default function EventDashboard() {
             const data = await res.json();
 
             if (res.ok) {
-                setUserRegistrations(prev => new Set([...prev, selectedEvent._id]));
+                setUserRegistrations(prev => new Set([...prev, selectedEvent._id.toString()]));
                 toast.success(regType === 'team' ? `Team "${teamName}" registered!` : 'Registered successfully!');
                 setRegModalOpen(false);
             } else {
@@ -276,7 +276,7 @@ export default function EventDashboard() {
                     const regRes = await fetch(`/api/events/register?email=${user.email}`);
                     if (regRes.ok) {
                         const data = await regRes.json();
-                        const registeredEventIds = new Set(data.data.map(r => r.eventId));
+                        const registeredEventIds = new Set(data.data.map(r => (r.eventId?._id || r.eventId)?.toString()));
                         setUserRegistrations(registeredEventIds);
                     }
                 }
@@ -296,7 +296,7 @@ export default function EventDashboard() {
             const res = await fetch(`/api/events/register?email=${user.email}`);
             if (res.ok) {
                 const data = await res.json();
-                const reg = data.data.find(r => r.eventId === event._id || r.eventId?._id === event._id);
+                const reg = data.data.find(r => (r.eventId?._id || r.eventId)?.toString() === (event._id?._id || event._id)?.toString());
                 setViewingRegistration(reg);
                 setPassModalOpen(true);
             }

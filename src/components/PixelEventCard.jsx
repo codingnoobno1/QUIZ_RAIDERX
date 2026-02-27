@@ -23,7 +23,8 @@ export default function PixelEventCard({
     event,
     isRegistered,
     onRegister,
-    isRegistering
+    isRegistering,
+    onViewPass
 }) {
     const eventDate = new Date(event.date).toLocaleDateString('en-IN', {
         day: 'numeric',
