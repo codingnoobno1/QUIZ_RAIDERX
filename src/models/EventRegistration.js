@@ -48,7 +48,12 @@ const EventRegistrationSchema = new mongoose.Schema({
         type: String,
         enum: ['pending', 'attended', 'cancelled'],
         default: 'pending'
-    }
+    },
+    // Entry and Exit Tracking
+    entryTime: { type: Date },
+    exitTime: { type: Date },
+    entryCount: { type: Number, default: 0 },
+    exitCount: { type: Number, default: 0 }
 }, {
     timestamps: true
 });

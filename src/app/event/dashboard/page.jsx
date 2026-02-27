@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useEventUserStore from '@/store/useEventUserStore';
 import PixelEventCard from "@/components/PixelEventCard";
+import EventPass from '@/components/EventPass';
 import {
     Box,
     Typography,
@@ -68,6 +69,11 @@ export default function EventDashboard() {
     // Invitations
     const [invitations, setInvitations] = useState([]);
     const [loadingInvitations, setLoadingInvitations] = useState(false);
+
+    // Pass Modal State
+    const [passModalOpen, setPassModalOpen] = useState(false);
+    const [viewingRegistration, setViewingRegistration] = useState(null);
+    const [viewingEvent, setViewingEvent] = useState(null);
 
     useEffect(() => {
         hydrateUser();
@@ -281,6 +287,22 @@ export default function EventDashboard() {
         } catch (err) {
             console.error('Invitation response error:', err);
             toast.error('Something went wrong');
+        }
+    };
+
+    const handleOpenPass = async (event) => {
+        setViewingEvent(event);
+        try {
+            const res = await fetch(`/api/events/register?email=${user.email}`);
+            if (res.ok) {
+                const data = await res.json();
+                const reg = data.data.find(r => r.eventId === event._id || r.eventId?._id === event._id);
+                setViewingRegistration(reg);
+                setPassModalOpen(true);
+            }
+        } catch (err) {
+            console.error('Pass fetch error:', err);
+            toast.error('Failed to load pass');
         }
     };
 
@@ -509,226 +531,240 @@ export default function EventDashboard() {
                                     isRegistered={userRegistrations.has(event._id)}
                                     onRegister={handleOpenRegModal}
                                     isRegistering={registeringId === event._id}
+                                    onViewPass={() => handleOpenPass(event)}
                                 />
                             </Grid>
                         ))}
                     </Grid>
                 )}
-        </Box>
-
-            {/* Registration Dialog */ }
-    <Dialog
-        open={regModalOpen}
-        onClose={() => setRegModalOpen(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-            sx: {
-                bgcolor: '#11111a',
-                backgroundImage: 'none',
-                color: '#fff',
-                borderRadius: '20px',
-                border: '1px solid rgba(255,255,255,0.1)',
-            }
-        }}
-    >
-        <DialogTitle sx={{ p: 3, pb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Celebration sx={{ color: '#a855f7' }} />
-                <Typography variant="h5" fontWeight={800}>Register for {selectedEvent?.title}</Typography>
-            </Box>
-        </DialogTitle>
-        <DialogContent sx={{ p: 3, pt: 1 }}>
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2 }}>
-                    Choose your registration type. You can register solo or as a team (up to 6 members).
-                </Typography>
-                <ToggleButtonGroup
-                    value={regType}
-                    exclusive
-                    onChange={(_, val) => val && setRegType(val)}
-                    fullWidth
-                    sx={{
-                        bgcolor: 'rgba(255,255,255,0.05)',
-                        p: 0.5,
-                        borderRadius: '12px',
-                        '& .MuiToggleButton-root': {
-                            border: 'none',
-                            color: 'rgba(255,255,255,0.5)',
-                            borderRadius: '10px !important',
-                            py: 1.5,
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            '&.Mui-selected': {
-                                bgcolor: '#a855f7',
-                                color: '#fff',
-                                '&:hover': { bgcolor: '#9333ea' }
-                            }
-                        }
-                    }}
-                >
-                    <ToggleButton value="solo">Solo Entry</ToggleButton>
-                    <ToggleButton value="team">Team Entry</ToggleButton>
-                </ToggleButtonGroup>
             </Box>
 
-            {regType === 'team' && (
-                <Stack spacing={3}>
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ mb: 1, color: '#a855f7', fontWeight: 700 }}>TEAM DETAILS</Typography>
-                        <TextField
-                            fullWidth
-                            placeholder="Enter Team Name"
-                            value={teamName}
-                            onChange={(e) => setTeamName(e.target.value)}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    bgcolor: 'rgba(255,255,255,0.03)',
-                                    color: '#fff',
-                                    borderRadius: '12px',
-                                    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-                                    '&:hover fieldset': { borderColor: 'rgba(168,85,247,0.5)' },
-                                }
-                            }}
-                        />
-                    </Box>
-
-                    <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="subtitle2" sx={{ color: '#a855f7', fontWeight: 700 }}>TEAM MEMBERS ({members.length + 1}/6)</Typography>
-                            <Button
-                                startIcon={<AddIcon />}
-                                size="small"
-                                onClick={() => handleAddMember()}
-                                disabled={members.length >= 5}
-                                sx={{ color: '#a855f7' }}
-                            >
-                                Add Manually
-                            </Button>
-                        </Box>
-
-                        <Grid container spacing={2}>
-                            {/* Leader (ReadOnly) */}
-                            <Grid item xs={12}>
-                                <Paper sx={{ p: 2, bgcolor: 'rgba(168,85,247,0.05)', border: '1px dashed rgba(168,85,247,0.3)', borderRadius: '12px' }}>
-                                    <Stack direction="row" spacing={2} alignItems="center">
-                                        <Avatar size="small" sx={{ bgcolor: '#a855f7', width: 32, height: 32, fontSize: '0.875rem' }}>L</Avatar>
-                                        <Box>
-                                            <Typography variant="body2" fontWeight={600}>{user.name} (You)</Typography>
-                                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>{user.email} | Sem {user.semester}</Typography>
-                                        </Box>
-                                    </Stack>
-                                </Paper>
-                            </Grid>
-
-                            {/* Dynamic Members */}
-                            {members.map((member, idx) => (
-                                <Grid item xs={12} key={idx}>
-                                    <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}>
-                                        <Stack spacing={2}>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Typography variant="caption" fontWeight={700} sx={{ color: 'rgba(255,255,255,0.3)' }}>MEMBER {idx + 2}</Typography>
-                                                <IconButton size="small" onClick={() => handleRemoveMember(idx)} sx={{ color: '#f87171' }}>
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                            </Box>
-                                            <Grid container spacing={1}>
-                                                <Grid item xs={12} sm={6}>
-                                                    <TextField
-                                                        size="small" fullWidth placeholder="Name"
-                                                        value={member.name} onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
-                                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                                    />
-                                                </Grid>
-                                                <Grid item xs={12} sm={6}>
-                                                    <TextField
-                                                        size="small" fullWidth placeholder="Email"
-                                                        value={member.email} onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
-                                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                                    />
-                                                </Grid>
-                                                <Grid item xs={6}>
-                                                    <TextField
-                                                        size="small" fullWidth placeholder="Enrollment"
-                                                        value={member.enrollmentNumber} onChange={(e) => handleMemberChange(idx, 'enrollmentNumber', e.target.value)}
-                                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                                    />
-                                                </Grid>
-                                                <Grid item xs={6}>
-                                                    <TextField
-                                                        size="small" fullWidth placeholder="Semester"
-                                                        value={member.semester} onChange={(e) => handleMemberChange(idx, 'semester', e.target.value)}
-                                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                                    />
-                                                </Grid>
-                                            </Grid>
-                                        </Stack>
-                                    </Paper>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </Box>
-
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ color: '#a855f7', fontWeight: 700, mb: 2 }}>FIND TEAMMATES (Registered on Platform)</Typography>
-                        {loadingPotential ? (
-                            <CircularProgress size={20} />
-                        ) : (
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                {potentialParticipants.length === 0 ? (
-                                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)' }}>No other users available right now.</Typography>
-                                ) : (
-                                    potentialParticipants.slice(0, 10).map((p, i) => (
-                                        <Tooltip key={i} title={`Sem ${p.semester} | ${p.email}`}>
-                                            <Chip
-                                                icon={<PersonAddIcon size="small" />}
-                                                label={p.name}
-                                                onClick={() => handleAddMember(p)}
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: 'rgba(168,85,247,0.1)',
-                                                    color: '#c084fc',
-                                                    '&:hover': { bgcolor: 'rgba(168,85,247,0.2)' }
-                                                }}
-                                            />
-                                        </Tooltip>
-                                    ))
-                                )}
-                            </Box>
-                        )}
-                    </Box>
-                </Stack>
-            )}
-
-            {regType === 'solo' && (
-                <Paper sx={{ p: 3, bgcolor: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.1)', borderRadius: '16px' }}>
-                    <Typography variant="body1" sx={{ mb: 2, fontWeight: 600 }}>Confirm Registration Details</Typography>
-                    <Stack spacing={1}>
-                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}><strong>Name:</strong> {user.name}</Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}><strong>Email:</strong> {user.email}</Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}><strong>Enrollment:</strong> {user.enrollmentNumber}</Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}><strong>Semester:</strong> {user.semester}</Typography>
-                    </Stack>
-                </Paper>
-            )}
-        </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 1 }}>
-            <Button onClick={() => setRegModalOpen(false)} sx={{ color: 'rgba(255,255,255,0.5)' }}>Cancel</Button>
-            <Button
-                variant="contained"
-                onClick={handleRegister}
-                disabled={!!registeringId}
-                sx={{
-                    borderRadius: '10px',
-                    px: 4,
-                    bgcolor: '#a855f7',
-                    '&:hover': { bgcolor: '#9333ea' }
+            {/* Registration Dialog */}
+            <Dialog
+                open={regModalOpen}
+                onClose={() => setRegModalOpen(false)}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        bgcolor: '#11111a',
+                        backgroundImage: 'none',
+                        color: '#fff',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                    }
                 }}
             >
-                {registeringId ? <CircularProgress size={24} color="inherit" /> : 'Confirm Registration'}
-            </Button>
-        </DialogActions>
-    </Dialog>
+                <DialogTitle sx={{ p: 3, pb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Celebration sx={{ color: '#a855f7' }} />
+                        <Typography variant="h5" fontWeight={800}>Register for {selectedEvent?.title}</Typography>
+                    </Box>
+                </DialogTitle>
+                <DialogContent sx={{ p: 3, pt: 1 }}>
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2 }}>
+                            Choose your registration type. You can register solo or as a team (up to 6 members).
+                        </Typography>
+                        <ToggleButtonGroup
+                            value={regType}
+                            exclusive
+                            onChange={(_, val) => val && setRegType(val)}
+                            fullWidth
+                            sx={{
+                                bgcolor: 'rgba(255,255,255,0.05)',
+                                p: 0.5,
+                                borderRadius: '12px',
+                                '& .MuiToggleButton-root': {
+                                    border: 'none',
+                                    color: 'rgba(255,255,255,0.5)',
+                                    borderRadius: '10px !important',
+                                    py: 1.5,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    '&.Mui-selected': {
+                                        bgcolor: '#a855f7',
+                                        color: '#fff',
+                                        '&:hover': { bgcolor: '#9333ea' }
+                                    }
+                                }
+                            }}
+                        >
+                            <ToggleButton value="solo">Solo Entry</ToggleButton>
+                            <ToggleButton value="team">Team Entry</ToggleButton>
+                        </ToggleButtonGroup>
+                    </Box>
+
+                    {regType === 'team' && (
+                        <Stack spacing={3}>
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ mb: 1, color: '#a855f7', fontWeight: 700 }}>TEAM DETAILS</Typography>
+                                <TextField
+                                    fullWidth
+                                    placeholder="Enter Team Name"
+                                    value={teamName}
+                                    onChange={(e) => setTeamName(e.target.value)}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            bgcolor: 'rgba(255,255,255,0.03)',
+                                            color: '#fff',
+                                            borderRadius: '12px',
+                                            '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                                            '&:hover fieldset': { borderColor: 'rgba(168,85,247,0.5)' },
+                                        }
+                                    }}
+                                />
+                            </Box>
+
+                            <Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="subtitle2" sx={{ color: '#a855f7', fontWeight: 700 }}>TEAM MEMBERS ({members.length + 1}/6)</Typography>
+                                    <Button
+                                        startIcon={<AddIcon />}
+                                        size="small"
+                                        onClick={() => handleAddMember()}
+                                        disabled={members.length >= 5}
+                                        sx={{ color: '#a855f7' }}
+                                    >
+                                        Add Manually
+                                    </Button>
+                                </Box>
+
+                                <Grid container spacing={2}>
+                                    {/* Leader (ReadOnly) */}
+                                    <Grid item xs={12}>
+                                        <Paper sx={{ p: 2, bgcolor: 'rgba(168,85,247,0.05)', border: '1px dashed rgba(168,85,247,0.3)', borderRadius: '12px' }}>
+                                            <Stack direction="row" spacing={2} alignItems="center">
+                                                <Avatar size="small" sx={{ bgcolor: '#a855f7', width: 32, height: 32, fontSize: '0.875rem' }}>L</Avatar>
+                                                <Box>
+                                                    <Typography variant="body2" fontWeight={600}>{user.name} (You)</Typography>
+                                                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>{user.email} | Sem {user.semester}</Typography>
+                                                </Box>
+                                            </Stack>
+                                        </Paper>
+                                    </Grid>
+
+                                    {/* Dynamic Members */}
+                                    {members.map((member, idx) => (
+                                        <Grid item xs={12} key={idx}>
+                                            <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                                                <Stack spacing={2}>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <Typography variant="caption" fontWeight={700} sx={{ color: 'rgba(255,255,255,0.3)' }}>MEMBER {idx + 2}</Typography>
+                                                        <IconButton size="small" onClick={() => handleRemoveMember(idx)} sx={{ color: '#f87171' }}>
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Box>
+                                                    <Grid container spacing={1}>
+                                                        <Grid item xs={12} sm={6}>
+                                                            <TextField
+                                                                size="small" fullWidth placeholder="Name"
+                                                                value={member.name} onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
+                                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={12} sm={6}>
+                                                            <TextField
+                                                                size="small" fullWidth placeholder="Email"
+                                                                value={member.email} onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
+                                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={6}>
+                                                            <TextField
+                                                                size="small" fullWidth placeholder="Enrollment"
+                                                                value={member.enrollmentNumber} onChange={(e) => handleMemberChange(idx, 'enrollmentNumber', e.target.value)}
+                                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={6}>
+                                                            <TextField
+                                                                size="small" fullWidth placeholder="Semester"
+                                                                value={member.semester} onChange={(e) => handleMemberChange(idx, 'semester', e.target.value)}
+                                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                                            />
+                                                        </Grid>
+                                                    </Grid>
+                                                </Stack>
+                                            </Paper>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            </Box>
+
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ color: '#a855f7', fontWeight: 700, mb: 2 }}>FIND TEAMMATES (Registered on Platform)</Typography>
+                                {loadingPotential ? (
+                                    <CircularProgress size={20} />
+                                ) : (
+                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                        {potentialParticipants.length === 0 ? (
+                                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)' }}>No other users available right now.</Typography>
+                                        ) : (
+                                            potentialParticipants.slice(0, 10).map((p, i) => (
+                                                <Tooltip key={i} title={`Sem ${p.semester} | ${p.email}`}>
+                                                    <Chip
+                                                        icon={<PersonAddIcon size="small" />}
+                                                        label={p.name}
+                                                        onClick={() => handleAddMember(p)}
+                                                        size="small"
+                                                        sx={{
+                                                            bgcolor: 'rgba(168,85,247,0.1)',
+                                                            color: '#c084fc',
+                                                            '&:hover': { bgcolor: 'rgba(168,85,247,0.2)' }
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                            ))
+                                        )}
+                                    </Box>
+                                )}
+                            </Box>
+                        </Stack>
+                    )}
+
+                    {regType === 'solo' && (
+                        <Paper sx={{ p: 3, bgcolor: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.1)', borderRadius: '16px' }}>
+                            <Typography variant="body1" sx={{ mb: 2, fontWeight: 600 }}>Confirm Registration Details</Typography>
+                            <Stack spacing={1}>
+                                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}><strong>Name:</strong> {user.name}</Typography>
+                                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}><strong>Email:</strong> {user.email}</Typography>
+                                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}><strong>Enrollment:</strong> {user.enrollmentNumber}</Typography>
+                                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}><strong>Semester:</strong> {user.semester}</Typography>
+                            </Stack>
+                        </Paper>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ p: 3, pt: 1 }}>
+                    <Button onClick={() => setRegModalOpen(false)} sx={{ color: 'rgba(255,255,255,0.5)' }}>Cancel</Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleRegister}
+                        disabled={!!registeringId}
+                        sx={{
+                            borderRadius: '10px',
+                            px: 4,
+                            bgcolor: '#a855f7',
+                            '&:hover': { bgcolor: '#9333ea' }
+                        }}
+                    >
+                        {registeringId ? <CircularProgress size={24} color="inherit" /> : 'Confirm Registration'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                open={passModalOpen}
+                onClose={() => setPassModalOpen(false)}
+                PaperProps={{
+                    sx: { bgcolor: 'transparent', boxShadow: 'none', backgroundImage: 'none' }
+                }}
+            >
+                <EventPass
+                    registration={viewingRegistration}
+                    event={viewingEvent}
+                    onClose={() => setPassModalOpen(false)}
+                />
+            </Dialog>
         </Box >
     );
 }

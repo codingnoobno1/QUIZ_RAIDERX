@@ -243,6 +243,7 @@ export default function PixelEventCard({
 
                     <Button
                         variant="outlined"
+                        onClick={onViewPass}
                         sx={{
                             flex: 1,
                             borderRadius: '14px',
