@@ -53,7 +53,17 @@ const EventRegistrationSchema = new mongoose.Schema({
     entryTime: { type: Date },
     exitTime: { type: Date },
     entryCount: { type: Number, default: 0 },
-    exitCount: { type: Number, default: 0 }
+    exitCount: { type: Number, default: 0 },
+
+    // Pass and Mode Logic
+    passGenerated: { type: Boolean, default: false },
+    passUrl: { type: String },
+    modeProgress: [{
+        mode: String,
+        status: String,
+        score: Number,
+        data: mongoose.Schema.Types.Mixed
+    }]
 }, {
     timestamps: true
 });
