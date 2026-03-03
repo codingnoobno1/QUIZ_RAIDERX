@@ -85,3 +85,63 @@ export async function GET(req, { params }) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+/**
+ * POST /api/flutter/eventmode/[eventtype]
+ * Update user progress or submission for a specific mode.
+ */
+export async function POST(req, { params }) {
+    try {
+        const { eventtype } = params;
+        const body = await req.json();
+        const { eventId, email, score, status, data } = body;
+
+        if (!eventId || !email) {
+            return NextResponse.json({ error: 'Missing eventId or email' }, { status: 400 });
+        }
+
+        await connectDB();
+
+        const registration = await EventRegistration.findOne({
+            eventId,
+            $or: [
+                { email: email.toLowerCase() },
+                { 'members.email': email.toLowerCase(), 'members.inviteStatus': 'accepted' }
+            ]
+        });
+
+        if (!registration) {
+            return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
+        }
+
+        // Find or create progress entry for this mode
+        let progressIndex = registration.modeProgress.findIndex(p => p.mode === eventtype);
+
+        if (progressIndex > -1) {
+            // Update existing
+            registration.modeProgress[progressIndex].status = status || registration.modeProgress[progressIndex].status;
+            registration.modeProgress[progressIndex].score = score !== undefined ? score : registration.modeProgress[progressIndex].score;
+            registration.modeProgress[progressIndex].data = data ? { ...registration.modeProgress[progressIndex].data, ...data } : registration.modeProgress[progressIndex].data;
+        } else {
+            // Add new
+            registration.modeProgress.push({
+                mode: eventtype,
+                status: status || 'completed',
+                score: score || 0,
+                data: data || {}
+            });
+        }
+
+        await registration.save();
+
+        return NextResponse.json({
+            success: true,
+            message: `Progress updated for ${eventtype}`,
+            userProgress: registration.modeProgress.find(p => p.mode === eventtype)
+        }, { status: 200 });
+
+    } catch (error) {
+        console.error('Event Mode update error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
