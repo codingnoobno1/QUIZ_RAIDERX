@@ -26,12 +26,14 @@ export default function StudentAdminDashboard() {
                 // Fetch Pending Research
                 const res = await fetch('/api/research/approval');
                 const data = await res.json();
-                if (res.ok) setResearchRequests(data.data || []);
+                const researchList = data.data || data || [];
+                setResearchRequests(Array.isArray(researchList) ? researchList : []);
             } else {
                 // Fetch Admin Notes
                 const res = await fetch('/api/admin-notes');
                 const data = await res.json();
-                if (res.ok) setAdminNotes(data || []);
+                const notesList = data.data || data || [];
+                setAdminNotes(Array.isArray(notesList) ? notesList : []);
             }
         } catch (error) {
             console.error("Error fetching data:", error);
