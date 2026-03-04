@@ -31,7 +31,8 @@ export async function GET(req, { params }) {
 
         let responseData = {
             mode: eventtype,
-            active: event.activeMode === eventtype,
+            active: event.activeMode?.type === eventtype,
+            activeMode: event.activeMode || null, // Returns { type, startedAt }
             config: modeConfig ? modeConfig.config : {}
         };
 
@@ -112,6 +113,16 @@ export async function POST(req, { params }) {
 
         if (!registration) {
             return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
+        }
+
+        // 4. Reliability & Security: Prevent Fake Requests
+        // Never trust Flutter state. Check backend truth for active mode.
+        const event = await Event.findById(eventId);
+        if (!event || event.activeMode?.type !== eventtype) {
+            return NextResponse.json({
+                error: `Submission rejected. ${eventtype} is not currently active for this event.`,
+                activeMode: event?.activeMode?.type || 'none'
+            }, { status: 403 });
         }
 
         // Find or create progress entry for this mode

@@ -114,27 +114,15 @@ export default function LiveEventManager() {
     const handleSaveMode = async () => {
         setSaving(true);
         try {
-            const modeType = activeMode === 'none' ? null : activeMode;
+            const modeType = activeMode === 'none' ? 'none' : activeMode;
 
-            // Construct config
-            let config = {};
-            if (modeType === 'quiz') config = { quizId, timeLimit: quizTimer };
-            if (modeType === 'voting') config = { topics: votingTopics };
-            if (modeType === 'treasure-hunt') config = { clueCount };
-
-            const response = await fetch(`/api/events/${selectedEvent._id}`, {
-                method: 'PUT',
+            const response = await fetch(`/api/admin/event/${selectedEvent._id}`, {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    activeMode: modeType,
-                    // Update the specific mode entry or the whole list
-                    modes: [
-                        { type: 'quiz', config: modeType === 'quiz' ? config : (selectedEvent.modes?.find(m => m.type === 'quiz')?.config || {}) },
-                        { type: 'voting', config: modeType === 'voting' ? config : (selectedEvent.modes?.find(m => m.type === 'voting')?.config || {}) },
-                        { type: 'treasure-hunt', config: modeType === 'treasure-hunt' ? config : (selectedEvent.modes?.find(m => m.type === 'treasure-hunt')?.config || {}) }
-                    ]
+                    activeMode: modeType
                 }),
             });
 
@@ -142,7 +130,8 @@ export default function LiveEventManager() {
                 setOpenDialog(false);
                 fetchEvents();
             } else {
-                alert('Failed to update event mode');
+                const errData = await response.json();
+                alert(errData.message || 'Failed to update event mode');
             }
         } catch (err) {
             alert('Error saving changes');

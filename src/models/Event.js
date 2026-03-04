@@ -11,9 +11,18 @@ const eventSchema = new mongoose.Schema({
   onDuty: { type: Boolean, default: false },
   modes: [{
     type: { type: String, enum: ['quiz', 'voting', 'treasure-hunt', 'custom'] },
-    config: { type: mongoose.Schema.Types.Mixed } // Stores specific settings like rapid-fire vs long-thinking
+    config: { type: mongoose.Schema.Types.Mixed }
   }],
-  activeMode: { type: String },
+  activeMode: {
+    type: { type: String },
+    startedAt: { type: Date }
+  },
+  modeHistory: [{
+    mode: String,
+    startedAt: Date,
+    endedAt: Date,
+    changedBy: String
+  }],
   createdAt: { type: Date, default: Date.now },
 });
 
