@@ -1,6 +1,6 @@
-# Live Event Admin: Next.js Documentation
+# Live Event Admin: Mini-Events & fun activities
 
-This document describes how to manage Live Event modes through the Admin Panel and API.
+This document describes how to manage "Mini-Events" (Quiz, Voting, Treasure Hunt) that run as fun activities during a major event.
 
 ## 1. API Endpoints
 
