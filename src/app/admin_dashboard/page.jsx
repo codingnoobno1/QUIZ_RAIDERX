@@ -96,6 +96,26 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </Grid>
+        {/* Live Event Management */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Card elevation={3} sx={{ border: '2px solid #f50057' }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <LiveTvIcon fontSize="large" color="secondary" />
+              <Typography variant="h6" sx={{ mt: 1 }}>
+                Live Management
+              </Typography>
+              <Button
+                variant="contained"
+                color="secondary"
+                sx={{ mt: 2 }}
+                fullWidth
+                href="/admin"
+              >
+                Go Live
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
     </Box>
   );
