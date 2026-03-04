@@ -5,17 +5,19 @@ import { Add as AddIcon } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import ResearchCard from "./ResearchCard";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+
+const neonCyan = "#00FFFF";
+const neonPink = "#FF2E88";
 
 export default function MyResearch() {
   const [myResearch, setMyResearch] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get submitter name from localStorage
     const submitterName = localStorage.getItem('studentName') || '';
 
     if (submitterName) {
-      // Fetch user's research papers from database
       fetch(`/api/research?submitterName=${encodeURIComponent(submitterName)}`)
         .then(res => res.json())
         .then(data => {
@@ -33,94 +35,94 @@ export default function MyResearch() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <CircularProgress sx={{ color: '#00FFFF' }} />
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+        <CircularProgress sx={{ color: neonCyan }} />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: 4 }}>
-      {/* Header - matches ResearchPapers */}
+    <Box>
+      {/* Header */}
       <Box sx={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        mb: 3,
+        mb: 4,
         flexWrap: 'wrap',
         gap: 2,
       }}>
-        <Typography variant="h4" sx={{
-          fontWeight: 'bold',
-          background: 'linear-gradient(135deg, #00FFFF 0%, #FF1493 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-        }}>
-          My Research
-        </Typography>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 900, color: "#fff", letterSpacing: -1 }}>
+            MY ARCHIVES
+          </Typography>
+          <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.4)", fontWeight: 500 }}>
+            Review your documented research and academic papers.
+          </Typography>
+        </Box>
         <Button
           component={Link}
           href="/submit-research"
           variant="contained"
           startIcon={<AddIcon />}
           sx={{
-            background: 'linear-gradient(135deg, #FF1493 0%, #00FFFF 100%)',
-            fontWeight: 'bold',
+            background: `linear-gradient(135deg, ${neonPink} 0%, ${neonCyan} 100%)`,
+            fontWeight: 900,
             px: 3,
-            py: 1,
-            borderRadius: 2,
-            textTransform: 'none',
-            fontSize: '0.95rem',
-            boxShadow: '0 4px 15px rgba(255, 20, 147, 0.3)',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: '0 6px 20px rgba(255, 20, 147, 0.4)',
-            },
-            transition: 'all 0.3s ease',
+            py: 1.5,
+            borderRadius: "16px",
+            boxShadow: `0 8px 16px ${neonPink}33`,
+            "&:hover": { transform: "translateY(-2px)", boxShadow: `0 12px 24px ${neonPink}44` },
+            transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
           }}
         >
-          Submit New Research
+          NEW DOCUMENT
         </Button>
       </Box>
 
-      {myResearch.length === 0 ? (
-        <Box sx={{
-          textAlign: 'center',
-          py: 8,
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.5) 100%)',
-          borderRadius: 3,
-          border: '1px dashed rgba(0, 255, 255, 0.3)',
-        }}>
-          <Typography sx={{ color: '#9ca3af', mb: 2, fontSize: '1.1rem' }}>
-            You have not submitted any research papers yet.
-          </Typography>
-          <Button
-            component={Link}
-            href="/submit-research"
-            variant="outlined"
-            startIcon={<AddIcon />}
-            sx={{
-              borderColor: '#00FFFF',
-              color: '#00FFFF',
-              '&:hover': {
-                borderColor: '#FF1493',
-                color: '#FF1493',
-                bgcolor: 'rgba(255,20,147,0.1)',
-              }
-            }}
-          >
-            Submit Your First Research
-          </Button>
-        </Box>
-      ) : (
-        <Grid container spacing={4}>
-          {myResearch.map((item) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={item._id}>
-              <ResearchCard data={item} />
-            </Grid>
-          ))}
-        </Grid>
-      )}
+      <AnimatePresence>
+        {myResearch.length === 0 ? (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{
+              textAlign: 'center',
+              py: 10,
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: "32px",
+              border: '1px dashed rgba(0, 255, 255, 0.2)',
+            }}>
+              <Typography sx={{ color: 'rgba(255, 255, 255, 0.3)', mb: 3, fontSize: '1.1rem', fontWeight: 500 }}>
+                No research papers logged in your sector.
+              </Typography>
+              <Button
+                component={Link}
+                href="/submit-research"
+                variant="outlined"
+                startIcon={<AddIcon />}
+                sx={{
+                  borderColor: neonCyan,
+                  color: neonCyan,
+                  borderRadius: "12px",
+                  "&:hover": {
+                    borderColor: neonPink,
+                    color: neonPink,
+                    bgcolor: `${neonPink}11`,
+                  }
+                }}
+              >
+                SUBMIT FIRST PAPER
+              </Button>
+            </Box>
+          </motion.div>
+        ) : (
+          <Grid container spacing={4}>
+            {myResearch.map((item) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={item._id}>
+                <ResearchCard data={item} />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </AnimatePresence>
     </Box>
   );
 }

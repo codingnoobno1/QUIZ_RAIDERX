@@ -9,186 +9,358 @@ import CloseIcon from "@mui/icons-material/Close";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import CloudIcon from "@mui/icons-material/Cloud";
 import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
-import projectData from "./data.json";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function ProjectCard() {
+const neonCyan = "#00FFFF";
+const neonPink = "#FF2E88";
+const slate800 = "#1e293b";
+const slate900 = "#0f172a";
+
+export default function ProjectCard({ data }) {
   const [open, setOpen] = useState(false);
-  const [currentProject, setCurrentProject] = useState(null);
   const [tab, setTab] = useState(0);
 
-  const handleOpen = (project) => {
-    setCurrentProject(project);
-    setTab(0);
-    setOpen(true);
-  };
-
+  const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const goldenStyle = {
-    color: "#ffcb05",
-    fontWeight: 600,
-    fontFamily: "serif",
-  };
+  // If data is passed as a prop, use it. Otherwise, this component might be used in a way that it needs to handle its own state or it's a template.
+  // In ProjectCard.jsx, it was originally using data.json directly, but AllProjects.js passes 'data' prop.
+  const project = data;
 
-  const cardStyle = {
-    background: "#111827",
-    borderRadius: 4,
-    color: "#e5e7eb",
-    height: 370,
-    cursor: "pointer",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
-    border: "1px solid #1f2937",
-    transition: "transform 0.3s",
-    "&:hover": {
-      transform: "scale(1.03)",
-      boxShadow: "0 6px 30px rgba(255,203,5,0.2)",
-    },
-  };
+  if (!project) return null;
 
   return (
     <>
-      <Grid container spacing={3} sx={{ px: 2, py: 4 }}>
-        {projectData.map((project, idx) => (
-          <Grid item xs={12} sm={6} md={4} key={idx}>
-            <Card sx={cardStyle} onClick={() => handleOpen(project)}>
-              <CardContent>
-                <Box sx={{ textAlign: "center", mb: 2 }}>
-                  <img
-                    src={project.image || "/placeholder.jpg"}
-                    alt="project"
-                    style={{ width: "100%", height: 150, objectFit: "cover", borderRadius: 8 }}
-                  />
-                </Box>
-                <Typography variant="h6" sx={{ ...goldenStyle, mb: 1 }}>
-                  {project.title}
-                </Typography>
-                <Typography variant="body2" sx={{ color: "#9ca3af", mb: 2 }}>
-                  {project.description?.slice(0, 70)}...
-                </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+      <motion.div
+        whileHover={{ y: -10, scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      >
+        <Card
+          onClick={handleOpen}
+          sx={{
+            background: "rgba(30, 41, 59, 0.4)",
+            backdropFilter: "blur(12px)",
+            borderRadius: "24px",
+            color: "#f1f5f9",
+            height: "100%",
+            minHeight: 400,
+            cursor: "pointer",
+            position: "relative",
+            overflow: "hidden",
+            border: "1px solid rgba(255, 255, 255, 0.05)",
+            transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+            "&:hover": {
+              border: `1px solid ${neonCyan}44`,
+              boxShadow: `0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px ${neonCyan}11`,
+              "& .card-glow": { opacity: 1 },
+            },
+          }}
+        >
+          {/* Glowing Accent */}
+          <Box
+            className="card-glow"
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "4px",
+              background: `linear-gradient(90deg, ${neonCyan}, ${neonPink})`,
+              opacity: 0.3,
+              transition: "opacity 0.4s",
+            }}
+          />
+
+          <CardContent sx={{ p: 0, height: "100%", display: "flex", flexDirection: "column" }}>
+            {/* Image Container */}
+            <Box sx={{ position: "relative", height: 180, overflow: "hidden" }}>
+              <Box
+                component="img"
+                src={project.image || "/placeholder.jpg"}
+                alt={project.title}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  transition: "transform 0.6s",
+                  filter: "brightness(0.8) contrast(1.1)",
+                }}
+              />
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  background: "linear-gradient(to top, rgba(15, 23, 42, 0.9), transparent)",
+                  p: 2,
+                }}
+              >
+                <Chip
+                  label={project.type || "Project"}
+                  size="small"
+                  sx={{
+                    background: "rgba(255, 255, 255, 0.1)",
+                    backdropFilter: "blur(4px)",
+                    color: "#f8fafc",
+                    fontWeight: 700,
+                    fontSize: "0.65rem",
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                  }}
+                />
+              </Box>
+            </Box>
+
+            <Box sx={{ p: 3, flexGrow: 1, display: "flex", flexDirection: "column" }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 800,
+                  color: "#f1f5f9",
+                  mb: 1,
+                  lineHeight: 1.2,
+                  fontSize: "1.25rem",
+                }}
+              >
+                {project.title}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "rgba(148, 163, 184, 0.8)",
+                  mb: 3,
+                  fontSize: "0.9rem",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {project.description}
+              </Typography>
+
+              <Box sx={{ mt: "auto" }}>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
                   {project.stack?.slice(0, 3).map((tech, i) => (
-                    <Chip
+                    <Typography
                       key={i}
-                      label={tech}
-                      size="small"
-                      variant="outlined"
-                      sx={{ color: "#ffcb05", borderColor: "#ffcb05" }}
-                    />
+                      variant="caption"
+                      sx={{
+                        color: neonCyan,
+                        fontWeight: 700,
+                        fontSize: "0.7rem",
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      #{tech.toUpperCase()}
+                    </Typography>
                   ))}
                 </Box>
-                {project.usp && (
-                  <Box sx={{ mt: 2 }}>
-                    <Chip label={project.usp} color="success" size="small" />
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
 
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-        <DialogContent sx={{ p: 0, bgcolor: tab === 0 ? "#0f172a" : "#fff", minHeight: "600px" }}>
-          <IconButton onClick={handleClose} sx={{ position: "absolute", top: 10, right: 10, zIndex: 1 }}>
-            <CloseIcon sx={{ color: tab === 0 ? "#fff" : "#000" }} />
+                <Divider sx={{ borderColor: "rgba(255, 255, 255, 0.05)", mb: 2 }} />
+
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Avatar sx={{ width: 24, height: 24, fontSize: "0.75rem", bgcolor: slate800, color: neonCyan, border: `1px solid ${neonCyan}44` }}>
+                      {project.teamLead?.[0] || "L"}
+                    </Avatar>
+                    <Typography variant="caption" sx={{ ml: 1, color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
+                      {project.teamLead || "Lead"}
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" sx={{ color: neonPink, fontWeight: 800 }}>
+                    VIEW DETAILS →
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Redesigned Dialog */}
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            bgcolor: "#020617",
+            backgroundImage: "none",
+            borderRadius: "32px",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: "0 50px 100px -20px rgba(0, 0, 0, 0.7)",
+            overflow: "hidden",
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 0, position: "relative", minHeight: 500 }}>
+          <IconButton
+            onClick={handleClose}
+            sx={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              zIndex: 10,
+              bgcolor: "rgba(0,0,0,0.3)",
+              backdropFilter: "blur(8px)",
+              color: "#fff",
+              "&:hover": { bgcolor: neonPink, color: "#fff" }
+            }}
+          >
+            <CloseIcon />
           </IconButton>
+
+          <Box sx={{ position: "relative", height: 250 }}>
+            <Box
+              component="img"
+              src={project.image || "/placeholder.jpg"}
+              sx={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.5)" }}
+            />
+            <Box sx={{ position: "absolute", bottom: 0, left: 0, right: 0, p: 4, background: "linear-gradient(to top, #020617, transparent)" }}>
+              <Typography variant="h3" sx={{ fontWeight: 900, color: "#fff", letterSpacing: -1 }}>
+                {project.title}
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                <Chip label={project.type} size="small" sx={{ bgcolor: neonCyan, color: "#000", fontWeight: 700 }} />
+                {project.usp && <Chip label={project.usp} size="small" sx={{ bgcolor: neonPink, color: "#fff", fontWeight: 700 }} />}
+              </Box>
+            </Box>
+          </Box>
 
           <Tabs
             value={tab}
             onChange={(e, newVal) => setTab(newVal)}
             variant="fullWidth"
             sx={{
-              bgcolor: tab === 0 ? "#1e293b" : "#f5f5f5",
-              borderBottom: 1,
-              borderColor: "#ccc",
-              color: tab === 0 ? "#fff" : "#000",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+              "& .MuiTab-root": { color: "rgba(255, 255, 255, 0.5)", fontWeight: 700 },
+              "& .Mui-selected": { color: neonCyan },
+              "& .MuiTabs-indicator": { bgcolor: neonCyan, height: 3 },
             }}
           >
-            <Tab label="Title Page" />
-            <Tab label="Overview" />
-            <Tab label="Tech & Links" />
-            <Tab label="Team" />
+            <Tab label="OVERVIEW" />
+            <Tab label="TECH STACK" />
+            <Tab label="LINKS" />
+            <Tab label="TEAM" />
           </Tabs>
 
-          {tab === 0 && (
-            <Box sx={{ p: 5, textAlign: "center", color: "#ffcb05" }}>
-              <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
-                {currentProject?.title}
-              </Typography>
-              <Typography variant="subtitle1" sx={{ fontFamily: "serif", color: "#bbb" }}>
-                Project Report | {currentProject?.type}
-              </Typography>
-            </Box>
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Box sx={{ p: 4, color: "#cbd5e1" }}>
+                {tab === 0 && (
+                  <Box>
+                    <Typography variant="h6" sx={{ color: neonCyan, mb: 2, fontWeight: 800 }}>Project Essence</Typography>
+                    <Typography variant="body1" sx={{ lineHeight: 1.8 }}>{project.description}</Typography>
+                  </Box>
+                )}
 
-          {tab === 1 && (
-            <Box sx={{ p: 4 }}>
-              <Typography variant="h5" sx={{ ...goldenStyle, mb: 2 }}>Description</Typography>
-              <Typography variant="body1" sx={{ color: "#333" }}>{currentProject?.description}</Typography>
-              {currentProject?.usp && (
-                <Box mt={3}>
-                  <Chip label={`USP: ${currentProject.usp}`} color="success" />
-                </Box>
-              )}
-            </Box>
-          )}
+                {tab === 1 && (
+                  <Box>
+                    <Typography variant="h6" sx={{ color: neonCyan, mb: 2, fontWeight: 800 }}>Technology Framework</Typography>
+                    <Grid container spacing={1}>
+                      {project.stack?.map((tech, i) => (
+                        <Grid item key={i}>
+                          <Chip
+                            label={tech}
+                            sx={{
+                              bgcolor: "rgba(0, 255, 255, 0.05)",
+                              border: `1px solid ${neonCyan}33`,
+                              color: neonCyan,
+                              fontWeight: 600
+                            }}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                )}
 
-          {tab === 2 && (
-            <Box sx={{ p: 4 }}>
-              <Typography variant="h6" sx={{ ...goldenStyle }}>Tech Stack</Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
-                {currentProject?.stack?.map((tech, i) => (
-                  <Chip key={i} label={tech} color="info" size="small" />
-                ))}
+                {tab === 2 && (
+                  <Box>
+                    <Typography variant="h6" sx={{ color: neonCyan, mb: 3, fontWeight: 800 }}>Access Points</Typography>
+                    <Grid container spacing={3}>
+                      {project.github && (
+                        <Grid item xs={12} sm={4}>
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            startIcon={<GitHubIcon />}
+                            href={project.github}
+                            target="_blank"
+                            sx={{ borderColor: "rgba(255,255,255,0.1)", color: "#fff", borderRadius: "12px", py: 1.5 }}
+                          >
+                            CODEBASE
+                          </Button>
+                        </Grid>
+                      )}
+                      {project.deployment && (
+                        <Grid item xs={12} sm={4}>
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            startIcon={<CloudIcon />}
+                            href={project.deployment}
+                            target="_blank"
+                            sx={{ bgcolor: neonCyan, color: "#000", "&:hover": { bgcolor: "#00cccc" }, borderRadius: "12px", py: 1.5, fontWeight: 800 }}
+                          >
+                            LIVE DEMO
+                          </Button>
+                        </Grid>
+                      )}
+                      {project.gdrive && (
+                        <Grid item xs={12} sm={4}>
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            startIcon={<DriveFolderUploadIcon />}
+                            href={project.gdrive}
+                            target="_blank"
+                            sx={{ borderColor: "rgba(255,255,255,0.1)", color: "#fff", borderRadius: "12px", py: 1.5 }}
+                          >
+                            RESOURCES
+                          </Button>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </Box>
+                )}
+
+                {tab === 3 && (
+                  <Box>
+                    <Typography variant="h6" sx={{ color: neonCyan, mb: 3, fontWeight: 800 }}>Project Leadership</Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", p: 2, bgcolor: "rgba(255,255,255,0.03)", borderRadius: "16px", mb: 4 }}>
+                      <Avatar sx={{ width: 48, height: 48, bgcolor: neonCyan, color: "#000", fontWeight: 800, mr: 2 }}>{project.teamLead?.[0]}</Avatar>
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 800, color: "#fff" }}>{project.teamLead}</Typography>
+                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>ARCHITECT / TEAM LEAD</Typography>
+                      </Box>
+                    </Box>
+
+                    <Typography variant="h6" sx={{ color: neonPink, mb: 2, fontWeight: 800 }}>Collaborators</Typography>
+                    <Grid container spacing={2}>
+                      {project.groupMembers?.map((member, i) => (
+                        <Grid item xs={6} md={4} key={i}>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Avatar sx={{ width: 28, height: 28, fontSize: "0.7rem", mr: 1 }}>{member[0]}</Avatar>
+                            <Typography variant="body2">{member}</Typography>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                )}
               </Box>
-
-              <Typography variant="h6" sx={{ ...goldenStyle, mt: 4 }}>Project Links</Typography>
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                {currentProject?.github && (
-                  <Grid item>
-                    <Tooltip title="GitHub Repository">
-                      <Link href={currentProject.github} target="_blank" underline="hover">
-                        <GitHubIcon sx={{ mr: 0.5 }} /> GitHub
-                      </Link>
-                    </Tooltip>
-                  </Grid>
-                )}
-                {currentProject?.gdrive && (
-                  <Grid item>
-                    <Tooltip title="Google Drive Docs">
-                      <Link href={currentProject.gdrive} target="_blank" underline="hover">
-                        <DriveFolderUploadIcon sx={{ mr: 0.5 }} /> Drive
-                      </Link>
-                    </Tooltip>
-                  </Grid>
-                )}
-                {currentProject?.deployment && (
-                  <Grid item>
-                    <Tooltip title="Live Deployment">
-                      <Link href={currentProject.deployment} target="_blank" underline="hover">
-                        <CloudIcon sx={{ mr: 0.5 }} /> Live
-                      </Link>
-                    </Tooltip>
-                  </Grid>
-                )}
-              </Grid>
-            </Box>
-          )}
-
-          {tab === 3 && (
-            <Box sx={{ p: 4 }}>
-              <Typography variant="h6" sx={{ ...goldenStyle }}>Team Lead</Typography>
-              <Typography>{currentProject?.teamLead}</Typography>
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="h6" sx={{ ...goldenStyle }}>Group Members</Typography>
-              {currentProject?.groupMembers?.map((member, index) => (
-                <Box key={index} sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-                  <Avatar sx={{ width: 32, height: 32, mr: 1 }}>{member[0]}</Avatar>
-                  <Typography>{member}</Typography>
-                </Box>
-              ))}
-            </Box>
-          )}
+            </motion.div>
+          </AnimatePresence>
         </DialogContent>
       </Dialog>
     </>

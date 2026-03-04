@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { AppBar, Toolbar, Button, Box } from '@mui/material';
+import { Button, Box, Typography } from '@mui/material';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 const ProjectNavbar = () => {
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'all';
 
@@ -20,54 +20,78 @@ const ProjectNavbar = () => {
   ];
 
   return (
-    <AppBar
-      position="static"
-      color="transparent"
-      elevation={0}
+    <Box
       sx={{
+        display: 'flex',
+        justifyContent: { xs: 'flex-start', md: 'center' },
+        alignItems: 'center',
+        overflowX: 'auto',
+        pb: 2,
         mb: 4,
-        borderRadius: 2,
-        backdropFilter: 'blur(10px)',
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+        gap: 1.5,
+        '&::-webkit-scrollbar': { display: 'none' },
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
       }}
     >
-      <Toolbar
+      <Box
         sx={{
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-          gap: { xs: 1, sm: 2 },
-          py: { xs: 1, sm: 1.5 },
+          display: 'flex',
+          p: 1,
+          background: 'rgba(2, 6, 23, 0.4)',
+          borderRadius: '20px',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(10px)',
         }}
       >
         {navItems.map((item) => {
           const isActive = currentTab === item.tab;
           return (
-            <Button
-              key={item.name}
-              component={Link}
-              href={`/coding-club/projects?tab=${item.tab}`}
-              sx={{
-                color: isActive ? '#00FFFF' : 'rgba(255, 255, 255, 0.7)',
-                fontWeight: isActive ? 'bold' : 'normal',
-                textTransform: 'none',
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                px: { xs: 1, sm: 2 },
-                py: { xs: 0.5, sm: 0.75 },
-                borderRadius: 2,
-                borderBottom: isActive ? '2px solid #00FFFF' : 'none',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                  color: '#00FFFF',
-                },
-              }}
-            >
-              {item.name}
-            </Button>
+            <Box key={item.tab} sx={{ position: 'relative' }}>
+              <Button
+                component={Link}
+                href={`/coding-club/projects?tab=${item.tab}`}
+                sx={{
+                  color: isActive ? '#f8fafc' : 'rgba(148, 163, 184, 0.6)',
+                  fontWeight: isActive ? 700 : 500,
+                  textTransform: 'none',
+                  fontSize: '0.875rem',
+                  px: 3,
+                  py: 1,
+                  borderRadius: '14px',
+                  transition: 'all 0.3s ease',
+                  zIndex: 1,
+                  '&:hover': {
+                    color: '#00FFFF',
+                    backgroundColor: 'transparent',
+                  },
+                }}
+              >
+                {item.name}
+              </Button>
+              {isActive && (
+                <motion.div
+                  layoutId="activeTab"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 255, 255, 0.15)',
+                    border: '1px solid rgba(0, 255, 255, 0.3)',
+                    borderRadius: '14px',
+                    boxShadow: '0 0 15px rgba(0, 255, 255, 0.1)',
+                    zIndex: 0,
+                  }}
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+            </Box>
           );
         })}
-      </Toolbar>
-    </AppBar>
+      </Box>
+    </Box>
   );
 };
 

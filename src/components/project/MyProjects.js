@@ -3,14 +3,16 @@
 import { useState, useEffect } from "react";
 import {
   Box, TextField, Typography, Button, Grid, Chip, IconButton,
-  CircularProgress, Card, CardContent, CardActions, Dialog, DialogTitle, DialogContent
+  CircularProgress, Dialog, DialogTitle, DialogContent, Avatar
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import GitHubIcon from "@mui/icons-material/GitHub";
-import LaunchIcon from "@mui/icons-material/Launch";
 import CloseIcon from "@mui/icons-material/Close";
-import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import ProjectCard from "./ProjectCard";
+
+const neonCyan = "#00FFFF";
+const neonPink = "#FF2E88";
+const slate800 = "#1e293b";
 
 export default function MyProjects() {
   const [myProjects, setMyProjects] = useState([]);
@@ -31,11 +33,8 @@ export default function MyProjects() {
   });
 
   useEffect(() => {
-    // Get author name from localStorage
     const authorName = localStorage.getItem('studentName') || '';
-
     if (authorName) {
-      // Fetch user's projects from API
       fetch(`/api/portfolio-projects?authorName=${encodeURIComponent(authorName)}`)
         .then(res => res.json())
         .then(data => {
@@ -46,7 +45,6 @@ export default function MyProjects() {
           console.error('Error fetching projects:', err);
           setLoading(false);
         });
-
       setFormData(prev => ({ ...prev, authorName }));
     } else {
       setLoading(false);
@@ -64,7 +62,6 @@ export default function MyProjects() {
 
     try {
       const authorName = formData.authorName || localStorage.getItem('studentName') || 'Anonymous';
-
       const response = await fetch('/api/portfolio-projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,13 +75,11 @@ export default function MyProjects() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Project submitted for review!' });
+        setMessage({ type: 'success', text: 'Project deployed to the staging sector! Waiting for approval.' });
         setShowForm(false);
-        // Refresh the projects list
         const refreshRes = await fetch(`/api/portfolio-projects?authorName=${encodeURIComponent(authorName)}`);
         const refreshData = await refreshRes.json();
         setMyProjects(refreshData.projects || []);
-        // Reset form
         setFormData({
           title: "",
           description: "",
@@ -96,163 +91,107 @@ export default function MyProjects() {
           authorName,
         });
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to submit project' });
+        setMessage({ type: 'error', text: data.error || 'Uplink failed. Transmission interrupted.' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Network error: ' + error.message });
+      setMessage({ type: 'error', text: 'Critical Error: ' + error.message });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'approved': return 'success';
-      case 'pending': return 'warning';
-      case 'rejected': return 'error';
-      default: return 'default';
-    }
-  };
-
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <CircularProgress sx={{ color: '#00FFFF' }} />
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+        <CircularProgress sx={{ color: neonCyan }} />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#00FFFF' }}>
-          My Projects
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 900, color: "#fff", letterSpacing: -1 }}>
+            MY EXPEDITIONS
+          </Typography>
+          <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.4)", fontWeight: 500 }}>
+            Track your contributions to the collective index.
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setShowForm(true)}
           sx={{
-            background: 'linear-gradient(135deg, #00FFFF 0%, #FF1493 100%)',
-            fontWeight: 'bold',
+            background: `linear-gradient(135deg, ${neonCyan} 0%, ${neonPink} 100%)`,
+            fontWeight: 800,
+            px: 3,
+            py: 1.5,
+            borderRadius: "16px",
+            boxShadow: `0 8px 16px ${neonCyan}33`,
+            "&:hover": { transform: "translateY(-2px)", boxShadow: `0 12px 24px ${neonCyan}44` },
+            transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
           }}
         >
-          Submit New Project
+          NEW INITIATIVE
         </Button>
       </Box>
 
-      {/* Success/Error Message */}
-      {message && (
-        <Box sx={{
-          p: 2,
-          mb: 3,
-          borderRadius: 2,
-          bgcolor: message.type === 'success' ? 'rgba(0,255,0,0.1)' : 'rgba(255,0,0,0.1)',
-          border: `1px solid ${message.type === 'success' ? '#00FF00' : '#FF0000'}`,
-          color: message.type === 'success' ? '#00FF00' : '#FF0000'
-        }}>
-          {message.text}
-        </Box>
-      )}
+      {/* Status Message */}
+      <AnimatePresence>
+        {message && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+            <Box sx={{
+              p: 2,
+              mb: 4,
+              borderRadius: "16px",
+              background: message.type === 'success' ? `${neonCyan}11` : `${neonPink}11`,
+              border: `1px solid ${message.type === 'success' ? neonCyan : neonPink}44`,
+              color: message.type === 'success' ? neonCyan : neonPink,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center"
+            }}>
+              {message.text}
+            </Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Projects Grid */}
       {myProjects.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 6 }}>
-          <Typography sx={{ color: '#9ca3af', mb: 2 }}>
-            You have not submitted any projects yet.
+        <Box sx={{
+          textAlign: 'center',
+          py: 10,
+          border: "1px dashed rgba(255, 255, 255, 0.1)",
+          borderRadius: "32px",
+          background: "rgba(255, 255, 255, 0.02)"
+        }}>
+          <Typography sx={{ color: 'rgba(255, 255, 255, 0.3)', mb: 3, fontWeight: 500 }}>
+            No records found for your signature. Start a new expedition.
           </Typography>
           <Button
             variant="outlined"
             startIcon={<AddIcon />}
             onClick={() => setShowForm(true)}
-            sx={{ borderColor: '#00FFFF', color: '#00FFFF' }}
+            sx={{ borderColor: neonCyan, color: neonCyan, borderRadius: "12px", "&:hover": { borderColor: neonPink, color: neonPink } }}
           >
-            Submit Your First Project
+            INITIALIZE FIRST PROJECT
           </Button>
         </Box>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={4}>
           {myProjects.map((project) => (
             <Grid item xs={12} sm={6} md={4} key={project._id}>
-              <Card sx={{
-                bgcolor: '#111827',
-                color: '#fff',
-                borderRadius: 3,
-                border: '1px solid #1f2937',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'transform 0.3s, box-shadow 0.3s',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 8px 30px rgba(0,255,255,0.2)',
-                }
-              }}>
-                {project.imageUrl && (
-                  <Box
-                    component="img"
-                    src={project.imageUrl}
-                    alt={project.title}
-                    sx={{ width: '100%', height: 150, objectFit: 'cover' }}
-                  />
-                )}
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#00FFFF' }}>
-                      {project.title}
-                    </Typography>
-                    <Chip
-                      label={project.status}
-                      size="small"
-                      color={getStatusColor(project.status)}
-                    />
-                  </Box>
-                  <Typography variant="body2" sx={{ color: '#9ca3af', mb: 2 }}>
-                    {project.description?.slice(0, 100)}...
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {project.tags?.slice(0, 3).map((tag, i) => (
-                      <Chip
-                        key={i}
-                        label={tag}
-                        size="small"
-                        sx={{ bgcolor: 'rgba(0,255,255,0.1)', color: '#00FFFF', fontSize: '0.7rem' }}
-                      />
-                    ))}
-                  </Box>
-                </CardContent>
-                <CardActions sx={{ px: 2, pb: 2 }}>
-                  {project.githubUrl && (
-                    <Button
-                      size="small"
-                      startIcon={<GitHubIcon />}
-                      href={project.githubUrl}
-                      target="_blank"
-                      sx={{ color: '#fff' }}
-                    >
-                      Code
-                    </Button>
-                  )}
-                  {project.liveUrl && (
-                    <Button
-                      size="small"
-                      startIcon={<LaunchIcon />}
-                      href={project.liveUrl}
-                      target="_blank"
-                      sx={{ color: '#FF1493' }}
-                    >
-                      Live
-                    </Button>
-                  )}
-                </CardActions>
-              </Card>
+              <ProjectCard data={project} />
             </Grid>
           ))}
         </Grid>
       )}
 
-      {/* Submit Form Dialog */}
+      {/* Submission Form Dialog */}
       <Dialog
         open={showForm}
         onClose={() => setShowForm(false)}
@@ -260,108 +199,132 @@ export default function MyProjects() {
         fullWidth
         PaperProps={{
           sx: {
-            bgcolor: '#0f172a',
-            color: '#fff',
-            borderRadius: 3,
+            bgcolor: "#020617",
+            color: "#fff",
+            borderRadius: "32px",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: "0 50px 100px -20px rgba(0, 0, 0, 0.7)",
+            backgroundImage: "none",
           }
         }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" sx={{ color: '#00FFFF' }}>Submit New Project</Typography>
-          <IconButton onClick={() => setShowForm(false)} sx={{ color: '#fff' }}>
+        <DialogTitle sx={{ p: 4, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h5" sx={{ fontWeight: 900, color: neonCyan, letterSpacing: -1 }}>NEW EXPEDITION</Typography>
+          <IconButton onClick={() => setShowForm(false)} sx={{ color: 'rgba(255,255,255,0.4)', "&:hover": { color: neonPink } }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: 4, pt: 2 }}>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-            <TextField
-              fullWidth
-              name="title"
-              label="Project Title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              name="description"
-              label="Description"
-              multiline
-              rows={3}
-              value={formData.description}
-              onChange={handleChange}
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              name="tags"
-              label="Tags (comma-separated)"
-              placeholder="React, Node.js, MongoDB"
-              value={formData.tags}
-              onChange={handleChange}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              name="category"
-              label="Category"
-              select
-              SelectProps={{ native: true }}
-              value={formData.category}
-              onChange={handleChange}
-              sx={{ mb: 2 }}
-            >
-              {['Web App', 'Mobile App', 'AI/ML', 'Blockchain', 'IoT', 'Game Dev', 'Other'].map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </TextField>
-            <TextField
-              fullWidth
-              name="imageUrl"
-              label="Image URL (optional)"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              name="githubUrl"
-              label="GitHub URL (optional)"
-              value={formData.githubUrl}
-              onChange={handleChange}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              name="liveUrl"
-              label="Live Demo URL (optional)"
-              value={formData.liveUrl}
-              onChange={handleChange}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              name="authorName"
-              label="Your Name"
-              value={formData.authorName}
-              onChange={handleChange}
-              required
-              sx={{ mb: 3 }}
-            />
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  name="title"
+                  label="Project Designation"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  variant="filled"
+                  sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  name="description"
+                  label="Mission Briefing"
+                  multiline
+                  rows={4}
+                  value={formData.description}
+                  onChange={handleChange}
+                  required
+                  variant="filled"
+                  sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  name="tags"
+                  label="Tech Tags"
+                  placeholder="React, AI, etc."
+                  value={formData.tags}
+                  onChange={handleChange}
+                  variant="filled"
+                  sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  name="category"
+                  label="Classification"
+                  select
+                  SelectProps={{ native: true }}
+                  value={formData.category}
+                  onChange={handleChange}
+                  variant="filled"
+                  sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
+                >
+                  {['Web App', 'Mobile App', 'AI/ML', 'Blockchain', 'IoT', 'Game Dev', 'Other'].map(cat => (
+                    <option key={cat} value={cat} style={{ background: "#0f172a" }}>{cat}</option>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  name="imageUrl"
+                  label="Visual Metadata (URL)"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                  variant="filled"
+                  sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  name="githubUrl"
+                  label="Uplink (GitHub)"
+                  value={formData.githubUrl}
+                  onChange={handleChange}
+                  variant="filled"
+                  sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  name="liveUrl"
+                  label="Live Sector"
+                  value={formData.liveUrl}
+                  onChange={handleChange}
+                  variant="filled"
+                  sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
+                />
+              </Grid>
+            </Grid>
+
             <Button
               type="submit"
               variant="contained"
               fullWidth
               disabled={submitting}
               sx={{
-                py: 1.5,
-                background: 'linear-gradient(135deg, #00FFFF 0%, #FF1493 100%)',
-                fontWeight: 'bold',
+                mt: 4,
+                py: 2,
+                background: `linear-gradient(135deg, ${neonCyan} 0%, ${neonPink} 100%)`,
+                fontWeight: 900,
+                borderRadius: "16px",
+                fontSize: "1rem",
+                letterSpacing: 1,
+                boxShadow: `0 8px 16px ${neonCyan}33`,
+                "&:hover": { boxShadow: `0 12px 24px ${neonCyan}44` }
               }}
             >
-              {submitting ? 'Submitting...' : 'Submit Project'}
+              {submitting ? 'TRANSMITTING...' : 'INITIALIZE UPLINK'}
             </Button>
           </Box>
         </DialogContent>

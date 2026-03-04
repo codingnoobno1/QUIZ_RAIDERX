@@ -8,28 +8,13 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import ArticleIcon from "@mui/icons-material/Article";
 import ScienceIcon from "@mui/icons-material/Science";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Unified card styling - matches ProjectCard exactly
-const cardStyle = {
-  background: "linear-gradient(135deg, #1e293b 0%, #111827 100%)",
-  borderRadius: 4,
-  color: "#e5e7eb",
-  height: 340,
-  cursor: "pointer",
-  boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
-  border: "1px solid rgba(0, 255, 255, 0.15)",
-  transition: "all 0.3s ease",
-  "&:hover": {
-    transform: "translateY(-8px) scale(1.02)",
-    boxShadow: "0 12px 40px rgba(0,255,255,0.15), 0 4px 20px rgba(255,20,147,0.1)",
-    borderColor: "rgba(0, 255, 255, 0.4)",
-  },
-};
+const neonCyan = "#00FFFF";
+const neonPink = "#FF2E88";
+const slate900 = "#020617";
+const slate800 = "#1e293b";
 
-const accentColor = "#00FFFF";
-const secondaryAccent = "#FF1493";
-
-// Single Research Card Component - accepts a paper object via props
 export default function ResearchCard({ data }) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState(0);
@@ -47,232 +32,282 @@ export default function ResearchCard({ data }) {
 
   return (
     <>
-      <Card sx={cardStyle} onClick={handleOpen}>
-        <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          {/* Icon Header */}
-          <Box sx={{
-            textAlign: "center",
-            mb: 2,
-            p: 2,
-            background: 'linear-gradient(135deg, rgba(0,255,255,0.1) 0%, rgba(255,20,147,0.1) 100%)',
-            borderRadius: 2,
-          }}>
-            <ArticleIcon sx={{ fontSize: 48, color: accentColor }} />
-          </Box>
+      <motion.div
+        whileHover={{ y: -10, scale: 1.02 }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, cubicBezier: [0.175, 0.885, 0.32, 1.275] }}
+      >
+        <Card
+          onClick={handleOpen}
+          sx={{
+            background: "rgba(30, 41, 59, 0.4)",
+            backdropFilter: "blur(20px)",
+            borderRadius: "24px",
+            color: "#fff",
+            height: 360,
+            cursor: "pointer",
+            position: "relative",
+            overflow: "hidden",
+            border: "1px solid rgba(255, 255, 255, 0.05)",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+            "&:hover": {
+              border: `1px solid ${neonCyan}33`,
+              boxShadow: `0 15px 45px ${neonCyan}11`,
+              "& .glow-overlay": { opacity: 1 }
+            }
+          }}
+        >
+          {/* Hover Glow Effect */}
+          <Box
+            className="glow-overlay"
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: `radial-gradient(circle at 50% 0%, ${neonCyan}11 0%, transparent 70%)`,
+              opacity: 0,
+              transition: "opacity 0.4s ease",
+              pointerEvents: "none",
+            }}
+          />
 
-          {/* Title */}
-          <Typography variant="h6" sx={{
-            color: accentColor,
-            fontWeight: 700,
-            mb: 1,
-            fontSize: '1rem',
-            lineHeight: 1.3,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}>
-            {paper.title}
-          </Typography>
-
-          {/* Abstract Preview */}
-          <Typography variant="body2" sx={{
-            color: "rgba(255,255,255,0.7)",
-            mb: 2,
-            flex: 1,
-            display: '-webkit-box',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            fontSize: '0.85rem',
-          }}>
-            {paper.abstract?.slice(0, 100)}...
-          </Typography>
-
-          {/* Tags/Chips */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 'auto' }}>
-            <Chip
-              label={paper.publicationType || paper.publisher || paper.conference || "Research"}
-              size="small"
-              sx={{
-                bgcolor: 'rgba(255, 20, 147, 0.2)',
-                color: secondaryAccent,
-                border: `1px solid ${secondaryAccent}`,
-                fontWeight: 600,
-                fontSize: '0.7rem',
-              }}
-            />
-            {paper.status && (
+          <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3, position: "relative", zIndex: 1 }}>
+            {/* Type Chip */}
+            <Box sx={{ mb: 2 }}>
               <Chip
-                label={paper.status}
+                label={(paper.publicationType || paper.publisher || "RESEARCH").toUpperCase()}
                 size="small"
                 sx={{
-                  bgcolor: paper.status === 'approved' ? 'rgba(0,255,0,0.2)' : 'rgba(255,165,0,0.2)',
-                  color: paper.status === 'approved' ? '#00FF00' : '#FFA500',
-                  fontWeight: 600,
-                  fontSize: '0.7rem',
+                  background: `${neonPink}11`,
+                  color: neonPink,
+                  border: `1px solid ${neonPink}44`,
+                  fontWeight: 800,
+                  fontSize: "0.65rem",
+                  letterSpacing: 1
                 }}
               />
-            )}
+            </Box>
+
+            {/* Icon/Visual Element */}
+            <Box sx={{
+              mb: 2,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: 80,
+              borderRadius: "16px",
+              background: "rgba(255, 255, 255, 0.02)",
+              border: "1px solid rgba(255, 255, 255, 0.05)"
+            }}>
+              <ArticleIcon sx={{ fontSize: 40, color: neonCyan }} />
+            </Box>
+
+            <Typography variant="h6" sx={{
+              fontWeight: 900,
+              lineHeight: 1.2,
+              mb: 1.5,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              letterSpacing: -0.5
+            }}>
+              {paper.title}
+            </Typography>
+
+            <Typography variant="body2" sx={{
+              color: "rgba(255, 255, 255, 0.5)",
+              mb: 2,
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              fontSize: "0.85rem",
+              lineHeight: 1.6
+            }}>
+              {paper.abstract}
+            </Typography>
+
+            {/* Footer Info */}
+            <Box sx={{ mt: 'auto', pt: 2, borderTop: "1px solid rgba(255, 255, 255, 0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(255, 255, 255, 0.4)" }}>
+                {paper.authors?.[0] || paper.submitterName || "CONTRIBUTOR"}
+              </Typography>
+              {paper.status && (
+                <Box sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  bgcolor: paper.status === 'approved' ? neonCyan : "#facc15",
+                  boxShadow: `0 0 10px ${paper.status === 'approved' ? neonCyan : "#facc15"}`
+                }} />
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Premium Detail Dialog */}
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            bgcolor: slate900,
+            color: "#fff",
+            borderRadius: "32px",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: "0 50px 100px -20px rgba(0, 0, 0, 0.7)",
+            backgroundImage: "none",
+            overflow: "hidden"
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 0, minHeight: "600px", display: "flex", flexDirection: "column" }}>
+          {/* Header Image Area */}
+          <Box sx={{
+            height: 200,
+            background: `linear-gradient(45deg, ${slate900} 30%, ${neonCyan}22 100%)`,
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            px: 4
+          }}>
+            <IconButton onClick={handleClose} sx={{ position: "absolute", top: 20, right: 20, color: "rgba(255,255,255,0.4)", "&:hover": { color: neonPink } }}>
+              <CloseIcon />
+            </IconButton>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+              <Avatar sx={{ width: 80, height: 80, bgcolor: "rgba(255, 255, 255, 0.05)", border: `2px solid ${neonCyan}44` }}>
+                <ScienceIcon sx={{ fontSize: 40, color: neonCyan }} />
+              </Avatar>
+              <Box>
+                <Chip
+                  label={(paper.publicationType || "RESEARCH").toUpperCase()}
+                  size="small"
+                  sx={{ background: neonCyan, color: "#000", fontWeight: 900, mb: 1 }}
+                />
+                <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: -1 }}>{paper.title.toUpperCase()}</Typography>
+              </Box>
+            </Box>
           </Box>
-        </CardContent>
-      </Card>
 
-      {/* Detail Dialog */}
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-        <DialogContent sx={{
-          p: 0,
-          background: tab === 0
-            ? "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"
-            : "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-          minHeight: "600px"
-        }}>
-          <IconButton onClick={handleClose} sx={{ position: "absolute", top: 10, right: 10, zIndex: 1 }}>
-            <CloseIcon sx={{ color: tab === 0 ? "#fff" : "#000" }} />
-          </IconButton>
-
+          {/* Navigation Tabs */}
           <Tabs
             value={tab}
             onChange={(e, newVal) => setTab(newVal)}
             variant="fullWidth"
             sx={{
-              bgcolor: tab === 0 ? "rgba(30, 41, 59, 0.9)" : "#f5f5f5",
-              borderBottom: 1,
-              borderColor: tab === 0 ? "rgba(0,255,255,0.2)" : "#ccc",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
               "& .MuiTab-root": {
-                color: tab === 0 ? "rgba(255,255,255,0.7)" : "#666",
-                fontWeight: 600,
-                "&.Mui-selected": {
-                  color: tab === 0 ? accentColor : secondaryAccent,
-                },
+                color: "rgba(255, 255, 255, 0.4)",
+                fontWeight: 800,
+                py: 3,
+                "&.Mui-selected": { color: neonCyan },
               },
-              "& .MuiTabs-indicator": {
-                backgroundColor: tab === 0 ? accentColor : secondaryAccent,
-              },
+              "& .MuiTabs-indicator": { backgroundColor: neonCyan, height: 3 },
             }}
           >
-            <Tab label="Abstract" />
-            <Tab label="Authors" />
-            <Tab label="References" />
-            <Tab label="Info" />
+            <Tab label="ABSTRACT" />
+            <Tab label="COLLABORATORS" />
+            <Tab label="CITATIONS" />
+            <Tab label="DATA" />
           </Tabs>
 
-          {tab === 0 && (
-            <Box sx={{ p: 5, textAlign: "center" }}>
-              <Typography variant="h4" sx={{
-                fontWeight: 700,
-                mb: 3,
-                background: `linear-gradient(135deg, ${accentColor} 0%, ${secondaryAccent} 100%)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}>
-                {paper.title}
-              </Typography>
-              <Typography variant="body1" sx={{ color: "rgba(255,255,255,0.8)", lineHeight: 1.8 }}>
-                {paper.abstract}
-              </Typography>
-            </Box>
-          )}
-
-          {tab === 1 && (
-            <Box sx={{ p: 4 }}>
-              <Typography variant="h6" sx={{ color: accentColor, fontWeight: 700, mb: 2 }}>Authors</Typography>
-              {paper.authors?.map((author, i) => (
-                <Box key={i} sx={{ display: "flex", alignItems: "center", mt: 1.5 }}>
-                  <Avatar sx={{ width: 36, height: 36, mr: 2, bgcolor: secondaryAccent }}>{author[0]}</Avatar>
-                  <Typography sx={{ color: tab === 0 ? "#fff" : "#333" }}>{author}</Typography>
-                </Box>
-              ))}
-              {paper.coAuthors?.length > 0 && (
-                <>
-                  <Divider sx={{ my: 3, borderColor: 'rgba(0,255,255,0.2)' }} />
-                  <Typography variant="h6" sx={{ color: secondaryAccent, fontWeight: 700, mb: 2 }}>Co-Authors</Typography>
-                  {paper.coAuthors.map((co, i) => (
-                    <Box key={i} sx={{ display: "flex", alignItems: "center", mt: 1.5 }}>
-                      <Avatar sx={{ width: 36, height: 36, mr: 2, bgcolor: 'rgba(0,255,255,0.3)' }}>{co[0]}</Avatar>
-                      <Typography sx={{ color: tab === 0 ? "#fff" : "#333" }}>{co}</Typography>
-                    </Box>
-                  ))}
-                </>
+          {/* Content Area */}
+          <Box sx={{ p: 5, flexGrow: 1, overflowY: "auto" }}>
+            <AnimatePresence mode="wait">
+              {tab === 0 && (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                  <Typography variant="h6" sx={{ color: neonCyan, fontWeight: 900, mb: 3 }}>EXECUTIVE SUMMARY</Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.8, fontSize: "1.1rem" }}>
+                    {paper.abstract}
+                  </Typography>
+                </motion.div>
               )}
-            </Box>
-          )}
 
-          {tab === 2 && (
-            <Box sx={{ p: 4 }}>
-              <Typography variant="h6" sx={{ color: accentColor, fontWeight: 700, mb: 2 }}>References</Typography>
-              {paper.references?.length > 0 ? (
-                <Box component="ul" sx={{ pl: 3 }}>
-                  {paper.references.map((ref, i) => (
-                    <Box component="li" key={i} sx={{ mb: 1 }}>
-                      <Typography variant="body2" sx={{ color: tab === 0 ? 'rgba(255,255,255,0.8)' : '#333' }}>{ref}</Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ) : (
-                <Typography sx={{ color: 'rgba(255,255,255,0.5)' }}>No references listed.</Typography>
+              {tab === 1 && (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                  <Typography variant="h6" sx={{ color: neonCyan, fontWeight: 900, mb: 3 }}>PRIMARY CONTRIBUTORS</Typography>
+                  <Grid container spacing={2}>
+                    {paper.authors?.map((author, i) => (
+                      <Grid item xs={12} sm={6} key={i}>
+                        <Box sx={{ display: "flex", alignItems: "center", p: 2, bgcolor: "rgba(255,255,255,0.02)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                          <Avatar sx={{ mr: 2, bgcolor: neonPink }}>{author[0]}</Avatar>
+                          <Typography sx={{ fontWeight: 700 }}>{author}</Typography>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </motion.div>
               )}
-            </Box>
-          )}
 
-          {tab === 3 && (
-            <Box sx={{ p: 4 }}>
-              <Box sx={{ display: 'grid', gap: 2 }}>
-                {paper.conference && (
-                  <Box>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Conference</Typography>
-                    <Typography sx={{ color: tab === 0 ? '#fff' : '#333', fontWeight: 600 }}>{paper.conference}</Typography>
+              {tab === 2 && (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                  <Typography variant="h6" sx={{ color: neonCyan, fontWeight: 900, mb: 3 }}>REFERENCES & CITATIONS</Typography>
+                  {paper.references?.length > 0 ? (
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      {paper.references.map((ref, i) => (
+                        <Box key={i} sx={{ pl: 3, borderLeft: `2px solid ${neonCyan}22`, py: 1 }}>
+                          <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.6)" }}>{ref}</Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography sx={{ color: "rgba(255,255,255,0.3)" }}>No citations documented for this paper.</Typography>
+                  )}
+                </motion.div>
+              )}
+
+              {tab === 3 && (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                  <Typography variant="h6" sx={{ color: neonCyan, fontWeight: 900, mb: 3 }}>TECHNICAL SPECIFICATIONS</Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 3 }}>
+                    {[
+                      { label: "CONFERENCE", value: paper.conference },
+                      { label: "JOURNAL", value: paper.journal },
+                      { label: "PUBLISHER", value: paper.publisher },
+                      { label: "PATENT ID", value: paper.patent, color: neonPink }
+                    ].filter(item => item.value).map((item, i) => (
+                      <Box key={i} sx={{ p: 2, bgcolor: "rgba(255,255,255,0.02)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.4)", fontWeight: 800 }}>{item.label}</Typography>
+                        <Typography sx={{ fontWeight: 700, color: item.color || "#fff" }}>{item.value}</Typography>
+                      </Box>
+                    ))}
                   </Box>
-                )}
-                {paper.journal && (
-                  <Box>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Journal</Typography>
-                    <Typography sx={{ color: tab === 0 ? '#fff' : '#333', fontWeight: 600 }}>{paper.journal}</Typography>
+                  <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
+                    {paper.doi && (
+                      <Button
+                        component={Link}
+                        href={paper.doi}
+                        target="_blank"
+                        variant="outlined"
+                        startIcon={<ScienceIcon />}
+                        sx={{ borderColor: neonCyan, color: neonCyan, borderRadius: "12px" }}
+                      >
+                        VIEW DOI
+                      </Button>
+                    )}
+                    {paper.pdfUrl && (
+                      <Button
+                        component={Link}
+                        href={paper.pdfUrl}
+                        target="_blank"
+                        variant="contained"
+                        sx={{ bgcolor: neonPink, color: "#fff", borderRadius: "12px", "&:hover": { bgcolor: neonPink, opacity: 0.9 } }}
+                      >
+                        DOWNLOAD PDF
+                      </Button>
+                    )}
                   </Box>
-                )}
-                {paper.publisher && (
-                  <Box>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Publisher</Typography>
-                    <Typography sx={{ color: tab === 0 ? '#fff' : '#333', fontWeight: 600 }}>{paper.publisher}</Typography>
-                  </Box>
-                )}
-                {paper.doi && (
-                  <Box>
-                    <Tooltip title="Open DOI Link">
-                      <Link href={paper.doi} target="_blank" underline="hover" sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        color: accentColor,
-                        fontWeight: 600,
-                      }}>
-                        <ScienceIcon /> View DOI
-                      </Link>
-                    </Tooltip>
-                  </Box>
-                )}
-                {paper.patent && (
-                  <Box>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Related Patent</Typography>
-                    <Typography sx={{ color: secondaryAccent, fontWeight: 600 }}>{paper.patent}</Typography>
-                  </Box>
-                )}
-                {paper.pdfUrl && (
-                  <Box>
-                    <Link href={paper.pdfUrl} target="_blank" underline="hover" sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      color: secondaryAccent,
-                      fontWeight: 600,
-                    }}>
-                      📄 Download PDF
-                    </Link>
-                  </Box>
-                )}
-              </Box>
-            </Box>
-          )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Box>
         </DialogContent>
       </Dialog>
     </>
