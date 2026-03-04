@@ -12,6 +12,7 @@ import EventIcon from '@mui/icons-material/Event';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import QuizIcon from '@mui/icons-material/Quiz';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
+import LiveTvIcon from '@mui/icons-material/LiveTv';
 
 export default function AdminDashboard() {
   return (
