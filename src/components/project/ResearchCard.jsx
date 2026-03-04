@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Card, CardContent, Typography, Dialog, DialogContent,
-  IconButton, Chip, Box, Tabs, Tab, Tooltip, Divider, Link, Avatar
+  IconButton, Chip, Box, Tabs, Tab, Tooltip, Divider, Link, Avatar, Grid
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ArticleIcon from "@mui/icons-material/Article";
