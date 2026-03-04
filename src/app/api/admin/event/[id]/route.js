@@ -4,7 +4,7 @@ import Event from '@/models/Event';
 
 export async function PATCH(request, { params }) {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
 
     try {
         const { activeMode } = await request.json(); // Expected: "quiz", "voting", "treasure-hunt", or "none"

@@ -4,7 +4,7 @@ import Event from '@/models/Event';
 
 export async function GET(request, { params }) {
   await connectDB();
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const event = await Event.findById(id).lean();
@@ -24,7 +24,7 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   await connectDB();
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const eventData = await request.json();
@@ -45,7 +45,7 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   await connectDB();
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const deletedEvent = await Event.findByIdAndDelete(id).lean();

@@ -10,7 +10,7 @@ import EventRegistration from '@/models/EventRegistration';
  */
 export async function GET(req, { params }) {
     try {
-        const { eventtype } = params;
+        const { eventtype } = await params;
         const { searchParams } = new URL(req.url);
         const eventId = searchParams.get('eventId');
         const email = searchParams.get('email');
@@ -93,7 +93,7 @@ export async function GET(req, { params }) {
  */
 export async function POST(req, { params }) {
     try {
-        const { eventtype } = params;
+        const { eventtype } = await params;
         const body = await req.json();
         const { eventId, email, score, status, data } = body;
 
