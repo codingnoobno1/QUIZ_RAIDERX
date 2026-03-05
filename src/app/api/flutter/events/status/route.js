@@ -65,12 +65,13 @@ export async function GET(req) {
                     options: q.questions[q.currentQuestion]?.options,
                     points: q.questions[q.currentQuestion]?.points
                 } : null,
-                // rapid_fire / preloaded: all questions without answers
+                // rapid_fire / preloaded: all questions WITH correctAnswer for local grading
                 questions: q.quizType !== 'custom_live'
                     ? (q.questions || []).map(qu => ({
                         _id: qu._id,
                         text: qu.text,
                         options: qu.options,
+                        correctAnswer: qu.correctAnswer,
                         points: qu.points,
                         imageUrl: qu.imageUrl
                     }))
