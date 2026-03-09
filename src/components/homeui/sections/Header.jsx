@@ -133,6 +133,30 @@ const Header = () => {
                 ) : (
                     <>
                         <MagneticButton>
+                            <Button
+                                onClick={() => window.open('http://localhost:3001', '_blank')}
+                                sx={{
+                                    borderRadius: '4px',
+                                    padding: '12px 24px',
+                                    fontWeight: 'bold',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '1px',
+                                    border: '1px solid #00FFFF',
+                                    color: '#00FFFF',
+                                    background: 'transparent',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                        backgroundColor: '#00FFFF',
+                                        color: '#000',
+                                        boxShadow: '0 0 25px rgba(0, 255, 255, 0.5)',
+                                    },
+                                    mr: 1
+                                }}
+                            >
+                                NTCC Portal
+                            </Button>
+                        </MagneticButton>
+                        <MagneticButton>
                             <NeonButton startIcon={<LoginIcon />} onClick={handleLoginClick}>
                                 Attendee Login
                             </NeonButton>
