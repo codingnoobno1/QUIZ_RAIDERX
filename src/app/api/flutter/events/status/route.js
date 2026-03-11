@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import Event from '@/models/Event';
 import EventActivity from '@/models/EventActivity';
+import QuizSubmission from '@/models/QuizSubmission';
 
 /**
  * GET /api/flutter/events/status?eventId=[id]
@@ -15,6 +16,7 @@ export async function GET(req) {
         await connectDB();
         const { searchParams } = new URL(req.url);
         const eventId = searchParams.get('eventId');
+        const participantId = searchParams.get('participantId');
 
         if (!eventId) {
             return NextResponse.json({ error: 'eventId is required' }, { status: 400 });
@@ -39,6 +41,16 @@ export async function GET(req) {
             });
         }
 
+        // Check if participant has already submitted this activity
+        let hasSubmitted = false;
+        if (participantId && activeActivity.type === 'quiz') {
+            const submission = await QuizSubmission.findOne({
+                activityId: activeActivity._id,
+                participantId
+            }).select('_id').lean();
+            hasSubmitted = !!submission;
+        }
+
         // Build a safe, stripped payload per activity type
         const safe = {
             _id: activeActivity._id,
@@ -47,6 +59,7 @@ export async function GET(req) {
             description: activeActivity.description,
             status: activeActivity.status,
             activatedAt: activeActivity.activatedAt,
+            hasSubmitted // Inject the flag
         };
 
         if (activeActivity.type === 'quiz') {
