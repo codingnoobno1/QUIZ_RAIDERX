@@ -18,6 +18,7 @@ import { useEvents, useMyRegistrations } from '@/hooks/queries/useEventQueries';
 import AsyncBoundary from '@/components/async/AsyncBoundary';
 import EmptyState from '@/components/async/EmptyState';
 import PageHeading from '@/components/events/shell/PageHeading';
+import NextEventFeature from '@/components/events/NextEventFeature';
 import { DateBlock, Chip } from '@/components/events/shell/RightRail';
 
 const FILTERS = [
@@ -47,9 +48,22 @@ export default function EventsPage() {
   const active = FILTERS.find((f) => f.key === filter) ?? FILTERS[0];
   const shown = events.filter((e) => active.test(e, registeredFor(e.id)));
 
+  // Live first, else the soonest one this user is registered for, else the
+  // soonest upcoming. If nothing is ahead, feature the most recent past event
+  // instead — an empty slot at the top of the page is worse than a recap, and
+  // the panel relabels itself rather than calling an ended event "next".
+  const featured =
+    events.find((e) => e.isLive) ??
+    events.find((e) => registeredFor(e.id) && !e.isPast) ??
+    events.find((e) => e.isUpcoming) ??
+    [...events].reverse().find((e) => e.isPast) ??
+    null;
+
   return (
     <>
       <PageHeading title="Events" subtitle="Everything you're registered for, or could join." />
+
+      <NextEventFeature event={featured} registration={featured ? registeredFor(featured.id) : null} />
 
       <Box
         className="pxe-scroll"

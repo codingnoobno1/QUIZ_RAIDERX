@@ -14,8 +14,10 @@
  *   >= 1200px nav + content + rail
  */
 
+import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, InputBase, Stack, Typography } from '@mui/material';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import ExploreRoundedIcon from '@mui/icons-material/ExploreRounded';
 import EventRoundedIcon from '@mui/icons-material/EventRounded';
@@ -49,6 +51,15 @@ export default function EventDashboardLayout({ children }) {
   const { user, isLoading, isAuthenticated, signOut } = useEventUser();
 
   const { data: invitations = [] } = useInvitations(user?.email);
+  const [q, setQ] = useState('');
+
+  // A decorative search bar is a lie. This routes to Explore with the term,
+  // which is where the real filtering already lives.
+  const search = (e) => {
+    e.preventDefault();
+    const term = q.trim();
+    if (term) router.push(`/event/dashboard/explore?q=${encodeURIComponent(term)}`);
+  };
 
   // The detail route carries its own sticky action panel, so the rail would be
   // a second competing column of actions.
@@ -118,6 +129,41 @@ export default function EventDashboardLayout({ children }) {
               </Box>
             </Typography>
           </Stack>
+
+          {/* The prototype anchors the whole bar on this. Without it the top
+              bar is a logo and an avatar with a hole between them. */}
+          <Box
+            component="form"
+            onSubmit={search}
+            sx={{
+              display: { xs: 'none', md: 'flex' },
+              alignItems: 'center',
+              gap: 1.25,
+              flex: 1,
+              maxWidth: 520,
+              mx: 3,
+              px: 1.75,
+              py: 1.1,
+              borderRadius: `${radius.md}px`,
+              border: `1px solid ${color.border}`,
+              bgcolor: color.surface,
+              transition: 'border-color 160ms ease',
+              '&:focus-within': { borderColor: tint(color.brand, 0.55) },
+            }}
+          >
+            <SearchRoundedIcon sx={{ fontSize: 18, color: color.textFaint }} />
+            <InputBase
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search events, teams and venues…"
+              sx={{
+                flex: 1,
+                color: color.text,
+                fontSize: '0.84rem',
+                '& input::placeholder': { color: color.textFaint, opacity: 1 },
+              }}
+            />
+          </Box>
 
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <Typography sx={{ color: color.textMuted, fontSize: '0.82rem', display: { xs: 'none', sm: 'block' } }}>
@@ -281,7 +327,21 @@ function NavButton({ item, active, badge, onClick }) {
         '&:hover': { bgcolor: active ? tint(color.brand, 0.14) : color.surface, color: color.text },
       }}
     >
-      <Icon sx={{ fontSize: 18, color: active ? color.brand : color.textFaint }} />
+      {/* The prototype marks state with a filled/hollow dot rather than a
+          coloured icon — quieter, and it keeps every row on the same baseline. */}
+      <Box
+        component="span"
+        sx={{
+          width: 7,
+          height: 7,
+          flexShrink: 0,
+          borderRadius: '50%',
+          bgcolor: active ? color.brand : 'transparent',
+          border: `1px solid ${active ? color.brand : color.textFaint}`,
+          transition: 'background-color 160ms ease',
+        }}
+      />
+      <Icon sx={{ fontSize: 17, color: active ? color.text : color.textFaint }} />
       <Box component="span" sx={{ flex: 1 }}>
         {item.label}
       </Box>

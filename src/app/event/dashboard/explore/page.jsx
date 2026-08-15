@@ -9,6 +9,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Box, InputBase, Stack, Typography } from '@mui/material';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import EventBusyRoundedIcon from '@mui/icons-material/EventBusyRounded';
@@ -25,7 +26,10 @@ export default function ExplorePage() {
   const eventsQuery = useEvents();
   const { data: registrations = [] } = useMyRegistrations(user?.email);
 
-  const [q, setQ] = useState('');
+  // Seeded from the top-bar search so submitting there lands here with the
+  // term already applied.
+  const params = useSearchParams();
+  const [q, setQ] = useState(params.get('q') ?? '');
   const [tag, setTag] = useState(null);
 
   const events = eventsQuery.data ?? [];
