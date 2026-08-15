@@ -86,20 +86,17 @@ export async function POST(req) {
         const event = await Event.findById(eventId).select('_id title').lean();
         if (!event) return notFound('That event no longer exists.');
 
-        // One indexed query, replacing a full scan of the event's registrations.
+        // Seats, not membership. Someone who merely has a PENDING invite from
+        // another team is free to register — only an accepted seat blocks them.
+        // The old check matched members[] regardless of inviteStatus, so
+        // declining an invitation locked you out of the event permanently.
         const clash = await EventRegistration.findOne({
             eventId,
-            $or: [
-                { email: { $in: allEmails } },
-                { 'members.email': { $in: allEmails } },
-            ],
-        }).select('email teamName members').lean();
+            participantEmails: { $in: allEmails },
+        }).select('email teamName participantEmails').lean();
 
         if (clash) {
-            const takenEmail =
-                allEmails.find((e) => e === clash.email) ??
-                allEmails.find((e) => (clash.members ?? []).some((m) => normaliseEmail(m?.email) === e));
-
+            const takenEmail = allEmails.find((e) => (clash.participantEmails ?? []).includes(e));
             return conflict(
                 clash.teamName
                     ? `${takenEmail} is already registered in team "${clash.teamName}".`
@@ -117,6 +114,11 @@ export async function POST(req) {
             semester: clean(semester),
             status: 'pending',
             modeProgress: [],
+            // The leader claims their seat on creation. Invited members claim
+            // theirs only when they accept. The unique index on
+            // (eventId, participantEmails) makes the claim atomic, so the check
+            // above is a courtesy for the error message — not the guard.
+            participantEmails: [leaderEmail],
         };
 
         if (isTeam) {
@@ -145,7 +147,16 @@ export async function POST(req) {
         // Lost a race with a concurrent signup (or a double-tapped submit).
         // Report the settled state, not a 500.
         if (error?.code === 11000) {
-            return conflict('That registration already exists.', { code: 'ALREADY_REGISTERED' });
+            // The unique index rejected the write: someone claimed a seat in the
+            // instant between the check above and this insert. This is the guard
+            // that actually holds under concurrency.
+            const dupTeamId = String(error?.keyPattern ?? '').includes('teamId');
+            return conflict(
+                dupTeamId
+                    ? 'Could not allocate a team id. Please try again.'
+                    : 'Someone in this registration was just registered for this event.',
+                { code: 'ALREADY_REGISTERED' },
+            );
         }
         if (error?.name === 'ValidationError') {
             return badRequest('Those registration details are incomplete.', {

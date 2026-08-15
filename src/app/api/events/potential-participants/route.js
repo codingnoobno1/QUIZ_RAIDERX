@@ -2,47 +2,84 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import User from '@/models/User';
 import EventRegistration from '@/models/EventRegistration';
+import { requireEventUser, invalidIdResponse, badRequest, serverError } from '@/lib/apiGuards';
 
+/** Never return the whole student directory in one response. */
+const MAX_RESULTS = 25;
+
+/**
+ * GET /api/events/potential-participants?eventId=&q=
+ *
+ * People the caller can still invite to a team for this event.
+ *
+ * Two problems with the previous version. It loaded every registration and
+ * every user into memory and filtered in JS — the whole user table on each
+ * keystroke of the teammate picker. And it was unauthenticated, so anyone could
+ * retrieve the name, email and enrollment number of every student on the
+ * platform by calling it once.
+ *
+ * Now: a verified participant only, filtered in the database, capped, and
+ * requiring a search term before it returns anyone at all.
+ */
 export async function GET(req) {
+    const auth = await requireEventUser(req);
+    if (!auth.ok) return auth.response;
+
+    const { searchParams } = new URL(req.url);
+    const eventId = searchParams.get('eventId');
+    const q = (searchParams.get('q') ?? '').trim();
+
+    if (!eventId) return badRequest('Missing eventId');
+
+    const invalid = invalidIdResponse(eventId, 'eventId');
+    if (invalid) return invalid;
+
     try {
-        const { searchParams } = new URL(req.url);
-        const eventId = searchParams.get('eventId');
-
-        if (!eventId) {
-            return NextResponse.json({ error: 'Missing eventId' }, { status: 400 });
-        }
-
         await connectDB();
 
-        // 1. Get all registered participants for this event
-        const registrations = await EventRegistration.find({ eventId });
+        // Only people who actually hold a seat are excluded. Someone with an
+        // unanswered invitation from another team is still invitable — several
+        // teams may invite the same person, and whoever they accept wins the
+        // seat. Excluding pending invitees was what made a declined invitation
+        // permanent.
+        const claimed = await EventRegistration.distinct('participantEmails', { eventId });
 
-        // Collect all emails (leaders and members)
-        const registeredEmails = new Set();
-        registrations.forEach(reg => {
-            registeredEmails.add(reg.email.toLowerCase());
-            if (reg.members) {
-                reg.members.forEach(m => registeredEmails.add(m.email.toLowerCase()));
-            }
-        });
+        const filter = {
+            email: { $nin: [...claimed, auth.email] },
+        };
 
-        // 2. Get all platform users except those already registered for this event
-        const allUsers = await User.find({}).lean();
+        // A directory is only browsable with a search term. Without one this
+        // returns nothing rather than everyone.
+        if (q) {
+            const safe = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            filter.$or = [
+                { name: { $regex: safe, $options: 'i' } },
+                { email: { $regex: safe, $options: 'i' } },
+                { enrollmentNumber: { $regex: safe, $options: 'i' } },
+            ];
+        }
 
-        const potentialParticipants = allUsers.filter(u => !registeredEmails.has(u.email.toLowerCase()));
+        const users = q
+            ? await User.find(filter)
+                  .select('name email semester enrollmentNumber')
+                  .limit(MAX_RESULTS)
+                  .lean()
+            : [];
 
-        // Return a simplified list
-        return NextResponse.json({
-            data: potentialParticipants.map(u => ({
-                name: u.name,
-                email: u.email,
-                semester: u.semester,
-                enrollmentNumber: u.enrollmentNumber
-            }))
-        }, { status: 200 });
-
+        return NextResponse.json(
+            {
+                data: users.map((u) => ({
+                    name: u.name ?? '',
+                    email: u.email ?? '',
+                    semester: u.semester ?? '',
+                    enrollmentNumber: u.enrollmentNumber ?? '',
+                })),
+                truncated: users.length === MAX_RESULTS,
+                requiresQuery: !q,
+            },
+            { status: 200 },
+        );
     } catch (error) {
-        console.error('Potential participants error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return serverError(error, 'events/potential-participants');
     }
 }

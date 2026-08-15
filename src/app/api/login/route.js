@@ -1,67 +1,60 @@
+import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import User from '@/models/User';
-import bcrypt from 'bcryptjs';
-import crypto from 'crypto'; // for sessionId generation
+import { attachEventSession, badRequest, serverError, readJson } from '@/lib/apiGuards';
 
+/**
+ * POST /api/login — event portal sign-in.
+ *
+ * The password check here was always sound. What was missing is that the
+ * response handed back a `sessionId` generated with `crypto.randomUUID()` and
+ * stored nowhere, and set no cookie — so nothing the client sent afterwards
+ * could be attributed to a real user. Every downstream route had to take the
+ * caller's word for who they were.
+ *
+ * It now also sets a signed, httpOnly session cookie. The JSON body is
+ * unchanged, so the existing client keeps working exactly as before; routes
+ * that need a verified identity read the cookie via `requireEventUser`.
+ */
 export async function POST(req) {
+  const parsed = await readJson(req);
+  if (!parsed.ok) return parsed.response;
+
+  const { email, password } = parsed.data;
+
+  if (!email || !password) {
+    return badRequest('Email and password are required');
+  }
+
   try {
     await connectDB();
 
-    const { email, password } = await req.json();
-
-    // Basic validation
-    if (!email || !password) {
-      return new Response(JSON.stringify({ error: 'Email and password are required' }), {
-        status: 400,
-      });
-    }
-
-    const trimmedEmail = email.trim().toLowerCase();
-
-    // Fetch user by email
+    const trimmedEmail = String(email).trim().toLowerCase();
     const user = await User.findOne({ email: trimmedEmail });
 
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Invalid email or password' }), {
-        status: 401,
-      });
+    // One message for "no such user" and "wrong password" — telling them apart
+    // turns this endpoint into a way to enumerate who has an account.
+    if (!user || !(await user.comparePassword(password))) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    // Compare password with hashed password
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return new Response(JSON.stringify({ error: 'Invalid email or password' }), {
-        status: 401,
-      });
-    }
-
-    // Session info
-    const sessionId = crypto.randomUUID();
     const loginTime = Date.now();
-    const expiryTime = loginTime + 15 * 60 * 1000; // 15 minutes
 
-    // Send response with all info needed for store.js
-    return new Response(
-      JSON.stringify({
-        sessionId,
-        loginTime,
-        expiryTime,
-        user: {
-          uuid: user.uuid,
-          name: user.name,
-          email: user.email,
-          enrollmentNumber: user.enrollmentNumber,
-        },
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('Login error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
+    const response = NextResponse.json({
+      loginTime,
+      expiryTime: loginTime + 15 * 60 * 1000,
+      user: {
+        uuid: user.uuid,
+        name: user.name,
+        email: user.email,
+        enrollmentNumber: user.enrollmentNumber,
+        semester: user.semester,
+        course: user.course,
+      },
     });
+
+    return attachEventSession(response, user);
+  } catch (error) {
+    return serverError(error, 'login');
   }
 }

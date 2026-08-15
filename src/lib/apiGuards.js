@@ -155,3 +155,97 @@ function safeVerify(token, secret) {
     return null;
   }
 }
+
+// ── Event participant identity ───────────────────────────────────────────────
+//
+// The event portal used to have no server-verifiable identity at all:
+// `/api/login` checked the password correctly, then returned a `sessionId` that
+// was a random UUID stored nowhere and set no cookie. Every later request simply
+// asserted an email in a query string or a JSON body, and the server believed
+// it. That is why anyone could respond to anyone else's team invitation.
+//
+// These mint and verify a short-lived signed cookie at login, so a request can
+// prove which participant it belongs to. It is deliberately narrow — full
+// consolidation of the app's parallel auth systems is a separate job.
+
+const EVENT_COOKIE = 'pxe_event_session';
+
+function sessionSecret() {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (secret) return secret;
+  if (IS_PROD) return null; // never sign with a known fallback in production
+  return 'fallback-secret-for-dev';
+}
+
+/**
+ * Attach a signed participant session to a response.
+ * Lifetime matches SESSION.DURATION_MS so the cookie and the client's own
+ * 15-minute session expire together.
+ */
+export function attachEventSession(response, user) {
+  const secret = sessionSecret();
+  if (!secret) {
+    console.error('[api:auth] NEXTAUTH_SECRET is unset — event session not issued');
+    return response;
+  }
+
+  const token = jwt.sign(
+    { email: String(user.email).toLowerCase(), name: user.name, uuid: user.uuid },
+    secret,
+    { expiresIn: '15m' },
+  );
+
+  response.cookies.set(EVENT_COOKIE, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: IS_PROD,
+    path: '/',
+    maxAge: 15 * 60,
+  });
+
+  return response;
+}
+
+export function clearEventSession(response) {
+  response.cookies.set(EVENT_COOKIE, '', { httpOnly: true, path: '/', maxAge: 0 });
+  return response;
+}
+
+/**
+ * The verified participant behind this request, or a 401.
+ *
+ * Accepts the event cookie, a NextAuth session, or the Flutter bearer token —
+ * one participant identity regardless of which client is calling.
+ *
+ * @returns {Promise<{ ok: true, email: string, name: string }
+ *                 | { ok: false, response: NextResponse }>}
+ */
+export async function requireEventUser(req) {
+  const raw = req?.cookies?.get?.(EVENT_COOKIE)?.value;
+  const secret = sessionSecret();
+
+  if (raw && secret) {
+    const claims = safeVerify(raw, secret);
+    if (claims?.email) {
+      return { ok: true, email: String(claims.email).toLowerCase(), name: claims.name ?? '' };
+    }
+  }
+
+  const session = await getServerSession(authOptions).catch(() => null);
+  if (session?.user?.email) {
+    return { ok: true, email: session.user.email.toLowerCase(), name: session.user.name ?? '' };
+  }
+
+  const bearer = readBearer(req);
+  if (bearer && secret) {
+    const claims = safeVerify(bearer, secret);
+    if (claims?.email) {
+      return { ok: true, email: String(claims.email).toLowerCase(), name: claims.name ?? '' };
+    }
+  }
+
+  return {
+    ok: false,
+    response: unauthorized('Your event session expired. Sign in again to continue.'),
+  };
+}

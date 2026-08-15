@@ -63,21 +63,57 @@ const EventRegistrationSchema = new mongoose.Schema({
         status: String,
         score: Number,
         data: mongoose.Schema.Types.Mixed
-    }]
+    }],
+
+    /**
+     * Every person who currently holds a seat in this registration: the leader,
+     * plus each member who has ACCEPTED their invite. Maintained by the register
+     * and invitation routes, and covered by the unique index below.
+     *
+     * Pending and declined invitees are absent by design — see the index note.
+     */
+    participantEmails: {
+        type: [String],
+        default: undefined,
+        index: true
+    }
 }, {
     timestamps: true
 });
 
-// The registration route used to load every registration for an event and loop
-// over it in JS to find a duplicate email — a full collection scan on each
-// signup, and it grew with the guest list. These make that one indexed lookup.
+// ── Seat claims ──────────────────────────────────────────────────────────────
 //
-// Not unique on purpose: a unique (eventId, email) index is the only thing that
-// closes the double-submit race for good, but it cannot be built on a
-// collection that already holds duplicates. Dedupe first, then tighten it.
+// A registration row can hold several people, so "one person, one registration
+// per event" cannot be expressed as a unique index on `email`. It can be
+// expressed on an array.
+//
+// Mongo indexes each element of an array separately (a multikey index), and a
+// UNIQUE multikey index rejects a write when any element collides with an
+// element of another document sharing the same eventId. One constraint therefore
+// covers the leader and every accepted member at once, and it is enforced by the
+// database rather than by a read-then-write check that two concurrent requests
+// can both pass.
+//
+// Pending and declined invitees are deliberately NOT claimed. Holding a seat on
+// an invitation nobody accepted would lock that person out of registering
+// themselves — the exact trap this replaces.
+EventRegistrationSchema.index(
+    { eventId: 1, participantEmails: 1 },
+    { unique: true, name: 'uniq_event_participant' },
+);
+
+// Lookup paths. The registration route used to load every registration for an
+// event and loop over it in JS — a full collection scan on every signup, growing
+// with the guest list.
 EventRegistrationSchema.index({ eventId: 1, email: 1 });
 EventRegistrationSchema.index({ eventId: 1, 'members.email': 1 });
 EventRegistrationSchema.index({ email: 1 });
+
+// Index builds belong to the migration script (scripts/registration-seats.mjs),
+// not to whichever web request happens to connect first. An automatic build
+// against a collection that already holds duplicates fails in the background and
+// leaves the constraint missing while the app assumes it is enforced.
+EventRegistrationSchema.set('autoIndex', false);
 
 // Prevent model recompilation error
 if (process.env.NODE_ENV !== 'production') delete mongoose.models.EventRegistration;

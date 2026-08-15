@@ -43,13 +43,17 @@ export const eventRepository = {
     );
   },
 
-  /** GET /api/events/potential-participants?eventId= — teammate picker. */
-  async getPotentialTeammates(eventId, { signal } = {}) {
+  /**
+   * GET /api/events/potential-participants — teammate search.
+   *
+   * Takes a query now. The endpoint no longer returns the whole student
+   * directory, so the picker searches rather than browses.
+   */
+  async getPotentialTeammates(eventId, query, { signal } = {}) {
     if (!eventId) return [];
-    const res = await api.get(
-      `/api/events/potential-participants?eventId=${encodeURIComponent(eventId)}`,
-      { signal },
-    );
+    const qs = new URLSearchParams({ eventId });
+    if (query) qs.set('q', query);
+    const res = await api.get(`/api/events/potential-participants?${qs}`, { signal });
     return (res?.data ?? []).map((p) => ({
       name: p?.name ?? '',
       email: p?.email ?? '',
@@ -72,9 +76,20 @@ export const eventRepository = {
     });
   },
 
-  /** POST /api/events/invitations */
-  async respondToInvitation({ registrationId, email, response }) {
-    return api.post('/api/events/invitations', { registrationId, email, response });
+  /**
+   * POST /api/events/invitations
+   *
+   * No email is sent: the server takes the invitee from the verified session.
+   * Passing it was what let anyone answer anyone else's invitation.
+   */
+  async respondToInvitation({ registrationId, response }) {
+    return api.post('/api/events/invitations', { registrationId, response });
+  },
+
+  /** DELETE /api/events/invitations — leader withdraws an unanswered invite. */
+  async withdrawInvitation({ registrationId, email }) {
+    const qs = new URLSearchParams({ registrationId, email });
+    return api.del(`/api/events/invitations?${qs}`);
   },
 
   // ── Live event engine ──────────────────────────────────────────────────────

@@ -20,7 +20,7 @@ export const eventKeys = {
   status: (eventId, participantId) => [...eventKeys.all, 'status', eventId, participantId ?? null],
   registrations: (email) => [...eventKeys.all, 'registrations', email ?? null],
   invitations: (email) => [...eventKeys.all, 'invitations', email ?? null],
-  teammates: (eventId) => [...eventKeys.all, 'teammates', eventId],
+  teammates: (eventId, q) => [...eventKeys.all, 'teammates', eventId, q ?? ''],
   submission: (activityId, participantId) => [...eventKeys.all, 'submission', activityId, participantId],
   votes: (activityId, participantId) => [...eventKeys.all, 'votes', activityId, participantId ?? null],
 };
@@ -70,12 +70,21 @@ export function useInvitations(email) {
   });
 }
 
-export function usePotentialTeammates(eventId, enabled = true) {
+/**
+ * Teammate search.
+ *
+ * The endpoint no longer returns every student on the platform, so this only
+ * runs once there are at least two characters to search on — which also keeps
+ * it from firing a request per keystroke on an empty field.
+ */
+export function usePotentialTeammates(eventId, query = '', enabled = true) {
+  const q = query.trim();
   return useQuery({
-    queryKey: eventKeys.teammates(eventId),
-    queryFn: ({ signal }) => eventRepository.getPotentialTeammates(eventId, { signal }),
-    enabled: Boolean(eventId) && enabled,
+    queryKey: eventKeys.teammates(eventId, q),
+    queryFn: ({ signal }) => eventRepository.getPotentialTeammates(eventId, q, { signal }),
+    enabled: Boolean(eventId) && enabled && q.length >= 2,
     staleTime: 120_000,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -133,12 +142,26 @@ export function useRegisterForEvent(email) {
 
 export function useRespondToInvitation(email) {
   const qc = useQueryClient();
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: eventKeys.invitations(email) });
+    qc.invalidateQueries({ queryKey: eventKeys.registrations(email) });
+  };
   return useMutation({
-    mutationFn: (vars) => eventRepository.respondToInvitation({ ...vars, email }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: eventKeys.invitations(email) });
-      qc.invalidateQueries({ queryKey: eventKeys.registrations(email) });
-    },
+    mutationFn: (vars) => eventRepository.respondToInvitation(vars),
+    onSuccess: refresh,
+    // An invitation answered on another device comes back 409. That is settled
+    // state, not a failure, so refetch either way and let the list correct
+    // itself rather than leaving a stale card the user can keep clicking.
+    onError: refresh,
+  });
+}
+
+/** Leader withdraws an invitation that has not been answered. */
+export function useWithdrawInvitation(email) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars) => eventRepository.withdrawInvitation(vars),
+    onSettled: () => qc.invalidateQueries({ queryKey: eventKeys.registrations(email) }),
   });
 }
 

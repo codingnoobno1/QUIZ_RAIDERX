@@ -25,8 +25,11 @@ export default function RegistrationForm({ event, user, onSubmit, isSubmitting, 
   const [teamName, setTeamName] = useState('');
   const [members, setMembers] = useState([]);
   const [touched, setTouched] = useState(false);
+  const [search, setSearch] = useState('');
 
-  const teammates = usePotentialTeammates(event.id, type === 'team');
+  // The directory endpoint no longer returns every student on the platform, so
+  // this is a search rather than a browse — it needs two characters to run.
+  const teammates = usePotentialTeammates(event.id, search, type === 'team');
   const full = members.length >= TEAM.MAX_ADDITIONAL_MEMBERS;
 
   const problems = validate({ type, teamName, members });
@@ -171,11 +174,31 @@ export default function RegistrationForm({ event, user, onSubmit, isSubmitting, 
             </Stack>
           </Box>
 
-          {teammates.data?.length > 0 && !full && (
+          {!full && (
             <Box>
-              <Label>Already on the platform</Label>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
-                {teammates.data.slice(0, 12).map((p) => (
+              <Label>Find a teammate</Label>
+              <TextField
+                fullWidth
+                size="small"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, email or enrollment"
+                sx={fieldSx}
+              />
+
+              {search.trim().length >= 2 && teammates.isFetching && (
+                <Typography sx={{ mt: 1, color: color.textFaint, fontSize: '.75rem' }}>
+                  Searching…
+                </Typography>
+              )}
+              {search.trim().length >= 2 && !teammates.isFetching && !teammates.data?.length && (
+                <Typography sx={{ mt: 1, color: color.textFaint, fontSize: '.75rem' }}>
+                  Nobody matches that, or they are already registered for this event.
+                </Typography>
+              )}
+
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1, mt: 1.5 }}>
+                {(teammates.data ?? []).map((p) => (
                   <Button
                     key={p.email}
                     size="small"
