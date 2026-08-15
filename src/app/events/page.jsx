@@ -93,7 +93,13 @@ export default function EventsPage() {
       </Box>
       <Grid container spacing={4}>
         {events.map((event) => (
-          <Grid item key={event._id} xs={12} sm={6} md={4}>
+          <Grid
+            key={event._id}
+            size={{
+              xs: 12,
+              sm: 6,
+              md: 4
+            }}>
             <EventCard event={event} onClick={handleEventClick} />
           </Grid>
         ))}

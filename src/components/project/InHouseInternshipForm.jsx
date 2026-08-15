@@ -106,17 +106,29 @@ export default function InHouseInternshipForm() {
         </Typography>
 
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField fullWidth label="Full Name" name="name" variant="filled" value={formData.name} onChange={handleChange} required sx={fieldStyle} />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 6
+            }}>
             <TextField fullWidth label="Enrollment Index" name="enrolment" variant="filled" value={formData.enrolment} onChange={handleChange} required sx={fieldStyle} />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 6
+            }}>
             <TextField fullWidth label="Communication Uplink (Phone)" name="phone" type="tel" variant="filled" value={formData.phone} onChange={handleChange} required sx={fieldStyle} />
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 6
+            }}>
             <FormControl fullWidth required variant="filled" sx={fieldStyle}>
               <InputLabel id="programme-label">Programme</InputLabel>
               <Select labelId="programme-label" name="programme" value={formData.programme} onChange={handleChange}>
@@ -126,7 +138,11 @@ export default function InHouseInternshipForm() {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 6
+            }}>
             <FormControl fullWidth required variant="filled" sx={fieldStyle}>
               <InputLabel id="semester-label">Semester Cycle</InputLabel>
               <Select labelId="semester-label" name="semester" value={formData.semester} onChange={handleChange}>
@@ -137,12 +153,12 @@ export default function InHouseInternshipForm() {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.05)" }} />
             <Typography variant="h6" sx={{ color: "#fff", fontWeight: 800, mb: 2, mt: 1 }}>MENTORSHIP & PROJECT</Typography>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControl fullWidth required variant="filled" sx={fieldStyle}>
               <InputLabel id="supervisor-label">Project Supervisor</InputLabel>
               <Select labelId="supervisor-label" name="supervisor" value={formData.supervisor} onChange={handleChange}>
@@ -155,7 +171,11 @@ export default function InHouseInternshipForm() {
 
           <AnimatePresence>
             {formData.supervisor && (
-              <Grid item xs={12} component={motion.div} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+              <Grid
+                component={motion.div}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                size={12}>
                 <FormControl fullWidth required variant="filled" sx={fieldStyle}>
                   <InputLabel id="project-label">Initiative Designation</InputLabel>
                   <Select labelId="project-label" name="project" value={formData.project} onChange={handleChange}>
@@ -171,7 +191,11 @@ export default function InHouseInternshipForm() {
 
           <AnimatePresence>
             {formData.project === "custom" && (
-              <Grid item xs={12} component={motion.div} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+              <Grid
+                component={motion.div}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                size={12}>
                 <TextField fullWidth label="Custom Project Title" name="customProject" variant="filled" value={formData.customProject} onChange={handleChange} required sx={fieldStyle} />
               </Grid>
             )}

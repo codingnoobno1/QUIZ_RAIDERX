@@ -58,7 +58,6 @@ export default function QuizHome({ setSelectedFaculty }) {
       >
         <Sidebar />
       </Box>
-
       {/* Main Content */}
       <Box
         component="main"
@@ -126,7 +125,13 @@ export default function QuizHome({ setSelectedFaculty }) {
                   const quizCount = faculty?.quizCount || 0;
 
                   return (
-                    <Grid item xs={12} sm={6} md={4} key={faculty.uuid || faculty.name}>
+                    <Grid
+                      key={faculty.uuid || faculty.name}
+                      size={{
+                        xs: 12,
+                        sm: 6,
+                        md: 4
+                      }}>
                       <motion.div
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.97 }}

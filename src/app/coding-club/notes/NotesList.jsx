@@ -59,7 +59,13 @@ export default function NotesList() {
       </Typography>
       <Grid container spacing={3}>
         {notes.map((note) => (
-          <Grid item xs={12} sm={6} md={4} key={note.id}>
+          <Grid
+            key={note.id}
+            size={{
+              xs: 12,
+              sm: 6,
+              md: 4
+            }}>
             <Card sx={{ height: '100%', boxShadow: 2 }}>
               <CardContent>
                 <Typography variant="h6" component="div" gutterBottom>

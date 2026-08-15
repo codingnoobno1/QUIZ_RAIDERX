@@ -79,7 +79,6 @@ export default function MyResearch() {
           NEW DOCUMENT
         </Button>
       </Box>
-
       <AnimatePresence>
         {myResearch.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -116,7 +115,14 @@ export default function MyResearch() {
         ) : (
           <Grid container spacing={4}>
             {myResearch.map((item) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={item._id}>
+              <Grid
+                key={item._id}
+                size={{
+                  xs: 12,
+                  sm: 6,
+                  md: 4,
+                  lg: 3
+                }}>
                 <ResearchCard data={item} />
               </Grid>
             ))}

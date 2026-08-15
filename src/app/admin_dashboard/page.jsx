@@ -20,10 +20,14 @@ export default function AdminDashboard() {
       <Typography variant="h4" gutterBottom>
         Admin Dashboard
       </Typography>
-
       <Grid container spacing={3}>
         {/* Create Event */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 3
+          }}>
           <Card elevation={3}>
             <CardContent sx={{ textAlign: 'center' }}>
               <EventIcon fontSize="large" color="primary" />
@@ -42,7 +46,12 @@ export default function AdminDashboard() {
         </Grid>
 
         {/* Manage Attendance */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 3
+          }}>
           <Card elevation={3}>
             <CardContent sx={{ textAlign: 'center' }}>
               <AssignmentTurnedInIcon fontSize="large" color="primary" />
@@ -61,7 +70,12 @@ export default function AdminDashboard() {
         </Grid>
 
         {/* Quiz Creation */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 3
+          }}>
           <Card elevation={3}>
             <CardContent sx={{ textAlign: 'center' }}>
               <QuizIcon fontSize="large" color="primary" />
@@ -80,7 +94,12 @@ export default function AdminDashboard() {
         </Grid>
 
         {/* Notes Upload */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 3
+          }}>
           <Card elevation={3}>
             <CardContent sx={{ textAlign: 'center' }}>
               <NoteAddIcon fontSize="large" color="primary" />
@@ -98,7 +117,12 @@ export default function AdminDashboard() {
           </Card>
         </Grid>
         {/* Live Event Management */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 3
+          }}>
           <Card elevation={3} sx={{ border: '2px solid #f50057' }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <LiveTvIcon fontSize="large" color="secondary" />

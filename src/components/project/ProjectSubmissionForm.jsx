@@ -147,7 +147,11 @@ export default function ProjectSubmissionForm() {
         <Typography variant="h6" sx={{ color: "#fff", fontWeight: 800, mb: 3 }}>CONTRIBUTOR DATA</Typography>
 
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 6
+            }}>
             <TextField
               fullWidth
               label="Full Identity"
@@ -161,7 +165,11 @@ export default function ProjectSubmissionForm() {
               sx={fieldStyle}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 6
+            }}>
             <TextField
               fullWidth
               label="Enrollment Index"
@@ -175,7 +183,7 @@ export default function ProjectSubmissionForm() {
               sx={fieldStyle}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               fullWidth
               label="Academic Sector (Branch)"
@@ -197,7 +205,7 @@ export default function ProjectSubmissionForm() {
 
         <Grid container spacing={2}>
           {[1, 2, 3].map((n) => (
-            <Grid item xs={12} key={n}>
+            <Grid key={n} size={12}>
               <Box sx={{ display: "flex", gap: 2 }}>
                 <TextField
                   fullWidth

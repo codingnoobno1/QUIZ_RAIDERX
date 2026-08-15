@@ -99,7 +99,13 @@ export default function AllProjectsPage() {
                 ) : (
                     <Grid container spacing={4}>
                         {filteredProjects.map((project) => (
-                            <Grid item xs={12} sm={6} md={4} key={project._id}>
+                            <Grid
+                                key={project._id}
+                                size={{
+                                    xs: 12,
+                                    sm: 6,
+                                    md: 4
+                                }}>
                                 <ProjectCard project={project} />
                             </Grid>
                         ))}

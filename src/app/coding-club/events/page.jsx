@@ -52,10 +52,15 @@ export default function EventsPage() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" fontWeight="bold" mb={4}>Upcoming Events</Typography>
-
       <Grid container spacing={3}>
         {events.map((event) => (
-          <Grid item xs={12} md={6} lg={4} key={event._id}>
+          <Grid
+            key={event._id}
+            size={{
+              xs: 12,
+              md: 6,
+              lg: 4
+            }}>
             <Card
               elevation={2}
               sx={{

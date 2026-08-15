@@ -2,29 +2,31 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import EventActivity from '@/models/EventActivity';
 import EventVote from '@/models/EventVote';
+import { readJson, invalidIdResponse, badRequest, notFound, conflict, serverError } from '@/lib/apiGuards';
 
 /**
  * POST /api/flutter/events/vote
- * Submit a vote for the currently active voting activity.
- *
  * Body: { participantId, activityId, option }
  */
 export async function POST(req) {
+    const parsed = await readJson(req);
+    if (!parsed.ok) return parsed.response;
+
+    const { participantId, activityId, option } = parsed.data;
+
+    if (!participantId || !activityId || !option) {
+        return badRequest('participantId, activityId, and option are all required');
+    }
+
+    const invalid = invalidIdResponse(activityId, 'activityId');
+    if (invalid) return invalid;
+
     try {
         await connectDB();
-        const { participantId, activityId, option } = await req.json();
-
-        if (!participantId || !activityId || !option) {
-            return NextResponse.json(
-                { error: 'participantId, activityId, and option are all required' },
-                { status: 400 }
-            );
-        }
 
         const activity = await EventActivity.findById(activityId).lean();
-
         if (!activity || activity.type !== 'voting') {
-            return NextResponse.json({ error: 'Voting activity not found' }, { status: 404 });
+            return notFound('Voting activity not found');
         }
 
         if (activity.status !== 'active') {
@@ -35,17 +37,20 @@ export async function POST(req) {
         }
 
         if (!activity.voting?.options?.includes(option)) {
-            return NextResponse.json({ error: 'Invalid option' }, { status: 400 });
+            return badRequest('Invalid option');
         }
 
-        // Prevent duplicate votes (unless allowMultiple)
+        // Prevent duplicate votes (unless allowMultiple). The unique index on
+        // (participantId, activityId) is the real guard — two taps in the same
+        // instant both pass this read, and the 11000 below catches the loser.
         if (!activity.voting.allowMultiple) {
-            const existing = await EventVote.findOne({ participantId, activityId });
+            const existing = await EventVote.findOne({ participantId, activityId }).select('option').lean();
             if (existing) {
-                return NextResponse.json(
-                    { error: 'You have already voted in this poll.', code: 'DUPLICATE_VOTE' },
-                    { status: 409 }
-                );
+                return conflict('You have already voted in this poll.', {
+                    code: 'DUPLICATE_VOTE',
+                    myVote: existing.option,
+                    ...(activity.voting.showLiveResults ? { results: await tally(activityId, activity) } : {}),
+                });
             }
         }
 
@@ -56,81 +61,89 @@ export async function POST(req) {
             option
         });
 
-        // Return live results if enabled
-        let results = null;
-        if (activity.voting.showLiveResults) {
-            const allVotes = await EventVote.find({ activityId }).lean();
-            const total = allVotes.length;
-            results = (activity.voting.options).reduce((acc, opt) => {
-                const count = allVotes.filter(v => v.option === opt).length;
-                acc[opt] = {
-                    count,
-                    percentage: total > 0 ? Math.round((count / total) * 100) : 0
-                };
-                return acc;
-            }, {});
-        }
-
         return NextResponse.json({
             success: true,
             message: 'Vote recorded!',
-            results
+            myVote: option,
+            results: activity.voting.showLiveResults ? await tally(activityId, activity) : null
         });
 
     } catch (err) {
         if (err.code === 11000) {
-            return NextResponse.json(
-                { error: 'You have already voted.', code: 'DUPLICATE_VOTE' },
-                { status: 409 }
-            );
+            // Lost the race against the participant's own second tap. Their vote
+            // is recorded either way, so report it as the settled state rather
+            // than as a failure.
+            return conflict('You have already voted.', { code: 'DUPLICATE_VOTE' });
         }
-        console.error('Vote error:', err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return serverError(err, 'flutter/events/vote');
     }
 }
 
 /**
- * GET /api/flutter/events/vote?activityId=[id]
- * Fetch the live vote tally for a voting activity.
+ * GET /api/flutter/events/vote?activityId=[id]&participantId=[id]
+ *
+ * The live tally, plus this participant's own choice when they pass an id —
+ * that is what lets a client restore "you voted for X" after a reload instead
+ * of offering a vote it will then reject with a 409.
  */
 export async function GET(req) {
+    const { searchParams } = new URL(req.url);
+    const activityId = searchParams.get('activityId');
+    const participantId = searchParams.get('participantId');
+
+    if (!activityId) return badRequest('activityId is required');
+
+    const invalid = invalidIdResponse(activityId, 'activityId');
+    if (invalid) return invalid;
+
     try {
         await connectDB();
-        const { searchParams } = new URL(req.url);
-        const activityId = searchParams.get('activityId');
-
-        if (!activityId) {
-            return NextResponse.json({ error: 'activityId is required' }, { status: 400 });
-        }
 
         const activity = await EventActivity.findById(activityId).lean();
         if (!activity || activity.type !== 'voting') {
-            return NextResponse.json({ error: 'Voting activity not found' }, { status: 404 });
+            return notFound('Voting activity not found');
         }
 
-        const allVotes = await EventVote.find({ activityId }).lean();
-        const total = allVotes.length;
-        const results = (activity.voting?.options || []).reduce((acc, opt) => {
-            const count = allVotes.filter(v => v.option === opt).length;
-            acc[opt] = {
-                count,
-                percentage: total > 0 ? Math.round((count / total) * 100) : 0
-            };
-            return acc;
-        }, {});
+        const results = await tally(activityId, activity);
+
+        let myVote = null;
+        if (participantId) {
+            const mine = await EventVote.findOne({ activityId, participantId }).select('option').lean();
+            myVote = mine?.option ?? null;
+        }
 
         return NextResponse.json({
             success: true,
             data: {
                 question: activity.voting?.question,
-                total,
+                total: Object.values(results).reduce((sum, r) => sum + r.count, 0),
                 results,
+                myVote,
+                // Withheld unless the organiser turned live results on, so a
+                // client can tell "no votes yet" from "you can't see these yet".
+                resultsVisible: Boolean(activity.voting?.showLiveResults),
                 activityStatus: activity.status
             }
         });
 
     } catch (err) {
-        console.error('Vote fetch error:', err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return serverError(err, 'flutter/events/vote/tally');
     }
+}
+
+/** { option: { count, percentage } } for every configured option. */
+async function tally(activityId, activity) {
+    const counts = await EventVote.aggregate([
+        { $match: { activityId: activity._id } },
+        { $group: { _id: '$option', count: { $sum: 1 } } },
+    ]);
+
+    const byOption = new Map(counts.map((c) => [c._id, c.count]));
+    const total = counts.reduce((sum, c) => sum + c.count, 0);
+
+    return (activity.voting?.options || []).reduce((acc, opt) => {
+        const count = byOption.get(opt) ?? 0;
+        acc[opt] = { count, percentage: total > 0 ? Math.round((count / total) * 100) : 0 };
+        return acc;
+    }, {});
 }

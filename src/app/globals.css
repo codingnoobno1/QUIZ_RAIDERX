@@ -1,8 +1,250 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/*
+ * Tailwind v4 — integrated alongside MUI.
+ *
+ * Preflight (Tailwind's global reset) is intentionally omitted. This codebase is
+ * predominantly MUI, which supplies its own base/reset via emotion. Importing only
+ * the theme + utilities layers makes every Tailwind utility class generate and work,
+ * without a global reset competing with MUI across 45+ files.
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
 
-/* Optional: Set base theme */
+/* Tell v4 where to scan for class names (utilities are generated on demand). */
+@source "../";
+
+/* Minimal base so `border-*` and box model utilities behave without full Preflight. */
+*,
+::before,
+::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: currentColor;
+}
+
+html,
 body {
-  @apply bg-white text-neutral-900 font-sans;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #0a0a0f;
+  color: #e7e7ea;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Global scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a35;
+  border-radius: 6px;
+}
+
+/* ── Card & grid system (plan §22) ─────────────────────────────────────────── */
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--cards-gap, 16px);
+  align-items: stretch;
+}
+.grid-cards > * {
+  height: 100%;
+}
+
+.ui-card {
+  --accent: #22d3ee;
+  display: flex;
+  flex-direction: column;
+  background: #111118;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  color: #e7e7ea;
+  text-decoration: none;
+  text-align: left;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+.ui-card--outline {
+  background: transparent;
+}
+.ui-card--elevated {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.ui-card--gradient {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--accent) 12%, transparent),
+    rgba(15, 15, 25, 0.92)
+  );
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.ui-card--interactive {
+  cursor: pointer;
+}
+/* Hover lift only on real pointer devices (no thrash on touch / long lists). */
+@media (hover: hover) and (pointer: fine) {
+  .ui-card--interactive:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    background: #16161f;
+  }
+}
+.ui-card--interactive:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-card,
+  .ui-card--interactive:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+.ui-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0d0d14;
+}
+.ui-card-media > img,
+.ui-card-media > * {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ui-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  font-weight: 700;
+}
+.ui-card-body {
+  padding: 0 16px 14px;
+  flex: 1;
+}
+.ui-card-footer {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Multi-line clamp helpers for card text */
+.clamp-1,
+.clamp-2,
+.clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.clamp-1 {
+  -webkit-line-clamp: 1;
+}
+.clamp-2 {
+  -webkit-line-clamp: 2;
+}
+.clamp-3 {
+  -webkit-line-clamp: 3;
+}
+
+/* ── Quiz Hub — reusable Faculty + Quiz cards (premium) ─────────────────────
+ * Live in globals (like .ui-card) because <FacultyCard>/<QuizCard> are reused
+ * across /coding-club/quiz, /quizzes and QuizSection — they must be styled
+ * everywhere, not just where a page-scoped <style> happens to be mounted.
+ * ------------------------------------------------------------------------- */
+
+/* .qz-fac* and .qz-quiz* now ship INSIDE the components (QuizCard.jsx /
+ * profilecard.jsx) via React 19 <style href precedence> hoist + dedupe, so the
+ * premium styling can never be lost to CSS-load / HMR ordering and renders
+ * identically in every place the cards are reused. Intentionally not here. */
+
+/* ── Mobile / iOS shell primitives ──────────────────────────────────────────
+ * Used by the event dashboard (and anything else that wants a real app shell).
+ * These exist because the desktop-first defaults break in specific, known ways
+ * on iOS Safari — each rule below fixes one of them.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* Resolve to 0 on every non-notched device; real values on iPhone once the
+   * root layout sets viewportFit: 'cover'. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --bottom-nav-h: 64px;
+}
+
+/* iOS Safari's toolbar collapses on scroll, so 100vh is TALLER than the visible
+ * viewport and the last 60-ish px sit under the chrome. dvh tracks it live. */
+.app-vh {
+  min-height: 100vh;          /* fallback for anything without dvh */
+  min-height: 100dvh;
+}
+
+.safe-t { padding-top: var(--safe-top); }
+.safe-b { padding-bottom: var(--safe-bottom); }
+.safe-x { padding-left: var(--safe-left); padding-right: var(--safe-right); }
+
+/* Scrollable pane inside the shell: momentum scroll, and don't let an
+ * over-scroll at the top drag the whole page (iOS rubber-band). */
+.app-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Content above a fixed bottom nav must clear both the bar and the home bar. */
+.pad-for-nav {
+  padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 16px);
+}
+
+/* iOS zooms the page when a focused input is under 16px. Never let that happen
+ * — the maximumScale:1 viewport would otherwise trap the user zoomed in. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea,
+  .MuiInputBase-input {
+    font-size: 16px !important;
+  }
+}
+
+/* Grey flash on tap looks broken on a dark app shell. */
+.app-shell,
+.app-shell * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Every interactive element in the shell clears Apple's 44px minimum. */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+
+/* Hover affordances must not be the ONLY signal — on touch there is no hover,
+ * and iOS fires a sticky :hover on first tap. Gate them behind a real pointer. */
+@media (hover: none) {
+  .hover-lift:hover { transform: none; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift { transition: transform 180ms ease, border-color 180ms ease; }
+  .hover-lift:hover { transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift,
+  .hover-lift:hover { transition: none; transform: none; }
 }

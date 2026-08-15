@@ -138,7 +138,6 @@ export default function MyProjects() {
           NEW INITIATIVE
         </Button>
       </Box>
-
       {/* Status Message */}
       <AnimatePresence>
         {message && (
@@ -159,7 +158,6 @@ export default function MyProjects() {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Projects Grid */}
       {myProjects.length === 0 ? (
         <Box sx={{
@@ -184,13 +182,18 @@ export default function MyProjects() {
       ) : (
         <Grid container spacing={4}>
           {myProjects.map((project) => (
-            <Grid item xs={12} sm={6} md={4} key={project._id}>
+            <Grid
+              key={project._id}
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <ProjectCard data={project} />
             </Grid>
           ))}
         </Grid>
       )}
-
       {/* Submission Form Dialog */}
       <Dialog
         open={showForm}
@@ -217,7 +220,7 @@ export default function MyProjects() {
         <DialogContent sx={{ p: 4, pt: 2 }}>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <TextField
                   fullWidth
                   name="title"
@@ -229,7 +232,7 @@ export default function MyProjects() {
                   sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <TextField
                   fullWidth
                   name="description"
@@ -243,7 +246,11 @@ export default function MyProjects() {
                   sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6
+                }}>
                 <TextField
                   fullWidth
                   name="tags"
@@ -255,7 +262,11 @@ export default function MyProjects() {
                   sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6
+                }}>
                 <TextField
                   fullWidth
                   name="category"
@@ -272,7 +283,7 @@ export default function MyProjects() {
                   ))}
                 </TextField>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <TextField
                   fullWidth
                   name="imageUrl"
@@ -283,7 +294,11 @@ export default function MyProjects() {
                   sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6
+                }}>
                 <TextField
                   fullWidth
                   name="githubUrl"
@@ -294,7 +309,11 @@ export default function MyProjects() {
                   sx={{ bgcolor: "rgba(255, 255, 255, 0.03)", borderRadius: "12px", "& .MuiFilledInput-root": { borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6
+                }}>
                 <TextField
                   fullWidth
                   name="liveUrl"

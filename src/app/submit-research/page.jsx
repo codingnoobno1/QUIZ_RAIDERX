@@ -180,7 +180,6 @@ export default function SubmitResearchPage() {
         <Box sx={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', bgcolor: '#000' }}>
             {/* Flowing Code Background */}
             <CodeFlowBackground />
-
             {/* Animated gradient orbs */}
             <Box sx={{
                 position: 'fixed',
@@ -210,7 +209,6 @@ export default function SubmitResearchPage() {
                 zIndex: 0,
                 animation: 'float 6s ease-in-out infinite',
             }} />
-
             {/* Form Container */}
             <Container maxWidth="md" sx={{ position: 'relative', zIndex: 2, py: 8 }}>
                 <Fade in timeout={800}>
@@ -280,7 +278,7 @@ export default function SubmitResearchPage() {
                                 </Typography>
 
                                 <Grid container spacing={3}>
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <CyberTextField
                                             fullWidth
                                             label="Paper Title *"
@@ -291,7 +289,7 @@ export default function SubmitResearchPage() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <CyberTextField
                                             fullWidth
                                             label="Abstract *"
@@ -306,7 +304,11 @@ export default function SubmitResearchPage() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} md={6}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            md: 6
+                                        }}>
                                         <CyberTextField
                                             select
                                             fullWidth
@@ -321,7 +323,11 @@ export default function SubmitResearchPage() {
                                         </CyberTextField>
                                     </Grid>
 
-                                    <Grid item xs={12} md={6}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            md: 6
+                                        }}>
                                         <CyberTextField
                                             fullWidth
                                             label="Published Date"
@@ -332,7 +338,7 @@ export default function SubmitResearchPage() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <CyberTextField
                                             fullWidth
                                             label="Keywords (comma-separated)"
@@ -366,7 +372,7 @@ export default function SubmitResearchPage() {
                                 </Typography>
 
                                 <Grid container spacing={3}>
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <CyberTextField
                                             fullWidth
                                             label="Primary Authors (comma-separated)"
@@ -377,7 +383,7 @@ export default function SubmitResearchPage() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <CyberTextField
                                             fullWidth
                                             label="Co-Authors (optional, comma-separated)"
@@ -387,7 +393,7 @@ export default function SubmitResearchPage() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <CyberTextField
                                             fullWidth
                                             label="Your Name *"
@@ -422,7 +428,11 @@ export default function SubmitResearchPage() {
                                 </Typography>
 
                                 <Grid container spacing={3}>
-                                    <Grid item xs={12} md={6}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            md: 6
+                                        }}>
                                         <CyberTextField
                                             fullWidth
                                             label="Publisher"
@@ -433,7 +443,11 @@ export default function SubmitResearchPage() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} md={6}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            md: 6
+                                        }}>
                                         <CyberTextField
                                             fullWidth
                                             label="Journal Name"
@@ -443,7 +457,11 @@ export default function SubmitResearchPage() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} md={6}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            md: 6
+                                        }}>
                                         <CyberTextField
                                             fullWidth
                                             label="Conference Name"
@@ -453,7 +471,11 @@ export default function SubmitResearchPage() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} md={6}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            md: 6
+                                        }}>
                                         <CyberTextField
                                             fullWidth
                                             label="DOI"
@@ -464,7 +486,11 @@ export default function SubmitResearchPage() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} md={6}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            md: 6
+                                        }}>
                                         <CyberTextField
                                             fullWidth
                                             label="PDF URL"
@@ -475,7 +501,11 @@ export default function SubmitResearchPage() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} md={6}>
+                                    <Grid
+                                        size={{
+                                            xs: 12,
+                                            md: 6
+                                        }}>
                                         <CyberTextField
                                             fullWidth
                                             label="Related Patent (optional)"

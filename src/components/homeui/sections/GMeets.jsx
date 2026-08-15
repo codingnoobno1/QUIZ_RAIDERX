@@ -13,7 +13,11 @@ const GMeets = () => {
         <Box id="events" sx={{ py: 10, background: '#080808', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
             <Container maxWidth="xl">
                 <Grid container spacing={4} alignItems="center">
-                    <Grid item xs={12} md={4}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            md: 4
+                        }}>
                         <Box sx={{ p: 4 }}>
                             <SectionTitle align="left" sx={{ mb: 2 }}>Upcoming Events</SectionTitle>
                             <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.6)', mb: 4, lineHeight: 1.8 }}>
@@ -33,7 +37,11 @@ const GMeets = () => {
                             </Button>
                         </Box>
                     </Grid>
-                    <Grid item xs={12} md={8}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            md: 8
+                        }}>
                         <RevealSection>
                             <GlassCard sx={{
                                 display: 'flex',

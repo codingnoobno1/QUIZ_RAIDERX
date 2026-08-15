@@ -32,14 +32,18 @@ export default function MemberNotes() {
       <Typography variant="h5" fontWeight="bold" gutterBottom color="primary">
         👥 Member Notes
       </Typography>
-
       <Typography variant="body1" sx={{ mb: 3, color: '#555' }}>
         Browse curated notes and contributions shared by club members.
       </Typography>
-
       <Grid container spacing={3}>
         {sampleNotes.map((note, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
+          <Grid
+            key={index}
+            size={{
+              xs: 12,
+              sm: 6,
+              md: 4
+            }}>
             <Card
               sx={{
                 backgroundColor: '#fefefe',

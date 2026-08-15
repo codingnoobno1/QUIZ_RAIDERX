@@ -68,6 +68,17 @@ const EventRegistrationSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// The registration route used to load every registration for an event and loop
+// over it in JS to find a duplicate email — a full collection scan on each
+// signup, and it grew with the guest list. These make that one indexed lookup.
+//
+// Not unique on purpose: a unique (eventId, email) index is the only thing that
+// closes the double-submit race for good, but it cannot be built on a
+// collection that already holds duplicates. Dedupe first, then tighten it.
+EventRegistrationSchema.index({ eventId: 1, email: 1 });
+EventRegistrationSchema.index({ eventId: 1, 'members.email': 1 });
+EventRegistrationSchema.index({ email: 1 });
+
 // Prevent model recompilation error
 if (process.env.NODE_ENV !== 'production') delete mongoose.models.EventRegistration;
 

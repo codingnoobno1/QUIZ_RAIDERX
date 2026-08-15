@@ -30,3 +30,8 @@ yarn-error.log*
 .idea/
 # Local Netlify folder
 .netlify
+
+# Not part of the Next.js app
+*.rar
+_mongotest.cjs
+.claude/

@@ -26,7 +26,7 @@ const handler = NextAuth({
 
         const user = result.recordset[0];
 
-        if (user && await bcrypt.compare(password, user.hashedPassword)) {
+        if (user && (await bcrypt.compare(password, user.hashedPassword))) {
           return {
             id: user.uuid,
             name: user.name,

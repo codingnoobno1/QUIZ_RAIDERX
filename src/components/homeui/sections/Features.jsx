@@ -29,7 +29,13 @@ const Features = () => {
                 <SectionTitle>Defining Excellence</SectionTitle>
                 <Grid container spacing={4}>
                     {items.map((item, index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
+                        <Grid
+                            key={index}
+                            size={{
+                                xs: 12,
+                                sm: 6,
+                                md: 4
+                            }}>
                             <TiltCard>
                                 <GlassCard
                                     initial={{ opacity: 0, y: 30 }}

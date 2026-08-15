@@ -34,25 +34,27 @@ export default function PixelAdminNotes() {
       <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
         🛡️ Pixel Admin Notes
       </Typography>
-
       {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
         </Box>
       )}
-
       {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
-
       {!loading && !error && notes.length === 0 && (
         <Typography variant="body1" sx={{ textAlign: 'center', my: 4, color: 'text.secondary' }}>
           No admin notes are available at the moment.
         </Typography>
       )}
-
       {!loading && !error && notes.length > 0 && (
         <Grid container spacing={3}>
           {notes.map((note) => (
-            <Grid item xs={12} sm={6} md={4} key={note.id}>
+            <Grid
+              key={note.id}
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <Card sx={{ height: '100%', boxShadow: 2, backgroundColor: '#f5f5f5' }}>
                 <CardContent>
                   <Typography variant="h6" component="div" gutterBottom>

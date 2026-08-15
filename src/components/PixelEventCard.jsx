@@ -35,7 +35,9 @@ export default function PixelEventCard({
     return (
         <Card
             sx={{
-                width: 520,
+                width: '100%',
+                maxWidth: 560,
+                mx: 'auto',
                 borderRadius: "28px",
                 overflow: "hidden",
                 background: "linear-gradient(145deg, rgba(20,20,40,0.95), rgba(10,10,25,0.95))",
@@ -121,7 +123,6 @@ export default function PixelEventCard({
                     />
                 )}
             </Box>
-
             {/* 2️⃣ EVENT INFO SECTION */}
             <Box p={4}>
                 <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.6)", lineHeight: 1.7, mb: 3 }}>
@@ -129,7 +130,7 @@ export default function PixelEventCard({
                 </Typography>
 
                 <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                    <Grid size={6}>
                         <Stack direction="row" spacing={1.5} alignItems="center">
                             <Box sx={{ p: 1, borderRadius: '10px', bgcolor: 'rgba(0,255,255,0.05)', color: '#00e5ff', display: 'flex' }}>
                                 <CalendarMonthIcon sx={{ fontSize: 20 }} />
@@ -140,7 +141,7 @@ export default function PixelEventCard({
                             </Box>
                         </Stack>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={6}>
                         <Stack direction="row" spacing={1.5} alignItems="center">
                             <Box sx={{ p: 1, borderRadius: '10px', bgcolor: 'rgba(0,255,255,0.05)', color: '#00e5ff', display: 'flex' }}>
                                 <AccessTimeIcon sx={{ fontSize: 20 }} />
@@ -151,7 +152,7 @@ export default function PixelEventCard({
                             </Box>
                         </Stack>
                     </Grid>
-                    <Grid item xs={12} sx={{ mt: 1 }}>
+                    <Grid sx={{ mt: 1 }} size={12}>
                         <Stack direction="row" spacing={1.5} alignItems="center">
                             <Box sx={{ p: 1, borderRadius: '10px', bgcolor: 'rgba(0,255,255,0.05)', color: '#00e5ff', display: 'flex' }}>
                                 <LocationOnIcon sx={{ fontSize: 20 }} />
@@ -261,7 +262,6 @@ export default function PixelEventCard({
                     </Button>
                 </Stack>
             </Box>
-
             {/* 5️⃣ FOOTER STRIP */}
             <Box
                 sx={{

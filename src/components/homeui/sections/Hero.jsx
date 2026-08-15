@@ -14,7 +14,11 @@ const Hero = () => {
     return (
         <Container maxWidth="xl" sx={{ pt: { xs: 8, md: 12 }, pb: 10 }}>
             <Grid container spacing={6} alignItems="center">
-                <Grid item xs={12} md={5}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 5
+                    }}>
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -100,7 +104,12 @@ const Hero = () => {
                     </motion.div>
                 </Grid>
 
-                <Grid item xs={12} md={7} sx={{ display: 'flex', justifyContent: 'center', position: 'relative', minHeight: { xs: '400px', md: '700px' } }}>
+                <Grid
+                    sx={{ display: 'flex', justifyContent: 'center', position: 'relative', minHeight: { xs: '400px', md: '700px' } }}
+                    size={{
+                        xs: 12,
+                        md: 7
+                    }}>
                     <motion.div
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}

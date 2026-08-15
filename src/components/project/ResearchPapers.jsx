@@ -75,7 +75,6 @@ export default function ResearchPapers() {
           Submit Research
         </Button>
       </Box>
-
       {researchPapers.length === 0 ? (
         <Box sx={{
           textAlign: 'center',
@@ -94,7 +93,14 @@ export default function ResearchPapers() {
       ) : (
         <Grid container spacing={4}>
           {researchPapers.map((paper) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={paper._id}>
+            <Grid
+              key={paper._id}
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4,
+                lg: 3
+              }}>
               <ResearchCard data={paper} />
             </Grid>
           ))}

@@ -149,7 +149,6 @@ export default function ResearchCard({ data }) {
           </CardContent>
         </Card>
       </motion.div>
-
       {/* Premium Detail Dialog */}
       <Dialog
         open={open}
@@ -235,7 +234,12 @@ export default function ResearchCard({ data }) {
                   <Typography variant="h6" sx={{ color: neonCyan, fontWeight: 900, mb: 3 }}>PRIMARY CONTRIBUTORS</Typography>
                   <Grid container spacing={2}>
                     {paper.authors?.map((author, i) => (
-                      <Grid item xs={12} sm={6} key={i}>
+                      <Grid
+                        key={i}
+                        size={{
+                          xs: 12,
+                          sm: 6
+                        }}>
                         <Box sx={{ display: "flex", alignItems: "center", p: 2, bgcolor: "rgba(255,255,255,0.02)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
                           <Avatar sx={{ mr: 2, bgcolor: neonPink }}>{author[0]}</Avatar>
                           <Typography sx={{ fontWeight: 700 }}>{author}</Typography>

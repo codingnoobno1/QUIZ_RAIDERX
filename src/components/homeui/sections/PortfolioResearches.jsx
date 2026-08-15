@@ -70,7 +70,6 @@ const PortfolioResearches = () => {
                 zIndex: 0,
                 pointerEvents: 'none'
             }} />
-
             <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
                 <SectionTitle>Portfolio Research</SectionTitle>
 
@@ -91,7 +90,13 @@ const PortfolioResearches = () => {
                 {loading ? (
                     <Grid container spacing={5}>
                         {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <Grid item xs={12} sm={6} md={4} key={i}>
+                            <Grid
+                                key={i}
+                                size={{
+                                    xs: 12,
+                                    sm: 6,
+                                    md: 4
+                                }}>
                                 <ResearchCardSkeleton />
                             </Grid>
                         ))}
@@ -100,7 +105,14 @@ const PortfolioResearches = () => {
                     <>
                         <Grid container spacing={5} sx={{ perspective: '1000px' }}>
                             {researches.map((paper, idx) => (
-                                <Grid item xs={12} sm={6} md={4} key={paper._id || idx} sx={{ zIndex: 1, '&:hover': { zIndex: 10 } }}>
+                                <Grid
+                                    key={paper._id || idx}
+                                    sx={{ zIndex: 1, '&:hover': { zIndex: 10 } }}
+                                    size={{
+                                        xs: 12,
+                                        sm: 6,
+                                        md: 4
+                                    }}>
                                     <Grow in timeout={500 + idx * 100}>
                                         <Box>
                                             <GlassCard
@@ -278,7 +290,7 @@ const PortfolioResearches = () => {
                     </>
                 ) : (
                     // Empty State
-                    <Fade in>
+                    (<Fade in>
                         <Box sx={{
                             textAlign: 'center',
                             py: 8,
@@ -319,7 +331,7 @@ const PortfolioResearches = () => {
                                 Submit Your Research
                             </Button>
                         </Box>
-                    </Fade>
+                    </Fade>)
                 )}
             </Container>
         </Box>

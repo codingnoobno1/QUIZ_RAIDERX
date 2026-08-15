@@ -235,7 +235,12 @@ export default function OurTeam() {
                 <SectionTitle>Our Mentors</SectionTitle>
                 <Grid container spacing={5} justifyContent="center" sx={{ mb: 12 }}>
                     {facultyMembers.map((member, index) => (
-                        <Grid item xs={12} md={4} key={index}>
+                        <Grid
+                            key={index}
+                            size={{
+                                xs: 12,
+                                md: 4
+                            }}>
                             <TeamCard member={member} isFaculty={true} />
                         </Grid>
                     ))}
@@ -245,7 +250,14 @@ export default function OurTeam() {
                 <SectionTitle>Team Members</SectionTitle>
                 <Grid container spacing={4}>
                     {studentMembers.map((member, index) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+                        <Grid
+                            key={index}
+                            size={{
+                                xs: 12,
+                                sm: 6,
+                                md: 4,
+                                lg: 3
+                            }}>
                             <TeamCard member={member} isFaculty={false} />
                         </Grid>
                     ))}

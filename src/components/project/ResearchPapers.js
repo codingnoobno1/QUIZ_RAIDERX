@@ -26,18 +26,24 @@ export default function ResearchPapers() {
         </Typography>
         <Box sx={{ flexGrow: 1, height: "1px", background: `linear-gradient(90deg, ${neonCyan}44, transparent)` }} />
       </Box>
-
       <motion.div variants={containerVariants} initial="hidden" animate="visible">
         <Grid container spacing={4}>
           {researchPapers.length === 0 ? (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Typography sx={{ color: "rgba(255,255,255,0.3)", textAlign: "center", py: 8 }}>
                 No research papers identified in this sector.
               </Typography>
             </Grid>
           ) : (
             researchPapers.map((item) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
+              <Grid
+                key={item.id}
+                size={{
+                  xs: 12,
+                  sm: 6,
+                  md: 4,
+                  lg: 3
+                }}>
                 <ResearchCard data={item} />
               </Grid>
             ))

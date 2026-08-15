@@ -37,7 +37,11 @@ export default function BatchAndSubjectSelector({
     <Box mb={4} width="100%">
       <Grid container spacing={3}>
         {/* Batch Selector */}
-        <Grid item xs={12} md={6}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 6
+          }}>
           <Typography variant="h6" mb={1} fontWeight={700} color="#2874A6">
             Assigned Batch
           </Typography>
@@ -96,7 +100,11 @@ export default function BatchAndSubjectSelector({
         </Grid>
 
         {/* Subject Selector */}
-        <Grid item xs={12} md={6}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 6
+          }}>
           <Typography variant="h6" mb={1} fontWeight={700} color="#CA6F1E">
             Subjects
           </Typography>

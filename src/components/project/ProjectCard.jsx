@@ -178,7 +178,6 @@ export default function ProjectCard({ data }) {
           </CardContent>
         </Card>
       </motion.div>
-
       {/* Redesigned Dialog */}
       <Dialog
         open={open}
@@ -268,7 +267,7 @@ export default function ProjectCard({ data }) {
                     <Typography variant="h6" sx={{ color: neonCyan, mb: 2, fontWeight: 800 }}>Technology Framework</Typography>
                     <Grid container spacing={1}>
                       {project.stack?.map((tech, i) => (
-                        <Grid item key={i}>
+                        <Grid key={i}>
                           <Chip
                             label={tech}
                             sx={{
@@ -289,7 +288,11 @@ export default function ProjectCard({ data }) {
                     <Typography variant="h6" sx={{ color: neonCyan, mb: 3, fontWeight: 800 }}>Access Points</Typography>
                     <Grid container spacing={3}>
                       {project.github && (
-                        <Grid item xs={12} sm={4}>
+                        <Grid
+                          size={{
+                            xs: 12,
+                            sm: 4
+                          }}>
                           <Button
                             fullWidth
                             variant="outlined"
@@ -303,7 +306,11 @@ export default function ProjectCard({ data }) {
                         </Grid>
                       )}
                       {project.deployment && (
-                        <Grid item xs={12} sm={4}>
+                        <Grid
+                          size={{
+                            xs: 12,
+                            sm: 4
+                          }}>
                           <Button
                             fullWidth
                             variant="contained"
@@ -317,7 +324,11 @@ export default function ProjectCard({ data }) {
                         </Grid>
                       )}
                       {project.gdrive && (
-                        <Grid item xs={12} sm={4}>
+                        <Grid
+                          size={{
+                            xs: 12,
+                            sm: 4
+                          }}>
                           <Button
                             fullWidth
                             variant="outlined"
@@ -348,7 +359,12 @@ export default function ProjectCard({ data }) {
                     <Typography variant="h6" sx={{ color: neonPink, mb: 2, fontWeight: 800 }}>Collaborators</Typography>
                     <Grid container spacing={2}>
                       {project.groupMembers?.map((member, i) => (
-                        <Grid item xs={6} md={4} key={i}>
+                        <Grid
+                          key={i}
+                          size={{
+                            xs: 6,
+                            md: 4
+                          }}>
                           <Box sx={{ display: "flex", alignItems: "center" }}>
                             <Avatar sx={{ width: 28, height: 28, fontSize: "0.7rem", mr: 1 }}>{member[0]}</Avatar>
                             <Typography variant="body2">{member}</Typography>

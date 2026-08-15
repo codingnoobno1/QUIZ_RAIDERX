@@ -69,7 +69,14 @@ export default function AllProjects() {
           <motion.div variants={containerVariants} initial="hidden" animate="visible">
             <Grid container spacing={4}>
               {majorProjects.map((item) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={item._id || item.id}>
+                <Grid
+                  key={item._id || item.id}
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                    lg: 3
+                  }}>
                   <ProjectCard data={item} />
                 </Grid>
               ))}
@@ -77,7 +84,6 @@ export default function AllProjects() {
           </motion.div>
         </>
       )}
-
       {/* Minor Projects Section */}
       {minorProjects.length > 0 && (
         <>
@@ -85,7 +91,14 @@ export default function AllProjects() {
           <motion.div variants={containerVariants} initial="hidden" animate="visible">
             <Grid container spacing={4}>
               {minorProjects.map((item) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={item._id || item.id}>
+                <Grid
+                  key={item._id || item.id}
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                    lg: 3
+                  }}>
                   <ProjectCard data={item} />
                 </Grid>
               ))}
@@ -93,20 +106,26 @@ export default function AllProjects() {
           </motion.div>
         </>
       )}
-
       {/* All Projects Section */}
       <SectionHeader title="Archive / Other" color="rgba(255,255,255,0.2)" />
       <motion.div variants={containerVariants} initial="hidden" animate="visible">
         <Grid container spacing={4}>
           {allProjects.length === 0 ? (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Typography sx={{ color: "rgba(255,255,255,0.3)", textAlign: "center", py: 4 }}>
                 No archives found in this sector.
               </Typography>
             </Grid>
           ) : (
             allProjects.map((item) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={item._id || item.id}>
+              <Grid
+                key={item._id || item.id}
+                size={{
+                  xs: 12,
+                  sm: 6,
+                  md: 4,
+                  lg: 3
+                }}>
                 <ProjectCard data={item} />
               </Grid>
             ))

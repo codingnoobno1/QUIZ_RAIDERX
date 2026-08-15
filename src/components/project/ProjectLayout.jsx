@@ -22,14 +22,14 @@ export default function ProjectLayout({ data }) {
       <Grid container spacing={4} justifyContent="center">
         {data.map((item) => (
           <Grid
-            item
-            xs={12}
-            sm={6}
-            md={4}
-            lg={3}
             key={item.id}
             display="flex"
-          >
+            size={{
+              xs: 12,
+              sm: 6,
+              md: 4,
+              lg: 3
+            }}>
             <motion.div
               style={{ width: "100%" }}
               variants={{

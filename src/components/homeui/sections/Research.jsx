@@ -25,7 +25,11 @@ const Research = () => {
             <Container maxWidth="lg">
                 <SectionTitle>Frontier Research</SectionTitle>
                 <Grid container spacing={4} alignItems="center">
-                    <Grid item xs={12} md={6}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            md: 6
+                        }}>
                         <RevealSection direction="right">
                             <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 3 }}>Pushing the boundaries of what's possible.</Typography>
                             <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 4, lineHeight: 1.8 }}>
@@ -45,7 +49,11 @@ const Research = () => {
                             </Box>
                         </RevealSection>
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            md: 6
+                        }}>
                         <RevealSection direction="left">
                             <Box sx={{ mb: 4, height: '240px' }}>
                                 {/* Temporarily using a placeholder - replace with local Lottie file */}

@@ -65,10 +65,9 @@ export default function ProjectForm() {
       <Typography variant="h4" sx={{ ...goldenStyle, mb: 3 }}>
         Submit New Project
       </Typography>
-
       <Grid container spacing={2}>
         {["title", "description", "type", "usp", "image", "github", "gdrive", "deployment", "teamLead"].map((field) => (
-          <Grid item xs={12} key={field}>
+          <Grid key={field} size={12}>
             <TextField
               name={field}
               label={field.charAt(0).toUpperCase() + field.slice(1)}
@@ -87,7 +86,11 @@ export default function ProjectForm() {
         ))}
 
         {/* Stack Input */}
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <TextField
             label="Add Tech Stack"
             value={stackInput}
@@ -112,7 +115,11 @@ export default function ProjectForm() {
         </Grid>
 
         {/* Members Input */}
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           <TextField
             label="Add Group Member"
             value={memberInput}
@@ -136,7 +143,7 @@ export default function ProjectForm() {
           </Box>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Button
             variant="contained"
             fullWidth

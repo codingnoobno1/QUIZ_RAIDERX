@@ -58,7 +58,11 @@ export default function UploadNotes() {
         </Typography>
 
         <Grid container spacing={3} mt={1}>
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <TextField
               label="Subject"
               fullWidth
@@ -68,7 +72,11 @@ export default function UploadNotes() {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
             <FormControl fullWidth>
               <InputLabel>Type</InputLabel>
               <Select
@@ -83,7 +91,11 @@ export default function UploadNotes() {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 4
+            }}>
             <TextField
               label="Department"
               fullWidth
@@ -93,7 +105,11 @@ export default function UploadNotes() {
             />
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 4
+            }}>
             <TextField
               label="Course"
               fullWidth
@@ -103,7 +119,11 @@ export default function UploadNotes() {
             />
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 4
+            }}>
             <TextField
               label="Semester"
               fullWidth
@@ -113,7 +133,7 @@ export default function UploadNotes() {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Button
               component="label"
               variant="outlined"
@@ -130,7 +150,7 @@ export default function UploadNotes() {
             </Button>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Button
               variant="contained"
               color="primary"

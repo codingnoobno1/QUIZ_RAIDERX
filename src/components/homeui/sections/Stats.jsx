@@ -16,7 +16,13 @@ const Stats = () => {
         <Container maxWidth="lg" sx={{ py: 15 }}>
             <Grid container spacing={6} justifyContent="center" textAlign="center">
                 {stats.map((stat, index) => (
-                    <Grid item xs={12} sm={6} md={3} key={index}>
+                    <Grid
+                        key={index}
+                        size={{
+                            xs: 12,
+                            sm: 6,
+                            md: 3
+                        }}>
                         <RevealSection delay={index * 0.15}>
                             <Box sx={{ p: 4, borderRadius: '30px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                 <Typography variant="h2" sx={{ fontWeight: '900', color: stat.color, mb: 1, fontFamily: "'Space Grotesk', sans-serif" }}>{stat.value}</Typography>

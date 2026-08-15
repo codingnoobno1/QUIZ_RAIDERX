@@ -122,15 +122,27 @@ export default function CreateQuizPage(props) {
       >
         {(batch && subject) ? (
           <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                md: 4
+              }}>
               <Typography fontWeight={700} color="primary.main">Batch:</Typography>
               <Typography>{batch.batch || batch.course || 'N/A'}</Typography>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                md: 4
+              }}>
               <Typography fontWeight={700} color="primary.main">Subject:</Typography>
               <Typography>{subject}</Typography>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                md: 4
+              }}>
               <Typography fontWeight={700} color="primary.main">Quiz Type:</Typography>
               <Typography>{quizType || questionType}</Typography>
             </Grid>
@@ -147,7 +159,6 @@ export default function CreateQuizPage(props) {
           ← Back to Quiz Grid
         </Button>
       </Paper>
-
       {/* Question Builder */}
       <Paper
         elevation={6}
@@ -196,7 +207,6 @@ export default function CreateQuizPage(props) {
           </Button>
         </Stack>
       </Paper>
-
       {/* Current Questions */}
       {questions.length > 0 && (
         <Paper elevation={3} sx={{ maxWidth: 800, mx: 'auto', p: 3, mb: 8, bgcolor: '#f9f9fb' }}>
@@ -226,7 +236,6 @@ export default function CreateQuizPage(props) {
           </Stack>
         </Paper>
       )}
-
       {/* Scroll to top FAB */}
       <Fab
         onClick={scrollToTop}
@@ -241,7 +250,6 @@ export default function CreateQuizPage(props) {
       >
         <ArrowUpward />
       </Fab>
-
       {/* Snackbar Notification */}
       <Snackbar
         open={snackbar.open}

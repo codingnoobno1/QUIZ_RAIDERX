@@ -23,10 +23,15 @@ export default function VideoPlayer() {
       <Typography variant="h4" gutterBottom style={{ color: '#fff', marginBottom: '2rem' }}>
         🎬 Featured Videos
       </Typography>
-
       <Grid container spacing={3}>
         {videoIds.map((id, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
+          <Grid
+            key={index}
+            size={{
+              xs: 12,
+              sm: 6,
+              md: 4
+            }}>
             <motion.div
               whileHover={{ scale: 1.05, zIndex: 10 }}
               transition={{ duration: 0.3 }}

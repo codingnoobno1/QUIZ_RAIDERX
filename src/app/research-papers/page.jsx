@@ -99,7 +99,13 @@ export default function AllResearchPage() {
                 ) : (
                     <Grid container spacing={4}>
                         {filteredPapers.map((paper) => (
-                            <Grid item xs={12} sm={6} md={4} key={paper._id}>
+                            <Grid
+                                key={paper._id}
+                                size={{
+                                    xs: 12,
+                                    sm: 6,
+                                    md: 4
+                                }}>
                                 <ResearchCard paper={paper} />
                             </Grid>
                         ))}

@@ -24,7 +24,12 @@ const Projects = () => {
                 <SectionTitle>Real-World Impact</SectionTitle>
                 <Grid container spacing={4}>
                     {projects.map((project, index) => (
-                        <Grid item xs={12} md={4} key={index}>
+                        <Grid
+                            key={index}
+                            size={{
+                                xs: 12,
+                                md: 4
+                            }}>
                             <TiltCard>
                                 <GlassCard sx={{ p: 0, overflow: 'hidden' }}>
                                     <Box sx={{ height: '200px', backgroundColor: 'rgba(0, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

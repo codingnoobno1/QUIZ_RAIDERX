@@ -228,7 +228,13 @@ export default function QuizzesPage() {
                             .filter((quiz) => !selectedSubject || quiz.subjectId?.name === selectedSubject)
                             .filter((quiz) => !selectedSemester || quiz.semester === selectedSemester)
                             .map((quiz) => (
-                                <Grid item xs={12} sm={6} md={4} key={quiz._id}>
+                                <Grid
+                                    key={quiz._id}
+                                    size={{
+                                        xs: 12,
+                                        sm: 6,
+                                        md: 4
+                                    }}>
                                     <QuizCard quiz={quiz} />
                                 </Grid>
                             ))}

@@ -17,7 +17,7 @@ export const authOptions = {
         await connectDB();
         const user = await User.findOne({ email: email.trim().toLowerCase() });
 
-        if (user && await user.comparePassword(password)) {
+        if (user && (await user.comparePassword(password))) {
           return {
             id: user.uuid,
             name: user.name,

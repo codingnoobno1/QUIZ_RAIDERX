@@ -35,11 +35,16 @@ export default function QuizSection() {
       <Typography variant="h5" gutterBottom>
         Choose a Faculty
       </Typography>
-
       {/* Display Faculty Cards in a Grid */}
       <Grid container spacing={3}>
         {facultyData.map((faculty) => (
-          <Grid item xs={12} sm={6} md={4} key={faculty.name}>
+          <Grid
+            key={faculty.name}
+            size={{
+              xs: 12,
+              sm: 6,
+              md: 4
+            }}>
             <FacultyCard faculty={faculty} onClick={() => handleFacultyClick(faculty.name)} />
           </Grid>
         ))}

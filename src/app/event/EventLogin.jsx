@@ -2,164 +2,103 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import * as Label from '@radix-ui/react-label';
+import * as Tooltip from '@radix-ui/react-tooltip';
+import toast from 'react-hot-toast';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import useEventUserStore from '@/store/useEventUserStore';
-import {
-    TextField,
-    Button,
-    Box,
-    Typography,
-    CircularProgress,
-    Alert,
-    InputAdornment,
-    IconButton,
-} from '@mui/material';
-import { Visibility, VisibilityOff, Email, Lock } from '@mui/icons-material';
 
 export default function EventLogin() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
-    const setUser = useEventUserStore((s) => s.setUser);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const setUser = useEventUserStore((s) => s.setUser);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-        try {
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-            const data = await res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
 
-            if (!res.ok) {
-                throw new Error(data.error || 'Login failed');
-            }
+      setUser(data.user, data.loginTime);
+      toast.success(`Welcome back, ${data.user?.name?.split(' ')[0] || 'attendee'}!`);
+      router.replace('/event/dashboard');
+    } catch (err) {
+      toast.error(err.message || 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            // Save to event user store
-            setUser(data.user, data.loginTime);
-            router.replace('/event/dashboard');
-        } catch (err) {
-            setError(err.message || 'An unexpected error occurred');
-        } finally {
-            setLoading(false);
-        }
-    };
+  return (
+    <form onSubmit={handleSubmit} noValidate>
+      <h2 className="evt-form-title">Event Login</h2>
 
-    return (
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-            <Typography
-                variant="h5"
-                fontWeight={700}
-                textAlign="center"
-                mb={3}
-                sx={{
-                    background: 'linear-gradient(135deg, #a855f7, #6366f1)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                }}
-            >
-                Event Login
-            </Typography>
+      <div className="evt-field">
+        <Label.Root htmlFor="evt-login-email" className="evt-label">Email</Label.Root>
+        <div className="evt-input-wrap">
+          <span className="evt-input-icon"><Mail size={16} /></span>
+          <input
+            id="evt-login-email"
+            type="email"
+            className="evt-input"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
+        </div>
+      </div>
 
-            <TextField
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                fullWidth
-                required
-                margin="normal"
-                variant="outlined"
-                InputProps={{
-                    startAdornment: (
-                        <InputAdornment position="start">
-                            <Email sx={{ color: 'rgba(255,255,255,0.5)' }} />
-                        </InputAdornment>
-                    ),
-                }}
-                sx={{
-                    '& .MuiOutlinedInput-root': {
-                        color: '#fff',
-                        '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                        '&:hover fieldset': { borderColor: 'rgba(168,85,247,0.5)' },
-                        '&.Mui-focused fieldset': { borderColor: '#a855f7' },
-                    },
-                    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.6)' },
-                    '& .MuiInputLabel-root.Mui-focused': { color: '#a855f7' },
-                }}
-            />
+      <div className="evt-field">
+        <Label.Root htmlFor="evt-login-password" className="evt-label">Password</Label.Root>
+        <div className="evt-input-wrap">
+          <span className="evt-input-icon"><Lock size={16} /></span>
+          <input
+            id="evt-login-password"
+            type={showPassword ? 'text' : 'password'}
+            className="evt-input evt-input--pad-right"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <button
+                type="button"
+                className="evt-eye"
+                onClick={() => setShowPassword((p) => !p)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side="left" sideOffset={6} className="evt-tooltip"
+                style={{ background: '#2a2440', color: '#e9d5ff', fontSize: 12, padding: '5px 9px', borderRadius: 6, zIndex: 9999 }}>
+                {showPassword ? 'Hide password' : 'Show password'}
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </div>
+      </div>
 
-            <TextField
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                fullWidth
-                required
-                margin="normal"
-                variant="outlined"
-                InputProps={{
-                    startAdornment: (
-                        <InputAdornment position="start">
-                            <Lock sx={{ color: 'rgba(255,255,255,0.5)' }} />
-                        </InputAdornment>
-                    ),
-                    endAdornment: (
-                        <InputAdornment position="end">
-                            <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{ color: 'rgba(255,255,255,0.5)' }}>
-                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                        </InputAdornment>
-                    ),
-                }}
-                sx={{
-                    '& .MuiOutlinedInput-root': {
-                        color: '#fff',
-                        '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                        '&:hover fieldset': { borderColor: 'rgba(168,85,247,0.5)' },
-                        '&.Mui-focused fieldset': { borderColor: '#a855f7' },
-                    },
-                    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.6)' },
-                    '& .MuiInputLabel-root.Mui-focused': { color: '#a855f7' },
-                }}
-            />
-
-            {error && (
-                <Alert severity="error" sx={{ mt: 2, bgcolor: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
-                    {error}
-                </Alert>
-            )}
-
-            <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                disabled={loading}
-                sx={{
-                    mt: 3,
-                    py: 1.5,
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 20px rgba(124,58,237,0.4)',
-                    '&:hover': {
-                        background: 'linear-gradient(135deg, #6d28d9, #9333ea)',
-                        boxShadow: '0 6px 30px rgba(124,58,237,0.6)',
-                        transform: 'translateY(-1px)',
-                    },
-                    transition: 'all 0.3s ease',
-                }}
-            >
-                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In →'}
-            </Button>
-        </Box>
-    );
+      <button type="submit" className="evt-btn" disabled={loading}>
+        {loading ? <span className="evt-spin" /> : 'Sign In →'}
+      </button>
+    </form>
+  );
 }

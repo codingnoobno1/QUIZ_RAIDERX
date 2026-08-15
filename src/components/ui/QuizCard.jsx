@@ -1,225 +1,113 @@
 'use client';
 
-import { useState } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import { motion } from 'framer-motion';
-import { BookOpen, Clock, Award, Calendar, Play } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { BookOpen, Clock, Award, FileQuestion, Play, Lock } from 'lucide-react';
 
-const QuizCard = ({ quiz }) => {
-    const router = useRouter();
+/**
+ * QuizCard — premium horizontal quiz row with a status-coloured accent strip.
+ *
+ * Styling is SELF-CONTAINED via a React 19 hoisted <style href precedence> tag
+ * (deduped by `href`, injected once for the whole list). This guarantees the
+ * card renders correctly everywhere it's reused and never depends on globals.css
+ * being loaded/HMR-fresh.
+ *
+ * Props: { quiz }
+ */
 
-    const handleStartQuiz = () => {
-        router.push(`/quizmode/${quiz._id}`);
-    };
+const QUIZ_CARD_CSS = `
+.qz-quiz{--accent:#22c55e;position:relative;display:flex;gap:16px;width:100%;padding:18px 18px 18px 22px;border-radius:16px;background:#111118;border:1px solid rgba(255,255,255,.08);overflow:hidden;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;}
+.qz-quiz::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent);}
+@media (hover:hover) and (pointer:fine){.qz-quiz:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 45%,transparent);box-shadow:0 16px 40px color-mix(in srgb,var(--accent) 16%,transparent);}}
+.qz-quiz-icon{width:50px;height:50px;min-width:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;align-self:flex-start;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);}
+.qz-quiz-body{display:flex;flex-direction:column;flex:1;min-width:0;}
+.qz-quiz-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.qz-quiz-title{margin:0;font-size:1.05rem;font-weight:800;color:#fff;line-height:1.25;}
+.qz-quiz-status{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;padding:4px 10px;border-radius:999px;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 32%,transparent);}
+.qz-quiz-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);}
+.qz-quiz-status--live .qz-quiz-dot{animation:qzpulse 1.4s ease-in-out infinite;}
+@keyframes qzpulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.qz-quiz-sub{margin:5px 0 0;font-size:.8rem;color:#22d3ee;font-weight:600;}
+.qz-quiz-desc{margin:8px 0 0;font-size:.84rem;color:rgba(255,255,255,.5);line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
+.qz-quiz-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px;flex-wrap:wrap;}
+.qz-quiz-meta{display:flex;gap:8px;flex-wrap:wrap;}
+.qz-quiz-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:9px;font-size:.74rem;font-weight:600;color:rgba(255,255,255,.7);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
+.qz-quiz-cta{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:11px;font-weight:800;font-size:.85rem;border:0;cursor:pointer;color:#04121a;background:linear-gradient(135deg,#22d3ee,#67e8f9);transition:gap .2s ease,box-shadow .2s ease,opacity .2s ease;}
+.qz-quiz-cta:hover{gap:11px;box-shadow:0 8px 22px rgba(34,211,238,.35);}
+.qz-quiz-cta:disabled{cursor:not-allowed;color:rgba(255,255,255,.4);background:rgba(255,255,255,.06);box-shadow:none;gap:7px;}
+@media (max-width:560px){.qz-quiz-foot{flex-direction:column;align-items:stretch;}.qz-quiz-cta{justify-content:center;}}
+`;
 
-    // Calculate status color
-    const getStatusColor = () => {
-        if (quiz.availabilityStatus === 'on') return '#4CAF50';
-        if (quiz.availabilityStatus === 'scheduled') return '#FF9800';
-        return '#9E9E9E';
-    };
+const QuizCard = ({ quiz = {} }) => {
+  const router = useRouter();
 
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.03 }}
-            transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-        >
-            <Card
-                sx={{
-                    position: 'relative',
-                    width: '100%',
-                    maxWidth: 400,
-                    minHeight: 300,
-                    borderRadius: '12px',
-                    backgroundColor: '#111113',
-                    color: '#e5e7eb',
-                    border: '1px solid #232323',
-                    overflow: 'hidden',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                        borderColor: '#333',
-                        transform: 'translateY(-2px)',
-                    },
-                }}
+  const status = quiz.availabilityStatus;
+  const isLive = status === 'on';
+  const isScheduled = status === 'scheduled';
+
+  const accent = isLive ? '#22c55e' : isScheduled ? '#f59e0b' : '#6b7280';
+  const statusLabel = isLive ? 'Live' : isScheduled ? 'Scheduled' : 'Closed';
+
+  const subject = quiz.subjectId?.name || 'General';
+  const qCount = quiz.questions?.length || 0;
+  const description =
+    quiz.description && quiz.description.length > 110
+      ? `${quiz.description.slice(0, 110)}…`
+      : quiz.description;
+
+  return (
+    <>
+      <style href="qz-quiz-card-v1" precedence="high">
+        {QUIZ_CARD_CSS}
+      </style>
+
+      <div className="qz-quiz" style={{ '--accent': accent }}>
+        <div className="qz-quiz-icon">
+          <BookOpen size={22} />
+        </div>
+
+        <div className="qz-quiz-body">
+          <div className="qz-quiz-top">
+            <h3 className="qz-quiz-title">{quiz.title || 'Untitled Quiz'}</h3>
+            <span className={`qz-quiz-status ${isLive ? 'qz-quiz-status--live' : ''}`}>
+              <span className="qz-quiz-dot" />
+              {statusLabel}
+            </span>
+          </div>
+
+          <p className="qz-quiz-sub">
+            {subject} · Semester {quiz.semester ?? '—'}
+            {quiz.createdBy?.name ? ` · ${quiz.createdBy.name}` : ''}
+          </p>
+
+          {description && <p className="qz-quiz-desc">{description}</p>}
+
+          <div className="qz-quiz-foot">
+            <div className="qz-quiz-meta">
+              {quiz.timeLimit != null && (
+                <span className="qz-quiz-pill"><Clock size={13} />{quiz.timeLimit} min</span>
+              )}
+              {quiz.maxMarks != null && (
+                <span className="qz-quiz-pill"><Award size={13} />{quiz.maxMarks} marks</span>
+              )}
+              {qCount > 0 && (
+                <span className="qz-quiz-pill"><FileQuestion size={13} />{qCount} questions</span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="qz-quiz-cta"
+              disabled={!isLive}
+              onClick={() => router.push(`/quizmode/${quiz._id}`)}
             >
-
-                {/* Status Indicator */}
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 16,
-                        right: 16,
-                        zIndex: 2,
-                    }}
-                >
-                    <Chip
-                        label={quiz.availabilityStatus === 'on' ? 'ACTIVE' : quiz.availabilityStatus === 'scheduled' ? 'SCHEDULED' : 'INACTIVE'}
-                        size="small"
-                        sx={{
-                            bgcolor: getStatusColor(),
-                            color: '#fff',
-                            fontWeight: 600,
-                            fontSize: '0.65rem',
-                            borderRadius: '4px',
-                        }}
-                    />
-                </Box>
-
-                {/* Main Content */}
-                <CardContent sx={{ position: 'relative', zIndex: 2, pt: 4 }}>
-                    {/* Quiz Icon */}
-                    <Box display="flex" justifyContent="center" mb={2}>
-                        <Box
-                            sx={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: '8px',
-                                bgcolor: '#1a1a1a',
-                                border: '1px solid #333',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <BookOpen size={20} color="#e5e7eb" />
-                        </Box>
-                    </Box>
-
-                    {/* Quiz Title */}
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            fontWeight: 600,
-                            color: '#e5e7eb',
-                            textAlign: 'center',
-                            mb: 0.5,
-                            minHeight: 50,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '1.1rem',
-                        }}
-                    >
-                        {quiz.title}
-                    </Typography>
-
-                    {/* Quiz Details */}
-                    <Stack
-                        direction="row"
-                        spacing={1}
-                        justifyContent="center"
-                        flexWrap="wrap"
-                        sx={{ mb: 2 }}
-                    >
-                        <Chip
-                            icon={<Clock size={14} />}
-                            label={`${quiz.timeLimit} min`}
-                            size="small"
-                            sx={{
-                                bgcolor: '#1a1a1a',
-                                border: '1px solid #333',
-                                color: '#9ca3af',
-                                fontSize: '0.75rem',
-                            }}
-                        />
-                        <Chip
-                            icon={<Award size={14} />}
-                            label={`${quiz.maxMarks} marks`}
-                            size="small"
-                            sx={{
-                                bgcolor: '#1a1a1a',
-                                border: '1px solid #333',
-                                color: '#9ca3af',
-                                fontSize: '0.75rem',
-                            }}
-                        />
-                        <Chip
-                            icon={<BookOpen size={14} />}
-                            label={`${quiz.questions?.length || 0} questions`}
-                            size="small"
-                            sx={{
-                                bgcolor: '#1a1a1a',
-                                border: '1px solid #333',
-                                color: '#9ca3af',
-                                fontSize: '0.75rem',
-                            }}
-                        />
-                    </Stack>
-
-                    {/* Subject & Semester */}
-                    <Box
-                        sx={{
-                            borderTop: '1px solid #232323',
-                            borderBottom: '1px solid #232323',
-                            py: 1.5,
-                            mb: 2,
-                        }}
-                    >
-                        <Typography
-                            variant="body2"
-                            sx={{
-                                color: '#9ca3af',
-                                textAlign: 'center',
-                                fontSize: '0.85rem',
-                            }}
-                        >
-                            {quiz.subjectId?.name || 'Unknown Subject'} • Semester {quiz.semester}
-                        </Typography>
-                        {quiz.description && (
-                            <Typography
-                                variant="caption"
-                                sx={{
-                                    color: '#6b7280',
-                                    textAlign: 'center',
-                                    display: 'block',
-                                    mt: 0.5,
-                                    fontSize: '0.75rem',
-                                }}
-                            >
-                                {quiz.description.length > 60
-                                    ? quiz.description.substring(0, 60) + '...'
-                                    : quiz.description}
-                            </Typography>
-                        )}
-                    </Box>
-
-                    {/* Start Quiz Button */}
-                    <Button
-                        variant="contained"
-                        fullWidth
-                        onClick={handleStartQuiz}
-                        disabled={quiz.availabilityStatus !== 'on'}
-                        sx={{
-                            bgcolor: quiz.availabilityStatus === 'on' ? '#e5e7eb' : '#333',
-                            color: quiz.availabilityStatus === 'on' ? '#000' : '#666',
-                            borderRadius: 2,
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            py: 1.2,
-                            fontSize: '0.9rem',
-                            boxShadow: 'none',
-                            '&:hover': {
-                                bgcolor: quiz.availabilityStatus === 'on' ? '#fff' : '#333',
-                                boxShadow: 'none',
-                            },
-                        }}
-                        startIcon={<Play size={16} />}
-                    >
-                        {quiz.availabilityStatus === 'on' ? 'Start Quiz' : 'Not Available'}
-                    </Button>
-                </CardContent>
-            </Card>
-        </motion.div>
-    );
+              {isLive ? <Play size={15} /> : <Lock size={15} />}
+              {isLive ? 'Start Quiz' : 'Not Available'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 };
 
 export default QuizCard;

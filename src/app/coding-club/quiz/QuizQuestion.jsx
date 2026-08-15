@@ -27,7 +27,12 @@ export default function QuizQuestion({ question, options, selected, onSelect }) 
 
         <Grid container spacing={2}>
           {options.map((option, index) => (
-            <Grid item xs={12} sm={6} key={index}>
+            <Grid
+              key={index}
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <Button
                 variant="outlined"
                 fullWidth

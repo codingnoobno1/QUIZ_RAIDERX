@@ -71,7 +71,7 @@ export default function QuizCard() {
               <Typography variant="h6" align="center" className="mt-6">Quizzes under {selectedFaculty}</Typography>
               <Grid container spacing={2} justifyContent="center">
                 {quizzes.map((quiz, index) => (
-                  <Grid item key={index}>
+                  <Grid key={index}>
                     <Card sx={{ width: 200, boxShadow: 3 }}>
                       <CardMedia
                         component="img"

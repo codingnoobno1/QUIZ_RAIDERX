@@ -64,7 +64,11 @@ const CardFullscreen = ({ open, handleClose, faculty, quizzes = [] }) => {
 
         <Grid container spacing={6}>
           {/* Left Column - Profile Details */}
-          <Grid item xs={12} md={4}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
             <motion.div
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -119,7 +123,11 @@ const CardFullscreen = ({ open, handleClose, faculty, quizzes = [] }) => {
           </Grid>
 
           {/* Right Column - Quizzes & Assignments */}
-          <Grid item xs={12} md={8}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 8
+            }}>
             <motion.div
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -146,7 +154,7 @@ const CardFullscreen = ({ open, handleClose, faculty, quizzes = [] }) => {
                 </Typography>
                 <Grid container spacing={1.5}>
                   {faculty.classAssignments?.flatMap(a => a.subjects).map((subj, idx) => (
-                    <Grid item key={idx}>
+                    <Grid key={idx}>
                       <Chip
                         label={subj.name || subj}
                         sx={{
