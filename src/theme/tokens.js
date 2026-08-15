@@ -7,22 +7,22 @@ export const color = {
   // the app is still dark — but the accent is desaturated so it can be used for
   // meaning (a live round, the primary action) instead of decoration. When
   // everything glows, nothing reads as urgent.
-  bg: '#0B0C10',
-  surface: '#12141A',
+  bg: '#090A0E',
+  surface: '#111319',
   surface2: '#171A21',
-  border: '#252933',
+  border: '#262A34',
   borderStrong: '#333845',
   text: '#F4F5F7',
-  textMuted: '#9399A6',
-  textFaint: '#6B7280',
+  textMuted: '#969CA8',
+  textFaint: '#646B77',
 
   // brand + accents
-  brand: '#34B8D1', // cyan (PIXEL) — primary action, active nav, selection
-  violet: '#8A6FD1', // invitations, teams, community identity
+  brand: '#38B9D3', // cyan (PIXEL) — primary action, active nav, selection
+  violet: '#9A82E2', // invitations, teams, community identity
   indigo: '#6366f1',
   amber: '#D9A441',
-  green: '#4CAF7D', // accepted, registered, live success
-  red: '#D9534F',
+  green: '#65BD91', // accepted, registered, live success
+  red: '#D76D74',
 };
 
 export const radius = { sm: 8, md: 12, lg: 16, xl: 20, pill: 999 };

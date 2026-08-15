@@ -1,226 +1,347 @@
 'use client';
 
 /**
- * The event dashboard shell.
+ * The event shell — top bar, left navigation, content, right rail.
  *
- *   < 1024px  single pane. The list IS the index screen; opening an event pushes
- *             a full-screen route over it. A floating bottom nav sits above the
- *             iOS home indicator. This is the mobile app's navigation model.
+ * Sections exist only where real data backs them. There is no Clubs nav
+ * because there is no club model, and no feed composer, likes or comments
+ * because nothing stores them. Everything rendered here comes from the events,
+ * registrations and invitations the API actually returns.
  *
- *   >= 1024px two panes. The list is a permanent sidebar and the child route
- *             renders beside it, so selecting an event never hides the list.
- *
- * Both breakpoints render the same components against the same query cache —
- * TanStack dedupes, so the shared list costs one request, not two.
+ *   < 900px   content only; navigation collapses to a bottom bar and the rail
+ *             moves inline where each page decides it belongs
+ *   >= 900px  nav + content
+ *   >= 1200px nav + content + rail
  */
 
 import { usePathname, useRouter } from 'next/navigation';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import { Box, Stack, Typography } from '@mui/material';
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
+import ExploreRoundedIcon from '@mui/icons-material/ExploreRounded';
 import EventRoundedIcon from '@mui/icons-material/EventRounded';
-import ConfirmationNumberRoundedIcon from '@mui/icons-material/ConfirmationNumberRounded';
-import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
+import MailRoundedIcon from '@mui/icons-material/MailRounded';
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import { color, radius, tint } from '@/theme/tokens';
-import { BREAKPOINT } from '@/config/constants';
 import useEventUser from '@/hooks/useEventUser';
 import Loading from '@/components/async/Loading';
-import EventListPane from '@/components/events/EventListPane';
 import EventShellStyles from '@/components/events/EventShellStyles';
+import RightRail from '@/components/events/shell/RightRail';
+import { useInvitations } from '@/hooks/queries/useEventQueries';
 
-const DESKTOP = `@media (min-width:${BREAKPOINT.DESKTOP_MIN}px)`;
-const MOBILE = `@media (max-width:${BREAKPOINT.DESKTOP_MIN - 1}px)`;
+const NAV = [
+  { key: 'home', label: 'Home', href: '/event/dashboard', icon: HomeRoundedIcon },
+  { key: 'explore', label: 'Explore', href: '/event/dashboard/explore', icon: ExploreRoundedIcon },
+  { key: 'events', label: 'Events', href: '/event/dashboard/events', icon: EventRoundedIcon },
+  { key: 'teams', label: 'Teams', href: '/event/dashboard/teams', icon: GroupsRoundedIcon },
+  { key: 'invites', label: 'Invitations', href: '/event/dashboard/invitations', icon: MailRoundedIcon },
+];
+
+const NAV_W = 220;
+const RAIL_W = 300;
+const WIDE = '@media (min-width:1200px)';
+const MID = '@media (min-width:900px)';
+const NARROW = '@media (max-width:899px)';
 
 export default function EventDashboardLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated, signOut } = useEventUser();
 
-  const isIndex = pathname === '/event/dashboard';
-  const selectedId = pathname.match(/^\/event\/dashboard\/([^/]+)/)?.[1] ?? null;
+  const { data: invitations = [] } = useInvitations(user?.email);
 
-  if (isLoading || !isAuthenticated) {
-    return (
-      <>
-        <EventShellStyles />
-        <Loading label="Loading your events" fullScreen />
-      </>
-    );
-  }
+  // The detail route carries its own sticky action panel, so the rail would be
+  // a second competing column of actions.
+  const isDetail = /^\/event\/dashboard\/[^/]+$/.test(pathname) && !NAV.some((n) => n.href === pathname);
+
+  if (isLoading) return <Loading label="Loading your events" />;
+  if (!isAuthenticated) return null; // useEventUser is already redirecting
+
+  const initials = (user.name ?? '?')
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
-    <>
+    <Box sx={{ bgcolor: color.bg, minHeight: '100dvh' }}>
       <EventShellStyles />
+
+      {/* ── top bar ─────────────────────────────────────────────────────── */}
       <Box
-        className="pxe-shell pxe-vh"
+        component="header"
         sx={{
-          bgcolor: color.bg,
-          display: 'grid',
-          gridTemplateRows: 'auto 1fr',
-          [DESKTOP]: { gridTemplateColumns: 'minmax(300px, 360px) 1fr' },
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
+          height: 64,
+          display: 'flex',
+          alignItems: 'center',
+          borderBottom: `1px solid ${color.border}`,
+          bgcolor: 'rgba(9,10,14,0.94)',
+          backdropFilter: 'blur(14px)',
         }}
       >
-        {/* ── Top bar ───────────────────────────────────────────────────── */}
-        <Box
-          className="pxe-safe-t"
-          sx={{
-            gridColumn: '1 / -1',
-            position: 'sticky',
-            top: 0,
-            zIndex: 20,
-            bgcolor: 'rgba(10,10,15,0.88)',
-            backdropFilter: 'blur(14px)',
-            borderBottom: `1px solid ${color.border}`,
-          }}
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ width: '100%', maxWidth: 1450, mx: 'auto', px: { xs: 2, md: 3 } }}
         >
-          <Stack direction="row" alignItems="center" spacing={0.5} sx={{ px: 1.5, height: 56 }}>
-            {!isIndex && (
-              <IconButton
-                onClick={() => router.push('/event/dashboard')}
-                aria-label="Back to events"
-                sx={{ color: color.text, [DESKTOP]: { display: 'none' } }}
-              >
-                <ArrowBackRoundedIcon />
-              </IconButton>
-            )}
-
-            <Box sx={{ minWidth: 0, flex: 1, pl: isIndex ? 1 : 0 }}>
-              <Typography sx={{ color: color.text, fontWeight: 800, letterSpacing: 1.5, fontSize: '0.82rem' }}>
-                PIXEL EVENTS
-              </Typography>
-              <Typography className="pxe-clamp-1" sx={{ color: color.textFaint, fontSize: '0.68rem' }}>
-                {user.name}
-              </Typography>
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1.25}
+            sx={{ cursor: 'pointer' }}
+            onClick={() => router.push('/event/dashboard')}
+          >
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: `${radius.sm}px`,
+                bgcolor: color.brand,
+                color: '#071014',
+                fontWeight: 900,
+                fontSize: '0.7rem',
+              }}
+            >
+              PX
             </Box>
-
-            <IconButton onClick={signOut} aria-label="Sign out" sx={{ color: color.textMuted }}>
-              <LogoutRoundedIcon fontSize="small" />
-            </IconButton>
+            <Typography sx={{ color: color.text, fontWeight: 800, letterSpacing: '-0.4px' }}>
+              PIXEL{' '}
+              <Box component="span" sx={{ color: color.textMuted, fontWeight: 600 }}>
+                Events
+              </Box>
+            </Typography>
           </Stack>
-        </Box>
 
-        {/* ── Sidebar list (desktop only) ───────────────────────────────── */}
-        <Box
-          component="aside"
-          className="pxe-pane-h"
-          sx={{
-            display: 'none',
-            [DESKTOP]: {
-              display: 'block',
-              borderRight: `1px solid ${color.border}`,
-              bgcolor: 'rgba(255,255,255,0.012)',
-              position: 'sticky',
-              top: 56,
-            },
-          }}
-        >
-          <EventListPane
-            user={user}
-            selectedId={selectedId}
-            onSelect={(event) => router.push(`/event/dashboard/${event.id}`)}
-          />
-        </Box>
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Typography sx={{ color: color.textMuted, fontSize: '0.82rem', display: { xs: 'none', sm: 'block' } }}>
+              {user.name}
+            </Typography>
+            <Box
+              sx={{
+                width: 34,
+                height: 34,
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: '50%',
+                bgcolor: '#243039',
+                color: color.brand,
+                fontWeight: 800,
+                fontSize: '0.68rem',
+              }}
+            >
+              {initials}
+            </Box>
+            <Box
+              component="button"
+              type="button"
+              onClick={signOut}
+              aria-label="Sign out"
+              className="pxe-tap"
+              sx={{
+                border: 'none',
+                bgcolor: 'transparent',
+                cursor: 'pointer',
+                color: color.textFaint,
+                display: 'grid',
+                placeItems: 'center',
+                p: 0.5,
+                '&:hover': { color: color.text },
+              }}
+            >
+              <LogoutRoundedIcon sx={{ fontSize: 19 }} />
+            </Box>
+          </Stack>
+        </Stack>
+      </Box>
 
-        {/* ── Content pane ──────────────────────────────────────────────── */}
-        <Box
-          component="main"
-          className="pxe-scroll"
-          sx={{
-            minWidth: 0,
-            minHeight: 0,
-            [MOBILE]: { paddingBottom: 'calc(var(--nav-h) + var(--safe-bottom) + 20px)' },
-            [DESKTOP]: { height: 'calc(100dvh - 56px)' },
-          }}
-        >
-          {children}
-        </Box>
-
-        {/* ── Floating bottom nav (mobile only) ─────────────────────────── */}
+      {/* ── body ────────────────────────────────────────────────────────── */}
+      <Box
+        sx={{
+          maxWidth: 1450,
+          mx: 'auto',
+          display: 'grid',
+          gap: 3,
+          px: { xs: 1.5, md: 3 },
+          pt: 3,
+          pb: { xs: 11, md: 8 },
+          gridTemplateColumns: '1fr',
+          [MID]: { gridTemplateColumns: `${NAV_W}px minmax(0,1fr)` },
+          ...(!isDetail && {
+            [WIDE]: { gridTemplateColumns: `${NAV_W}px minmax(0,1fr) ${RAIL_W}px` },
+          }),
+        }}
+      >
+        {/* left nav — desktop */}
         <Box
           component="nav"
-          aria-label="Event sections"
-          className="pxe-nav"
           sx={{
-            position: 'fixed',
-            left: 14,
-            right: 14,
-            zIndex: 30,
-            borderRadius: `${radius.xl}px`,
-            bgcolor: 'rgba(18,18,26,0.9)',
-            backdropFilter: 'blur(20px)',
-            border: `1px solid ${color.borderStrong}`,
-            boxShadow: '0 10px 30px rgba(0,0,0,0.45)',
-            [DESKTOP]: { display: 'none' },
+            display: 'none',
+            [MID]: { display: 'block', position: 'sticky', top: 88, height: 'max-content' },
           }}
         >
-          <Stack direction="row" sx={{ height: '100%' }}>
-            <NavItem
-              icon={EventRoundedIcon}
-              label="Events"
-              active={isIndex}
-              onClick={() => router.push('/event/dashboard')}
+          <SectionLabel>MENU</SectionLabel>
+          {NAV.map((item) => (
+            <NavButton
+              key={item.key}
+              item={item}
+              active={isActive(pathname, item.href)}
+              badge={item.key === 'invites' ? invitations.length : 0}
+              onClick={() => router.push(item.href)}
             />
-            <NavItem
-              icon={ConfirmationNumberRoundedIcon}
-              label="Pass"
-              active={pathname.endsWith('/pass')}
-              disabled={!selectedId}
-              onClick={() => selectedId && router.push(`/event/dashboard/${selectedId}/pass`)}
-            />
-            <NavItem
-              icon={BoltRoundedIcon}
-              label="Live"
-              active={pathname.endsWith('/lobby')}
-              disabled={!selectedId}
-              onClick={() => selectedId && router.push(`/event/dashboard/${selectedId}/lobby`)}
-            />
-          </Stack>
+          ))}
         </Box>
+
+        <Box sx={{ minWidth: 0 }}>{children}</Box>
+
+        {!isDetail && (
+          <Box sx={{ display: 'none', [WIDE]: { display: 'block', position: 'sticky', top: 88, height: 'max-content' } }}>
+            <RightRail user={user} />
+          </Box>
+        )}
       </Box>
-    </>
+
+      {/* ── bottom nav — mobile ─────────────────────────────────────────── */}
+      <Box
+        component="nav"
+        className="pxe-nav"
+        sx={{
+          [NARROW]: {
+            display: 'flex',
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 20,
+            px: 0.5,
+            pt: 0.5,
+            pb: 'calc(6px + env(safe-area-inset-bottom))',
+            bgcolor: '#0B0D11',
+            borderTop: `1px solid ${color.border}`,
+          },
+          [MID]: { display: 'none' },
+        }}
+      >
+        {NAV.map((item) => (
+          <BottomNavItem
+            key={item.key}
+            item={item}
+            active={isActive(pathname, item.href)}
+            badge={item.key === 'invites' ? invitations.length : 0}
+            onClick={() => router.push(item.href)}
+          />
+        ))}
+      </Box>
+    </Box>
   );
 }
 
-function NavItem({ icon: Icon, label, active, disabled, onClick }) {
+/** Home must match exactly; the rest match their subtree. */
+function isActive(pathname, href) {
+  if (href === '/event/dashboard') return pathname === href;
+  return pathname.startsWith(href);
+}
+
+const SectionLabel = ({ children }) => (
+  <Typography sx={{ px: 1.5, mb: 1, color: color.textFaint, fontSize: '0.62rem', fontWeight: 800, letterSpacing: 1.1 }}>
+    {children}
+  </Typography>
+);
+
+function NavButton({ item, active, badge, onClick }) {
+  const Icon = item.icon;
   return (
     <Box
       component="button"
       type="button"
       onClick={onClick}
-      disabled={disabled}
-      aria-current={active ? 'page' : undefined}
+      sx={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.25,
+        border: 0,
+        font: 'inherit',
+        cursor: 'pointer',
+        textAlign: 'left',
+        px: 1.5,
+        py: 1.25,
+        my: 0.25,
+        borderRadius: `${radius.md}px`,
+        fontWeight: 650,
+        fontSize: '0.88rem',
+        color: active ? color.text : color.textMuted,
+        bgcolor: active ? tint(color.brand, 0.1) : 'transparent',
+        '&:hover': { bgcolor: active ? tint(color.brand, 0.14) : color.surface, color: color.text },
+      }}
+    >
+      <Icon sx={{ fontSize: 18, color: active ? color.brand : color.textFaint }} />
+      <Box component="span" sx={{ flex: 1 }}>
+        {item.label}
+      </Box>
+      {badge > 0 && <Badge count={badge} />}
+    </Box>
+  );
+}
+
+function BottomNavItem({ item, active, badge, onClick }) {
+  const Icon = item.icon;
+  return (
+    <Box
+      component="button"
+      type="button"
+      onClick={onClick}
+      className="pxe-tap"
       sx={{
         flex: 1,
+        border: 0,
+        bgcolor: 'transparent',
+        font: 'inherit',
+        cursor: 'pointer',
+        minHeight: 48,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 0.3,
-        border: 'none',
-        bgcolor: 'transparent',
-        font: 'inherit',
-        cursor: disabled ? 'default' : 'pointer',
-        touchAction: 'manipulation',
-        opacity: disabled ? 0.3 : 1,
-        color: active ? color.brand : color.textMuted,
+        gap: 0.25,
+        color: active ? color.brand : color.textFaint,
         position: 'relative',
-        '&:focus-visible': { outline: `2px solid ${color.brand}`, outlineOffset: -4, borderRadius: 14 },
-        '&::before': active
-          ? {
-              content: '""',
-              position: 'absolute',
-              top: 6,
-              width: 22,
-              height: 2.5,
-              borderRadius: 2,
-              bgcolor: color.brand,
-              boxShadow: `0 0 10px ${tint(color.brand, 0.7)}`,
-            }
-          : undefined,
       }}
     >
-      <Icon sx={{ fontSize: 20 }} />
-      <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: 0.3 }}>{label}</Typography>
+      <Icon sx={{ fontSize: 19 }} />
+      <Box component="span" sx={{ fontSize: '0.6rem', fontWeight: 600 }}>
+        {item.label}
+      </Box>
+      {badge > 0 && (
+        <Box sx={{ position: 'absolute', top: 4, right: '50%', mr: '-16px' }}>
+          <Badge count={badge} />
+        </Box>
+      )}
     </Box>
   );
 }
+
+const Badge = ({ count }) => (
+  <Box
+    sx={{
+      minWidth: 18,
+      height: 18,
+      px: 0.6,
+      display: 'grid',
+      placeItems: 'center',
+      borderRadius: 999,
+      bgcolor: tint(color.violet, 0.18),
+      color: color.violet,
+      fontSize: '0.62rem',
+      fontWeight: 800,
+    }}
+  >
+    {count}
+  </Box>
+);

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import Event from '@/models/Event';
+import EventRegistration from '@/models/EventRegistration';
 import { requireAdmin, readJson, badRequest, serverError } from '@/lib/apiGuards';
 
 /** GET /api/events — the public event list. Read is open; writing is not. */
@@ -8,7 +9,19 @@ export async function GET() {
   try {
     await connectDB();
     const events = await Event.find({}).sort({ date: 1 }).lean();
-    return NextResponse.json(events, { status: 200 });
+
+    // Real participant counts, in one grouped query rather than one per event.
+    // Counts seats, so pending invitations do not inflate the number — this is
+    // the figure shown on every card, and it should mean "people who are in".
+    const counts = await EventRegistration.aggregate([
+      { $group: { _id: '$eventId', seats: { $sum: { $size: { $ifNull: ['$participantEmails', []] } } } } },
+    ]);
+    const byEvent = new Map(counts.map((c) => [String(c._id), c.seats]));
+
+    return NextResponse.json(
+      events.map((e) => ({ ...e, participantCount: byEvent.get(String(e._id)) ?? 0 })),
+      { status: 200 },
+    );
   } catch (error) {
     return serverError(error, 'events/list');
   }
