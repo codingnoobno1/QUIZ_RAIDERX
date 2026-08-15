@@ -187,6 +187,14 @@ export function toLiveActivity(json) {
     hasSubmitted: bool(json.hasSubmitted),
   };
 
+  // KBC arrives already tailored to this viewer by the server, so it passes
+  // through as-is. Re-normalising it here would only risk inventing fields the
+  // server deliberately withheld.
+  if (type === 'quiz' && json.quiz?.quizType === 'kbc') {
+    base.quiz = json.quiz;
+    return base;
+  }
+
   if (type === 'quiz') {
     const q = json.quiz ?? {};
     base.quiz = {

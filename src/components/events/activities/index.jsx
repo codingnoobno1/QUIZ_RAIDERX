@@ -20,6 +20,7 @@ import { color, radius, tint } from '@/theme/tokens';
 import { useSubmitVote, useVoteResults } from '@/hooks/queries/useEventQueries';
 import Loading from '@/components/async/Loading';
 import QuizActivity from './QuizActivity';
+import KbcActivity from './kbc/KbcActivity';
 
 /** Icon + accent per activity type — `_typeMeta` in the Flutter lobby. */
 export const ACTIVITY_META = {
@@ -32,10 +33,15 @@ export const ACTIVITY_META = {
 
 export const metaFor = (type) => ACTIVITY_META[type] ?? { icon: LiveTvRoundedIcon, tone: color.brand, label: 'Activity' };
 
-export default function ActivityRenderer({ activity, participantId, onExit }) {
+export default function ActivityRenderer({ activity, participantId, eventId, onExit }) {
   switch (activity.type) {
     case 'quiz':
-      return <QuizActivity activity={activity} participantId={participantId} onExit={onExit} />;
+      // KBC is a live show with roles, not a worksheet everyone fills in.
+      return activity.quiz?.quizType === 'kbc' ? (
+        <KbcActivity activity={activity} participantId={participantId} eventId={eventId} onExit={onExit} />
+      ) : (
+        <QuizActivity activity={activity} participantId={participantId} onExit={onExit} />
+      );
     case 'voting':
       return <VotingActivity activity={activity} participantId={participantId} onExit={onExit} />;
     case 'hunt':

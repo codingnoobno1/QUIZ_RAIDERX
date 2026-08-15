@@ -142,6 +142,21 @@ export const eventRepository = {
     return api.get(`/api/flutter/events/quiz/submit?${qs}`, { signal, signOutOn401: false });
   },
 
+  /**
+   * POST /api/events/live/answer — fastest-finger answer or audience-poll vote.
+   *
+   * Carries no timestamp and no identity: the server measures elapsed time
+   * against its own round clock and takes the participant from the session.
+   */
+  async submitLiveAnswer({ activityId, ...rest }) {
+    return api.post('/api/events/live/answer', { activityId, ...rest }, { signOutOn401: false });
+  },
+
+  /** POST /api/events/live/command — host only. */
+  async sendLiveCommand({ activityId, action, payload }) {
+    return api.post('/api/events/live/command', { activityId, action, payload });
+  },
+
   /** POST /api/flutter/events/vote */
   async submitVote({ activityId, participantId, option }) {
     return toVoteResults(

@@ -38,7 +38,7 @@ const EventActivitySchema = new mongoose.Schema({
         default: 'inactive', index: true
     },
     quiz: {
-        quizType: { type: String, enum: ['rapid_fire', 'custom_live', 'preloaded'], default: 'rapid_fire' },
+        quizType: { type: String, enum: ['rapid_fire', 'custom_live', 'preloaded', 'kbc'], default: 'rapid_fire' },
         questions: [QuestionSchema],
         timePerQuestion: { type: Number, default: 10 },
         scoring: { type: String, enum: ['correct_only', 'speed_bonus', 'partial'], default: 'correct_only' },

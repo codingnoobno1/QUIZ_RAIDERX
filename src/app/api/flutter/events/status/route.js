@@ -5,6 +5,10 @@ import EventActivity from '@/models/EventActivity';
 import QuizSubmission from '@/models/QuizSubmission';
 import EventVote from '@/models/EventVote';
 import HuntProgress from '@/models/HuntProgress';
+import AudiencePollVote from '@/models/AudiencePollVote';
+import FastestFingerSubmission from '@/models/FastestFingerSubmission';
+import EventRegistration from '@/models/EventRegistration';
+import { buildKbcPayload } from '@/lib/kbc/viewerPayload';
 import { invalidIdResponse, notFound, serverError } from '@/lib/apiGuards';
 
 /**
@@ -71,6 +75,22 @@ export async function GET(req) {
             activatedAt: activeActivity.activatedAt,
             hasSubmitted
         };
+
+        // KBC is role-derived: what comes back depends on who is asking and
+        // which phase the show is in. Every other quiz type keeps the payload
+        // it has always had, so the Flutter client is unaffected.
+        if (activeActivity.type === 'quiz' && activeActivity.quiz?.quizType === 'kbc') {
+            safe.quiz = await buildKbc(activeActivity, participantId, eventId);
+            return NextResponse.json({
+                success: true,
+                data: {
+                    eventId,
+                    onDuty: event.onDuty,
+                    activeActivity: safe,
+                    serverTime: new Date().toISOString()
+                }
+            });
+        }
 
         if (activeActivity.type === 'quiz') {
             const q = activeActivity.quiz ?? {};
@@ -166,6 +186,47 @@ export async function GET(req) {
     } catch (error) {
         return serverError(error, 'flutter/events/status');
     }
+}
+
+/**
+ * Gather only the counts the payload builder needs, then let it decide what
+ * this particular viewer is allowed to see.
+ */
+async function buildKbc(activity, participantId, eventId) {
+    const quiz = activity.quiz ?? {};
+    const pollIndex = quiz.audiencePoll?.questionIndex ?? quiz.currentQuestion ?? 0;
+    const ffIndex = quiz.fastestFinger?.questionIndex ?? 0;
+
+    const [pollVotes, myPollVote, ffSubmissions, myFf, ranking, audience] = await Promise.all([
+        AudiencePollVote.find({ activityId: activity._id, questionIndex: pollIndex }).select('option').lean(),
+        participantId
+            ? AudiencePollVote.findOne({ activityId: activity._id, questionIndex: pollIndex, participantId }).select('option').lean()
+            : null,
+        FastestFingerSubmission.countDocuments({ activityId: activity._id, questionIndex: ffIndex }),
+        participantId
+            ? FastestFingerSubmission.findOne({ activityId: activity._id, questionIndex: ffIndex, participantId })
+                  .select('elapsedMs correct').lean()
+            : null,
+        FastestFingerSubmission.find({ activityId: activity._id, questionIndex: ffIndex })
+            .sort({ elapsedMs: 1 }).limit(10)
+            .select('participantId name teamName elapsedMs correct').lean(),
+        EventRegistration.countDocuments({ eventId }),
+    ]);
+
+    const pollTally = pollVotes.reduce((acc, v) => {
+        acc[v.option] = (acc[v.option] ?? 0) + 1;
+        return acc;
+    }, {});
+
+    return buildKbcPayload({
+        quiz,
+        viewerId: participantId || null,
+        isHost: false, // the console has its own endpoint; this one is never host
+        counts: { pollVotes: pollVotes.length, pollTally, ffSubmissions, audience },
+        myPollVote,
+        myFfSubmission: myFf,
+        ranking,
+    });
 }
 
 /**

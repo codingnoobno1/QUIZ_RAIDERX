@@ -194,6 +194,21 @@ export function useVoteResults(activityId, participantId, { live = true } = {}) 
   });
 }
 
+/**
+ * Fastest-finger answers and audience-poll votes.
+ *
+ * On success the status query is invalidated rather than patched: the server
+ * decides what the participant may now see, and guessing that locally is how
+ * a client ends up showing a phase the show is not in.
+ */
+export function useLiveAnswer(activityId, eventId, participantId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars) => eventRepository.submitLiveAnswer({ activityId, ...vars }),
+    onSettled: () => qc.invalidateQueries({ queryKey: eventKeys.status(eventId, participantId) }),
+  });
+}
+
 export function useSubmitVote(activityId, participantId) {
   const qc = useQueryClient();
   return useMutation({

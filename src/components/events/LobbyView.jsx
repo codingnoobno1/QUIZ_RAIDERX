@@ -28,9 +28,22 @@ export default function LobbyView({ event, participantId }) {
 
   // Poll faster while an activity is open — host-paced quizzes advance between
   // renders and the mobile app does the same (5s inside, 30s in the lobby).
-  const statusQuery = useEventStatus(event.id, participantId, { fast: Boolean(openActivityId) });
+  // Two things force the fast cadence: having an activity open, and a KBC show
+  // being live at all. A KBC show moves between beats in seconds, so the 30s
+  // lobby cadence would leave the room a phase behind the host. This reads
+  // circular but is not — the first poll returns at the slow rate, and the
+  // interval tightens on the render after the show is recognised.
+  const [seenLiveShow, setSeenLiveShow] = useState(false);
+  const statusQuery = useEventStatus(event.id, participantId, {
+    fast: Boolean(openActivityId) || seenLiveShow,
+  });
   const status = statusQuery.data;
   const activity = status?.activeActivity ?? null;
+
+  const isLiveShow = activity?.quiz?.quizType === 'kbc';
+  useEffect(() => {
+    setSeenLiveShow(isLiveShow);
+  }, [isLiveShow]);
 
   // If the organiser ends the activity we were in, fall back to the lobby
   // rather than leaving a dead screen open.
@@ -70,6 +83,7 @@ export default function LobbyView({ event, participantId }) {
               <ActivityRenderer
                 activity={activity}
                 participantId={participantId}
+                eventId={event.id}
                 onExit={() => setOpenActivityId(null)}
               />
             </ErrorBoundary>
