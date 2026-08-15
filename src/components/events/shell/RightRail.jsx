@@ -64,7 +64,7 @@ export default function RightRail({ user }) {
               </Box>
             );
           })}
-          <LinkButton onClick={() => router.push('/event/dashboard/teams')}>Manage teams</LinkButton>
+          <LinkButton onClick={() => router.push('/event/dashboard/teams')}>+ Invite teammate</LinkButton>
         </Panel>
       )}
 
@@ -136,15 +136,42 @@ export function DateBlock({ date }) {
   );
 }
 
+/** Initials chip + name + role, matching the roster rows in the mock. */
 function Member({ name, role, status }) {
   const tone = status === 'accepted' ? color.green : status === 'rejected' ? color.textFaint : color.amber;
-  const text = status === 'accepted' ? role ?? 'Joined' : status === 'rejected' ? 'Declined' : 'Invited';
+  const text = status === 'accepted' ? role ?? 'Member' : status === 'rejected' ? 'Declined' : 'Invited';
+  const initials = (name ?? '?')
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
   return (
     <Stack direction="row" alignItems="center" spacing={1}>
-      <Typography className="pxe-clamp-1" sx={{ color: color.textMuted, fontSize: '0.75rem', flex: 1, minWidth: 0 }}>
+      <Box
+        sx={{
+          width: 20,
+          height: 20,
+          flexShrink: 0,
+          display: 'grid',
+          placeItems: 'center',
+          borderRadius: '4px',
+          bgcolor: tint(color.brand, 0.12),
+          color: color.brand,
+          fontSize: '0.52rem',
+          fontWeight: 800,
+        }}
+      >
+        {initials}
+      </Box>
+      <Typography className="pxe-clamp-1" sx={{ color: color.textMuted, fontSize: '0.74rem', flex: 1, minWidth: 0 }}>
         {name}
+        <Box component="span" sx={{ color: color.textFaint }}> · {text}</Box>
       </Typography>
-      <Typography sx={{ color: tone, fontSize: '0.62rem', fontWeight: 700 }}>{text}</Typography>
+      {status !== 'accepted' && (
+        <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: tone, flexShrink: 0 }} />
+      )}
     </Stack>
   );
 }

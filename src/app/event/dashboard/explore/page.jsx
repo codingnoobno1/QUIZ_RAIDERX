@@ -18,7 +18,7 @@ import useEventUser from '@/hooks/useEventUser';
 import { useEvents, useMyRegistrations } from '@/hooks/queries/useEventQueries';
 import AsyncBoundary from '@/components/async/AsyncBoundary';
 import EmptyState from '@/components/async/EmptyState';
-import EventPostCard from '@/components/events/EventPostCard';
+import DiscoverCard from '@/components/events/DiscoverCard';
 import PageHeading from '@/components/events/shell/PageHeading';
 
 export default function ExplorePage() {
@@ -148,8 +148,11 @@ export default function ExplorePage() {
         </>
       )}
 
-      <Typography sx={{ color: color.text, fontSize: '1rem', fontWeight: 650, mb: 1.5 }}>
-        {tag ? `Tagged “${tag}”` : term ? 'Results' : 'All events'}
+      <Typography sx={{ color: color.text, fontSize: '1rem', fontWeight: 650, mb: 0.5 }}>
+        {tag ? `Tagged “${tag}”` : term ? 'Results' : 'Trending events'}
+      </Typography>
+      <Typography sx={{ color: color.textMuted, fontSize: '0.75rem', mb: 1.5 }}>
+        {tag || term ? `${shown.length} ${shown.length === 1 ? 'match' : 'matches'}` : 'What students are joining right now.'}
       </Typography>
 
       <AsyncBoundary
@@ -166,9 +169,13 @@ export default function ExplorePage() {
               action={{ label: 'Clear', onClick: () => { setQ(''); setTag(null); } }}
             />
           ) : (
-            shown.map((event) => (
-              <EventPostCard key={event.id} event={event} registration={registeredFor(event.id)} />
-            ))
+            // Two-up while browsing: a grid is for scanning, and full-width
+            // cards make you scroll past four events to see five.
+            <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+              {shown.map((event) => (
+                <DiscoverCard key={event.id} event={event} registration={registeredFor(event.id)} />
+              ))}
+            </Box>
           )
         }
       </AsyncBoundary>
