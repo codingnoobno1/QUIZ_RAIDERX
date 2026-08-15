@@ -3,22 +3,26 @@
 // and scoped component styles. Change a value here, it changes everywhere.
 
 export const color = {
-  bg: '#0a0a0f',
-  surface: '#111118',
-  surface2: '#16161f',
-  border: 'rgba(255,255,255,0.08)',
-  borderStrong: 'rgba(255,255,255,0.16)',
-  text: '#e7e7ea',
-  textMuted: 'rgba(255,255,255,0.55)',
-  textFaint: 'rgba(255,255,255,0.35)',
+  // Calmer than the neon the marketing page uses. The brand is still cyan and
+  // the app is still dark — but the accent is desaturated so it can be used for
+  // meaning (a live round, the primary action) instead of decoration. When
+  // everything glows, nothing reads as urgent.
+  bg: '#0B0C10',
+  surface: '#12141A',
+  surface2: '#171A21',
+  border: '#252933',
+  borderStrong: '#333845',
+  text: '#F4F5F7',
+  textMuted: '#9399A6',
+  textFaint: '#6B7280',
 
   // brand + accents
-  brand: '#22d3ee', // cyan (PIXEL)
-  violet: '#a855f7',
+  brand: '#34B8D1', // cyan (PIXEL) — primary action, active nav, selection
+  violet: '#8A6FD1', // invitations, teams, community identity
   indigo: '#6366f1',
-  amber: '#f59e0b',
-  green: '#22c55e',
-  red: '#ef4444',
+  amber: '#D9A441',
+  green: '#4CAF7D', // accepted, registered, live success
+  red: '#D9534F',
 };
 
 export const radius = { sm: 8, md: 12, lg: 16, xl: 20, pill: 999 };

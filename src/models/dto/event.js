@@ -50,6 +50,30 @@ export function toEvent(json) {
       ? { type: str(json.activeMode.type), startedAt: date(json.activeMode.startedAt) }
       : null,
 
+    // Optional page content. Empty arrays rather than null so a component can
+    // ask `.length` without guarding, and each section decides for itself
+    // whether it has enough to render.
+    organizer: json.organizer?.name
+      ? {
+          name: str(json.organizer.name),
+          subtitle: str(json.organizer.subtitle),
+          logoUrl: str(json.organizer.logoUrl) || null,
+          contact: str(json.organizer.contact),
+        }
+      : null,
+    eligibility: list(json.eligibility).map((e) => str(e)).filter(Boolean),
+    rules: list(json.rules).map((r) => str(r)).filter(Boolean),
+    prizes: list(json.prizes)
+      .map((p) => ({ place: str(p?.place), reward: str(p?.reward) }))
+      .filter((p) => p.place || p.reward),
+    schedule: list(json.schedule)
+      .map((s) => ({ time: str(s?.time), label: str(s?.label) }))
+      .filter((s) => s.label),
+    faq: list(json.faq)
+      .map((f) => ({ question: str(f?.question), answer: str(f?.answer) }))
+      .filter((f) => f.question),
+    registrationClosesAt: date(json.registrationClosesAt),
+
     // ── derived (event.dart:43-55) ──
     get isUpcoming() {
       return this.date ? this.date.getTime() > Date.now() : false;
@@ -65,6 +89,23 @@ export function toEvent(json) {
     /** An organiser has a mode running right now. */
     get isLive() {
       return Boolean(this.activeMode?.type) || this.onDuty;
+    },
+    get registrationOpen() {
+      if (this.isPast) return false;
+      if (this.registrationClosesAt) return this.registrationClosesAt.getTime() > Date.now();
+      return true;
+    },
+    /**
+     * Where the event is in its life, as one word.
+     *
+     * The page used to show only ENDED or REGISTERED, which answers neither
+     * "what happens next" nor "do I need to do something now".
+     */
+    get stage() {
+      if (this.isLive) return 'live';
+      if (this.isPast) return 'ended';
+      if (this.isToday) return 'today';
+      return this.registrationOpen ? 'open' : 'closed';
     },
   };
 }

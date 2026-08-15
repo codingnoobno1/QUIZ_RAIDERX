@@ -35,11 +35,22 @@ export const eventRepository = {
     );
   },
 
-  /** GET /api/events/invitations?email= — team invites awaiting a response. */
+  /**
+   * GET /api/events/invitations — team invites awaiting a response.
+   *
+   * signOutOn401 is off for every event-portal call. The event portal is not
+   * NextAuth, so letting a 401 here call signOut() would tear down the whole
+   * app and bounce the participant to /login — which is exactly what happened
+   * the moment this endpoint started requiring a session. A 401 means "your
+   * event session lapsed"; the panel handles that itself.
+   */
   async getInvitations(email, { signal } = {}) {
     if (!email) return [];
     return toInvitations(
-      await api.get(`/api/events/invitations?email=${encodeURIComponent(email)}`, { signal }),
+      await api.get(`/api/events/invitations?email=${encodeURIComponent(email)}`, {
+        signal,
+        signOutOn401: false,
+      }),
     );
   },
 
@@ -53,7 +64,10 @@ export const eventRepository = {
     if (!eventId) return [];
     const qs = new URLSearchParams({ eventId });
     if (query) qs.set('q', query);
-    const res = await api.get(`/api/events/potential-participants?${qs}`, { signal });
+    const res = await api.get(`/api/events/potential-participants?${qs}`, {
+      signal,
+      signOutOn401: false,
+    });
     return (res?.data ?? []).map((p) => ({
       name: p?.name ?? '',
       email: p?.email ?? '',
@@ -83,13 +97,13 @@ export const eventRepository = {
    * Passing it was what let anyone answer anyone else's invitation.
    */
   async respondToInvitation({ registrationId, response }) {
-    return api.post('/api/events/invitations', { registrationId, response });
+    return api.post('/api/events/invitations', { registrationId, response }, { signOutOn401: false });
   },
 
   /** DELETE /api/events/invitations — leader withdraws an unanswered invite. */
   async withdrawInvitation({ registrationId, email }) {
     const qs = new URLSearchParams({ registrationId, email });
-    return api.del(`/api/events/invitations?${qs}`);
+    return api.del(`/api/events/invitations?${qs}`, { signOutOn401: false });
   },
 
   // ── Live event engine ──────────────────────────────────────────────────────
