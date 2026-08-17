@@ -45,7 +45,84 @@ const EventActivitySchema = new mongoose.Schema({
         shuffle: { type: Boolean, default: true },
         autoAdvance: { type: Boolean, default: true },
         maxParticipants: { type: Number, default: 500 },
-        currentQuestion: { type: Number, default: 0 }
+        currentQuestion: { type: Number, default: 0 },
+
+        // ── KBC ──────────────────────────────────────────────────────────
+        //
+        // Kept identical to std's copy of this schema. Mongoose drops unknown
+        // fields *silently*, so a stale model here does not error — the command
+        // route would write a document with no phase and no contestant while
+        // every response still returned 200, and the show would never advance.
+        phase: {
+            type: String,
+            enum: [
+                'lobby',
+                'fastest_finger',
+                'fastest_finger_result',
+                'contestant_intro',
+                'hot_seat',
+                'answer_locked',
+                'audience_poll',
+                'answer_reveal',
+                'leaderboard',
+                'completed',
+            ],
+            default: 'lobby',
+        },
+        round: { type: Number, default: 1 },
+
+        activeContestant: {
+            participantId: { type: String },
+            name: { type: String },
+            teamId: { type: String },
+            teamName: { type: String },
+            seatedAt: { type: Date },
+        },
+
+        fastestFinger: {
+            questionIndex: { type: Number },
+            openedAt: { type: Date },
+            closedAt: { type: Date },
+            revealed: { type: Boolean, default: false },
+        },
+
+        timer: {
+            startedAt: { type: Date },
+            endsAt: { type: Date },
+            durationSeconds: { type: Number },
+        },
+
+        answerState: {
+            locked: { type: Boolean, default: false },
+            lockedOption: { type: String },
+            lockedAt: { type: Date },
+        },
+
+        audiencePoll: {
+            questionIndex: { type: Number },
+            status: { type: String, enum: ['idle', 'open', 'closed'], default: 'idle' },
+            openedAt: { type: Date },
+            closedAt: { type: Date },
+            resultsVisible: { type: Boolean, default: false },
+        },
+
+        lifelines: {
+            fiftyFifty: { type: Boolean, default: true },
+            audiencePoll: { type: Boolean, default: true },
+            skip: { type: Boolean, default: true },
+            eliminatedOptions: [{ type: String }],
+        },
+
+        results: [{
+            participantId: String,
+            name: String,
+            teamName: String,
+            questionIndex: Number,
+            selectedOption: String,
+            correct: Boolean,
+            pointsAwarded: Number,
+            decidedAt: Date,
+        }],
     },
     voting: {
         question: { type: String },
