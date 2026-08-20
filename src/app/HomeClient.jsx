@@ -11,16 +11,11 @@ const SplashLoader = dynamic(() => import('@/components/homeui/animations/Splash
 const PixelPortfolio = dynamic(() => import('@/components/homeui/PixelPortfolio'), { ssr: false });
 
 export default function HomeClient() {
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
-        const hasSeenIntro = window.sessionStorage.getItem('pixel-intro-seen');
-        if (!hasSeenIntro) {
-            setLoading(true);
-            window.sessionStorage.setItem('pixel-intro-seen', 'true');
-        }
         // Safely hydrate user session from localStorage
         const { hydrateUser } = useUserStore.getState();
         hydrateUser();

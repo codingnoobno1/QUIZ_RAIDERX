@@ -19,6 +19,8 @@ import Footer from './sections/Footer';
 // Animation Imports
 import CodeFlowBackground from './animations/CodeFlowBackground';
 import FloatingBlobs from './animations/FloatingBlobs';
+import GlowCursor from './animations/GlowCursor';
+import FloatingCodeOverlay from './animations/FloatingCodeOverlay';
 import CodeSpectrum from '../code-spectrum/CodeSpectrum';
 import TechMarquee from './animations/TechMarquee';
 
@@ -37,6 +39,8 @@ const PixelPortfolio = () => {
         }}>
             <CodeFlowBackground />
             <FloatingBlobs />
+            <GlowCursor />
+            <FloatingCodeOverlay />
 
             <motion.div
                 key="content"
@@ -44,19 +48,16 @@ const PixelPortfolio = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1.2 }}
             >
-                <a className="skip-link" href="#main-content">Skip to content</a>
                 <Header />
                 <TechMarquee />
-                <main id="main-content">
-                    <Hero />
-                    <Features />
-                    <GMeets />
-                    <CodeSpectrum />
-                    <Stats />
-                    <Projects />
-                    <Research />
-                    <PortfolioResearches />
-                </main>
+                <Hero />
+                <Features />
+                <GMeets />
+                <CodeSpectrum />
+                <Stats />
+                <Projects />
+                <Research />
+                <PortfolioResearches />
                 <Footer />
                 <InteractiveRobot />
             </motion.div>
