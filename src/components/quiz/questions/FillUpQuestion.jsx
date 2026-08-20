@@ -8,10 +8,6 @@ export default function FillUpQuestion({ question, onAnswer, value }) {
 
     return (
         <Box>
-            <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.9)', mb: 3, fontWeight: 600 }}>
-                {question.text}
-            </Typography>
-
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}

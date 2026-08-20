@@ -8,10 +8,6 @@ export default function MCQQuestion({ question, onAnswer, value }) {
 
     return (
         <Box>
-            <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.9)', mb: 3, fontWeight: 600 }}>
-                {question.text}
-            </Typography>
-
             <Box display="flex" flexDirection="column" gap={2}>
                 {question.options.map((option, idx) => {
                     const isSelected = value === option;

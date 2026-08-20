@@ -65,12 +65,13 @@ const Header = () => {
                 zIndex: 1000,
                 background: 'rgba(5, 5, 5, 0.8)',
                 backdropFilter: 'blur(15px)',
-                borderBottom: '1px solid rgba(255,255,255,0.05)'
+                borderBottom: '1px solid rgba(255,255,255,0.07)',
+                minHeight: 72
             }}
         >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <img src="/pixel.jpg" alt="PIXEL Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', border: '2px solid #00FFFF' }} />
-                <Typography variant="h5" sx={{ fontWeight: '900', letterSpacing: '3px', display: { xs: 'none', lg: 'block' }, fontFamily: "'Space Grotesk', sans-serif" }}>
+                <img src="/pixel.jpg" alt="PIXEL Logo" width="42" height="42" style={{ width: '42px', height: '42px', borderRadius: '12px', border: '1px solid rgba(0,255,255,.55)' }} />
+                <Typography variant="h5" sx={{ fontWeight: '900', letterSpacing: '3px', display: 'block', fontSize: { xs: '1rem', sm: '1.5rem' }, fontFamily: "'Space Grotesk', sans-serif" }}>
                     PIXEL
                 </Typography>
             </Box>
@@ -100,7 +101,7 @@ const Header = () => {
                 ))}
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2 } }}>
                 {user ? (
                     <>
                         <IconButton onClick={handleProfileMenu}>
@@ -136,6 +137,7 @@ const Header = () => {
                             <Button
                                 onClick={() => window.open('http://localhost:3001', '_blank')}
                                 sx={{
+                                    display: { xs: 'none', xl: 'inline-flex' },
                                     borderRadius: '4px',
                                     padding: '12px 24px',
                                     fontWeight: 'bold',
@@ -158,7 +160,7 @@ const Header = () => {
                         </MagneticButton>
                         <MagneticButton>
                             <NeonButton startIcon={<LoginIcon />} onClick={handleLoginClick}>
-                                Attendee Login
+                                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Attendee&nbsp;</Box> Login
                             </NeonButton>
                         </MagneticButton>
                         <MagneticButton>
@@ -166,6 +168,7 @@ const Header = () => {
                                 startIcon={<EventIcon />}
                                 onClick={() => router.push('/event')}
                                 sx={{
+                                    display: { xs: 'none', lg: 'inline-flex' },
                                     borderRadius: '4px',
                                     padding: '12px 32px',
                                     fontWeight: 'bold',

@@ -10,10 +10,6 @@ export default function TrueFalseQuestion({ question, onAnswer, value }) {
 
     return (
         <Box>
-            <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.9)', mb: 4, fontWeight: 600 }}>
-                {question.text}
-            </Typography>
-
             <Box display="flex" gap={3}>
                 {options.map((option) => {
                     const isSelected = value === option;

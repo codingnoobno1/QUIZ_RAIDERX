@@ -12,6 +12,9 @@
 import { useRouter } from 'next/navigation';
 import { Box, Stack, Typography } from '@mui/material';
 import EventBusyRoundedIcon from '@mui/icons-material/EventBusyRounded';
+import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
+import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
+import MailOutlineRoundedIcon from '@mui/icons-material/MailOutlineRounded';
 import { color } from '@/theme/tokens';
 import useEventUser from '@/hooks/useEventUser';
 import { useEvents, useInvitations, useMyRegistrations } from '@/hooks/queries/useEventQueries';
@@ -35,8 +38,18 @@ export default function EventHome() {
     <>
       <PageHeading
         title="Your community"
-        subtitle="Events, teams and updates from your campus."
+        subtitle={`Welcome back${user?.name ? `, ${user.name.split(' ')[0]}` : ''}. Here is what needs your attention.`}
       />
+
+      <AsyncBoundary query={eventsQuery} loadingLabel="Loading event overview">
+        {(events) => (
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3,1fr)' }, gap: 1.25, mb: 2.5 }}>
+            <StatusCard icon={BoltRoundedIcon} label="Live now" value={events.filter((event) => event.isLive).length} tone={color.green} />
+            <StatusCard icon={ConfirmationNumberOutlinedIcon} label="My registrations" value={registrations.length} tone={color.brand} />
+            <StatusCard icon={MailOutlineRoundedIcon} label="Pending invites" value={invitations.length} tone={color.violet} />
+          </Box>
+        )}
+      </AsyncBoundary>
 
       {/* On narrow screens the rail is hidden, so invitations surface here —
           they are time-sensitive and should not require finding a tab. */}
@@ -71,6 +84,15 @@ export default function EventHome() {
         }
       </AsyncBoundary>
     </>
+  );
+}
+
+function StatusCard({ icon: Icon, label, value, tone }) {
+  return (
+    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ p: 1.75, borderRadius: 3, bgcolor: color.surface, border: `1px solid ${color.border}` }}>
+      <Box sx={{ width: 40, height: 40, flexShrink: 0, display: 'grid', placeItems: 'center', borderRadius: 2, color: tone, bgcolor: `${tone}18` }}><Icon sx={{ fontSize: 20 }} /></Box>
+      <Box><Typography sx={{ color: color.text, fontSize: '1.2rem', lineHeight: 1.1, fontWeight: 850 }}>{value}</Typography><Typography sx={{ color: color.textMuted, mt: .4, fontSize: '.69rem', fontWeight: 650 }}>{label}</Typography></Box>
+    </Stack>
   );
 }
 

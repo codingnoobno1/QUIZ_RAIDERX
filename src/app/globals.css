@@ -29,6 +29,24 @@ body {
   padding: 0;
 }
 
+html { scroll-behavior: smooth; }
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 10000;
+  padding: 10px 14px;
+  color: #041013;
+  background: #67e8f9;
+  border-radius: 8px;
+  font-weight: 800;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 160ms ease;
+}
+.skip-link:focus { transform: translateY(0); }
+
 body {
   background-color: #0a0a0f;
   color: #e7e7ea;

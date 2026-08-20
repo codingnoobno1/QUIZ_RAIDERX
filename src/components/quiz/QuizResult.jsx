@@ -5,8 +5,9 @@ import { CheckCircle, Cancel, AccessTime, ArrowBack } from "@mui/icons-material"
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-export default function QuizResult({ result }) {
-    const { score, review } = result;
+export default function QuizResult({ result, resultData }) {
+    const payload = result ?? resultData ?? {};
+    const { score = 0, review = [] } = payload;
 
     if (!review || review.length === 0) {
         return (

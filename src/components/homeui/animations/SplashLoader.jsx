@@ -88,12 +88,12 @@ export default function SplashLoader({ onComplete }) {
                     setTimeout(() => {
                         setVisible(false);
                         onComplete?.();
-                    }, 600);
+                    }, 180);
                     return 100;
                 }
-                return p + 1;
+                return Math.min(100, p + 8);
             });
-        }, 40);
+        }, 45);
 
         return () => clearInterval(t);
     }, [onComplete]);

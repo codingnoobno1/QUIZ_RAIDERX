@@ -79,6 +79,11 @@ export const NeonButton = styled(Button)(({ theme }) => ({
         color: '#000',
         boxShadow: '0 0 25px rgba(0, 255, 255, 0.5)',
     },
+    '@media (max-width: 599px)': {
+        padding: '10px 14px',
+        minWidth: 'auto',
+        letterSpacing: '0.5px',
+    },
 }));
 
 export const SectionTitle = ({ children }) => (
