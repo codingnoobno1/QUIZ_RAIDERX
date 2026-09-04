@@ -106,6 +106,24 @@ export const eventRepository = {
     return api.del(`/api/events/invitations?${qs}`, { signOutOn401: false });
   },
 
+  /** GET /api/events/:id/activities — organiser only. */
+  async getActivities(eventId, { signal } = {}) {
+    const res = await api.get(`/api/events/${encodeURIComponent(eventId)}/activities`, {
+      signal,
+      signOutOn401: false,
+    });
+    return res?.data ?? [];
+  },
+
+  /** POST /api/events/:id/activities — start / stop / reset an activity. */
+  async switchActivity({ eventId, activityId, action }) {
+    return api.post(
+      `/api/events/${encodeURIComponent(eventId)}/activities`,
+      { activityId, action },
+      { signOutOn401: false },
+    );
+  },
+
   // ── Live event engine ──────────────────────────────────────────────────────
   // These endpoints were built for the Flutter client and are unchanged here —
   // the web is simply becoming a second consumer of the same contract.

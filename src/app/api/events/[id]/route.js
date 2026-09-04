@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import Event from '@/models/Event';
+import EventActivity from '@/models/EventActivity';
 import {
   requireAdmin,
   readJson,
@@ -27,7 +28,23 @@ export async function GET(request, { params }) {
     await connectDB();
     const event = await Event.findById(id).lean();
     if (!event) return notFound('Event not found');
-    return NextResponse.json(event, { status: 200 });
+
+    // Same reason as the list route: the running activity is what makes an
+    // event joinable, so the detail page must see it too or its action panel
+    // will offer "view pass" while a quiz is on screen in the lobby.
+    const liveActivity = await EventActivity.findOne({ eventId: id, status: 'active' })
+      .select('type title')
+      .lean();
+
+    return NextResponse.json(
+      {
+        ...event,
+        liveActivity: liveActivity
+          ? { id: String(liveActivity._id), type: liveActivity.type, title: liveActivity.title }
+          : null,
+      },
+      { status: 200 },
+    );
   } catch (error) {
     return serverError(error, 'events/detail');
   }

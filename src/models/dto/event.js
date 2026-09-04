@@ -74,6 +74,15 @@ export function toEvent(json) {
       .filter((f) => f.question),
     registrationClosesAt: date(json.registrationClosesAt),
 
+    /** The activity running right now, if any — the thing people can join. */
+    liveActivity: json.liveActivity?.id
+      ? {
+          id: str(json.liveActivity.id),
+          type: str(json.liveActivity.type, 'activity'),
+          title: str(json.liveActivity.title, 'Live activity'),
+        }
+      : null,
+
     // ── derived (event.dart:43-55) ──
     get isUpcoming() {
       return this.date ? this.date.getTime() > Date.now() : false;
@@ -86,9 +95,15 @@ export function toEvent(json) {
       const now = new Date();
       return this.date.toDateString() === now.toDateString();
     },
-    /** An organiser has a mode running right now. */
+    /**
+     * Live means "there is something to join".
+     *
+     * A running activity counts even when the organiser never set activeMode —
+     * those two were tracked separately and disagreed, so an event could be
+     * running a poll while every badge said it was idle.
+     */
     get isLive() {
-      return Boolean(this.activeMode?.type) || this.onDuty;
+      return Boolean(this.liveActivity) || Boolean(this.activeMode?.type) || this.onDuty;
     },
     get registrationOpen() {
       if (this.isPast) return false;

@@ -32,6 +32,7 @@ import ExploreRoundedIcon from '@mui/icons-material/ExploreRounded';
 import LiveTvRoundedIcon from '@mui/icons-material/LiveTvRounded';
 import { color, radius, tint } from '@/theme/tokens';
 import ActionPanel, { nextActionFor } from './ActionPanel';
+import RunEventPanel from '@/components/events/RunEventPanel';
 
 const SECTIONS = [
   { id: 'overview', label: 'Overview' },
@@ -187,6 +188,9 @@ export default function EventDetailView({ event, registration, onNavigate }) {
               )}
             </Section>
           )}
+
+          {/* Organisers only — it hides itself for everyone else. */}
+          <RunEventPanel eventId={event.id} />
 
           {event.prizes.length > 0 && (
             <Section id="prizes" title="Prizes">

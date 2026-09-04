@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import Event from '@/models/Event';
 import EventRegistration from '@/models/EventRegistration';
+import EventActivity from '@/models/EventActivity';
 import { requireAdmin, readJson, badRequest, serverError } from '@/lib/apiGuards';
 
 /** GET /api/events — the public event list. Read is open; writing is not. */
@@ -18,8 +19,27 @@ export async function GET() {
     ]);
     const byEvent = new Map(counts.map((c) => [String(c._id), c.seats]));
 
+    // "Live" had two meanings that disagreed. The badges, the "Live now" count
+    // and the lobby button all read Event.activeMode/onDuty, while the lobby
+    // itself renders whatever EventActivity has status 'active'. So an event
+    // could be running a poll while every screen insisted nothing was on, and
+    // participants had no route into it.
+    //
+    // The activity is the honest signal — it is the thing people can actually
+    // join — so it is published here and the derived `isLive` uses it.
+    const live = await EventActivity.find({ status: 'active' })
+      .select('eventId type title')
+      .lean();
+    const liveByEvent = new Map(
+      live.map((a) => [String(a.eventId), { id: String(a._id), type: a.type, title: a.title }]),
+    );
+
     return NextResponse.json(
-      events.map((e) => ({ ...e, participantCount: byEvent.get(String(e._id)) ?? 0 })),
+      events.map((e) => ({
+        ...e,
+        participantCount: byEvent.get(String(e._id)) ?? 0,
+        liveActivity: liveByEvent.get(String(e._id)) ?? null,
+      })),
       { status: 200 },
     );
   } catch (error) {

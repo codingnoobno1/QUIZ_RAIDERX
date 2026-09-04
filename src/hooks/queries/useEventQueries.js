@@ -23,6 +23,7 @@ export const eventKeys = {
   teammates: (eventId, q) => [...eventKeys.all, 'teammates', eventId, q ?? ''],
   submission: (activityId, participantId) => [...eventKeys.all, 'submission', activityId, participantId],
   votes: (activityId, participantId) => [...eventKeys.all, 'votes', activityId, participantId ?? null],
+  activities: (eventId) => [...eventKeys.all, 'activities', eventId],
 };
 
 /** eventsProvider */
@@ -162,6 +163,35 @@ export function useWithdrawInvitation(email) {
   return useMutation({
     mutationFn: (vars) => eventRepository.withdrawInvitation(vars),
     onSettled: () => qc.invalidateQueries({ queryKey: eventKeys.registrations(email) }),
+  });
+}
+
+/**
+ * The activities of one event. Organiser only — a participant gets a 401 and
+ * the manage panel simply does not render for them.
+ */
+export function useActivities(eventId, enabled = true) {
+  return useQuery({
+    queryKey: eventKeys.activities(eventId),
+    queryFn: ({ signal }) => eventRepository.getActivities(eventId, { signal }),
+    enabled: Boolean(eventId) && enabled,
+    retry: false,
+    refetchInterval: 5_000,
+    refetchIntervalInBackground: false,
+    placeholderData: (prev) => prev,
+  });
+}
+
+/** Start / stop / reset. Invalidates the event too, so badges follow at once. */
+export function useSwitchActivity(eventId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars) => eventRepository.switchActivity({ eventId, ...vars }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: eventKeys.activities(eventId) });
+      qc.invalidateQueries({ queryKey: eventKeys.detail(eventId) });
+      qc.invalidateQueries({ queryKey: eventKeys.list() });
+    },
   });
 }
 
