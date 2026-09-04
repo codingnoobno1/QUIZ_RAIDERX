@@ -1,0 +1,130 @@
+{
+  "_comment": "Edit this file and re-run: node scripts/import-event.mjs scripts/data/technova.json. Matching is by event title, so re-running updates rather than duplicates.",
+
+  "event": {
+    "title": "TECHNOVA — The Freshers' Technical Quiz",
+    "description": "A PIXEL initiative to welcome the new batch through knowledge, technology, teamwork and healthy competition.\n\nFour rounds of increasing difficulty, from general knowledge and current affairs through to advanced technical and analytical questions.",
+    "date": "2026-09-27T09:30:00.000Z",
+    "time": "3:00 PM",
+    "location": "ASET Auditorium",
+    "tags": ["Quiz", "Technical", "Freshers", "AI & ML", "Cybersecurity"],
+    "onDuty": false,
+    "registrationClosesAt": "2026-09-26T18:30:00.000Z",
+
+    "organizer": {
+      "name": "PIXEL — Technical Club",
+      "subtitle": "Amity School of Engineering & Technology",
+      "contact": "pixel@amity.edu"
+    },
+
+    "modes": [{ "type": "quiz" }, { "type": "voting" }],
+
+    "eligibility": [
+      "First-year students of ASET",
+      "Teams of up to 4 members",
+      "Valid student ID required at check-in"
+    ],
+
+    "rules": [
+      "Participants must arrive 30 minutes before the event starts.",
+      "Each team may submit only one answer per question.",
+      "Use of phones or external assistance during a round is prohibited.",
+      "Negative marking applies in every round — see the scoring table.",
+      "The organising team's decision on scoring is final."
+    ],
+
+    "prizes": [
+      { "place": "Winner", "reward": "Certificate + PIXEL merchandise" },
+      { "place": "Runner up", "reward": "Certificate" }
+    ],
+
+    "schedule": [
+      { "time": "02:30 PM", "label": "Check-in opens" },
+      { "time": "03:00 PM", "label": "Round 1 — The Spark" },
+      { "time": "03:40 PM", "label": "Shortlisting" },
+      { "time": "04:00 PM", "label": "Round 2 — The Insight" },
+      { "time": "04:30 PM", "label": "Round 3 — The Decision" },
+      { "time": "05:00 PM", "label": "Round 4 — The Pinnacle" },
+      { "time": "05:30 PM", "label": "Results and felicitation" }
+    ]
+  },
+
+  "quiz": {
+    "title": "TECHNOVA Round 1 — The Spark",
+    "description": "Screening round. General knowledge, current affairs, basic technical and logical reasoning.",
+    "quizType": "rapid_fire",
+    "timePerQuestion": 30,
+    "scoring": "correct_only",
+    "shuffle": true,
+    "autoAdvance": true,
+    "activate": true,
+
+    "questions": [
+      {
+        "text": "Which protocol is primarily used for secure web communication?",
+        "options": ["FTP", "HTTPS", "SMTP", "DHCP"],
+        "correctAnswer": "HTTPS",
+        "points": 2
+      },
+      {
+        "text": "Which algorithm is used to train most modern neural networks?",
+        "options": ["Backpropagation", "Quicksort", "Dijkstra's algorithm", "RSA"],
+        "correctAnswer": "Backpropagation",
+        "points": 2
+      },
+      {
+        "text": "What does SQL injection primarily exploit?",
+        "options": ["Weak passwords", "Unvalidated user input", "Open network ports", "Expired certificates"],
+        "correctAnswer": "Unvalidated user input",
+        "points": 2
+      },
+      {
+        "text": "Which data structure works on Last In, First Out?",
+        "options": ["Queue", "Stack", "Linked list", "Binary tree"],
+        "correctAnswer": "Stack",
+        "points": 2
+      },
+      {
+        "text": "In machine learning, what problem does overfitting describe?",
+        "options": [
+          "The model is too simple for the data",
+          "The model memorises training data and generalises poorly",
+          "The dataset is too large to process",
+          "Training takes too long to converge"
+        ],
+        "correctAnswer": "The model memorises training data and generalises poorly",
+        "points": 2
+      },
+      {
+        "text": "What does the 'A' in the CIA triad of information security stand for?",
+        "options": ["Authentication", "Authorisation", "Availability", "Auditing"],
+        "correctAnswer": "Availability",
+        "points": 2
+      },
+      {
+        "text": "Which company develops the open-source machine learning library PyTorch?",
+        "options": ["Google", "Meta", "Microsoft", "Amazon"],
+        "correctAnswer": "Meta",
+        "points": 2
+      },
+      {
+        "text": "What is the time complexity of binary search on a sorted array of n elements?",
+        "options": ["O(n)", "O(n log n)", "O(log n)", "O(1)"],
+        "correctAnswer": "O(log n)",
+        "points": 2
+      },
+      {
+        "text": "Which of these is NOT a symmetric encryption algorithm?",
+        "options": ["AES", "DES", "RSA", "Blowfish"],
+        "correctAnswer": "RSA",
+        "points": 2
+      },
+      {
+        "text": "A train leaves at 14:35 and arrives at 17:10. How long is the journey?",
+        "options": ["2h 25m", "2h 35m", "3h 25m", "2h 45m"],
+        "correctAnswer": "2h 35m",
+        "points": 2
+      }
+    ]
+  }
+}
