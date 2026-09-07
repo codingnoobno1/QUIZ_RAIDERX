@@ -8,8 +8,10 @@ import HuntProgress from '@/models/HuntProgress';
 import AudiencePollVote from '@/models/AudiencePollVote';
 import FastestFingerSubmission from '@/models/FastestFingerSubmission';
 import EventRegistration from '@/models/EventRegistration';
+import LiveAnswer from '@/models/LiveAnswer';
 import { buildKbcPayload } from '@/lib/kbc/viewerPayload';
-import { invalidIdResponse, notFound, serverError } from '@/lib/apiGuards';
+import { ROUND_STATE, effectiveRoundState, isTargeted, resolveParticipantTeam } from '@/lib/live/rounds';
+import { invalidIdResponse, notFound, requireEventUser, serverError } from '@/lib/apiGuards';
 
 /**
  * GET /api/flutter/events/status?eventId=[id]&participantId=[id]
@@ -21,16 +23,27 @@ import { invalidIdResponse, notFound, serverError } from '@/lib/apiGuards';
  * Secrets withheld: the hunt's `quizRef`/`externalUrl` (revealed on scan) and
  * the external activity's `secretKey`.
  *
- * KNOWN EXPOSURE: for `rapid_fire`/`preloaded` the payload includes each
- * question's `correctAnswer`, because both clients grade locally for instant
- * feedback. Anyone reading the network tab can therefore score full marks.
- * That is a deliberate contract with the shipped mobile client — changing it
- * needs both clients updated together, so it is left alone here.
+ * VERSIONED PAYLOAD: pass `v=2`.
+ *
+ * v1 includes each question's `correctAnswer` for `rapid_fire`/`preloaded`,
+ * because those clients grade locally for instant feedback — which means anyone
+ * reading the network tab can score full marks. Removing it needs the client
+ * changed in the same breath, and a build of that client is already deployed,
+ * so the fix is a version rather than an edit: v1 keeps the old contract for
+ * phones in the wild, v2 withholds every answer and hands out `liveRound`
+ * instead. Delete v1 once the store build has rolled over.
+ *
+ * v2 adds, for host-paced (`custom_live`) quizzes, a `liveRound` block: the
+ * open question's `instanceId`, its absolute `endsAt`, whether this viewer's
+ * team is the one being asked, what they have already answered, and — only
+ * after the host reveals — the correct answer. Clients render it; they never
+ * compute it.
  */
 export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const eventId = searchParams.get('eventId');
     const participantId = searchParams.get('participantId');
+    const version = Number(searchParams.get('v')) >= 2 ? 2 : 1;
 
     if (!eventId) {
         return NextResponse.json({ error: 'eventId is required' }, { status: 400 });
@@ -56,7 +69,11 @@ export async function GET(req) {
                     eventId,
                     onDuty: event.onDuty,
                     activeActivity: null,
-                    serverTime: new Date().toISOString()
+                    serverTime: new Date().toISOString(),
+                    // Nothing is running: back off. The cadence is dictated
+                    // here rather than hardcoded per client so a room full of
+                    // phones can be sped up or calmed down from one place.
+                    pollAfterMs: 10000
                 }
             });
         }
@@ -87,7 +104,8 @@ export async function GET(req) {
                     eventId,
                     onDuty: event.onDuty,
                     activeActivity: safe,
-                    serverTime: new Date().toISOString()
+                    serverTime: new Date().toISOString(),
+                    pollAfterMs: 2000
                 }
             });
         }
@@ -96,13 +114,21 @@ export async function GET(req) {
             const q = activeActivity.quiz ?? {};
             const questions = Array.isArray(q.questions) ? q.questions : [];
 
+            // Host-paced rounds index off the round, not off `currentQuestion`,
+            // so a stale write to one cannot desync the other. They are kept in
+            // step on open; this just picks the authoritative one.
+            const rawIndex = q.quizType === 'custom_live' && q.liveRound?.instanceId
+                ? q.liveRound.questionIndex
+                : q.currentQuestion;
+
             // Clamp: a host who advances past the last question (or a config
             // written by hand) must not produce an out-of-range read.
-            const index = Math.min(Math.max(Number(q.currentQuestion) || 0, 0), Math.max(questions.length - 1, 0));
+            const index = Math.min(Math.max(Number(rawIndex) || 0, 0), Math.max(questions.length - 1, 0));
             const current = questions[index];
 
             safe.quiz = {
                 quizType: q.quizType,
+                scope: q.scope ?? 'individual',
                 timePerQuestion: q.timePerQuestion,
                 totalQuestions: questions.length,
                 currentQuestion: index,
@@ -119,18 +145,30 @@ export async function GET(req) {
                     options: current.options,
                     points: current.points
                 } : null,
-                // rapid_fire / preloaded: full pack for local grading (see note above).
+                // rapid_fire / preloaded: the pack. v1 carries the answers for
+                // local grading (see the version note above); v2 does not, and
+                // those clients read their score from the submit response.
                 questions: q.quizType !== 'custom_live'
                     ? questions.map(qu => ({
                         _id: qu._id,
                         text: qu.text,
                         options: qu.options,
-                        correctAnswer: qu.correctAnswer,
+                        ...(version === 1 ? { correctAnswer: qu.correctAnswer } : {}),
                         points: qu.points,
                         imageUrl: qu.imageUrl
                     }))
                     : undefined
             };
+
+            if (version >= 2 && q.quizType === 'custom_live') {
+                safe.quiz.liveRound = await buildLiveRound({
+                    activity: activeActivity,
+                    quiz: q,
+                    question: current,
+                    req,
+                    participantId
+                });
+            }
         }
 
         if (activeActivity.type === 'voting') {
@@ -179,7 +217,11 @@ export async function GET(req) {
                 eventId,
                 onDuty: event.onDuty,
                 activeActivity: safe,
-                serverTime: new Date().toISOString()
+                serverTime: new Date().toISOString(),
+                // A question that is open is worth a tight loop — a second of
+                // skew between two phones is a second of unfair thinking time.
+                // Everything else can wait.
+                pollAfterMs: safe.quiz?.liveRound?.state === 'open' ? 1000 : 5000
             }
         });
 
@@ -260,5 +302,101 @@ async function participantHasSubmitted(activity, participantId) {
     } catch (error) {
         console.error('[api:flutter/events/status] hasSubmitted lookup failed', error);
         return false;
+    }
+}
+
+/**
+ * The round as this particular viewer is allowed to see it.
+ *
+ * Three things here are deliberately server-decided rather than left to the
+ * client: whether this viewer's team is the one being asked, what they have
+ * already answered, and whether the answer may be shown yet. A client that
+ * decided any of them could show a non-targeted team the question early, or
+ * reveal the answer to whoever opened the developer tools.
+ */
+async function buildLiveRound({ activity, quiz, question, req, participantId }) {
+    const round = quiz.liveRound ?? {};
+    const now = new Date();
+
+    if (!round.instanceId) {
+        return { state: ROUND_STATE.IDLE, instanceId: null, questionIndex: round.questionIndex ?? 0 };
+    }
+
+    const state = effectiveRoundState(round, now);
+    const isTeamScope = quiz.scope === 'team';
+    const targetsTeams = round.target?.kind === 'teams';
+
+    // Prefer the verified identity. The `participantId` query parameter is
+    // unauthenticated and is used only to look up what this viewer already
+    // answered — a wrong one shows the wrong badge and authorises nothing,
+    // because every write goes through the answer endpoint's own session check.
+    const auth = await requireEventUser(req);
+    const viewer = auth.ok ? auth.email : (participantId || null);
+
+    const team = (isTeamScope || targetsTeams) && viewer
+        ? await resolveParticipantTeam(activity.eventId, viewer)
+        : { teamId: null, teamName: null };
+
+    const [mine, targetTeams] = await Promise.all([
+        findMyAnswer(round.instanceId, viewer, isTeamScope ? team.teamId : null),
+        targetsTeams ? namesForTeams(activity.eventId, round.target.teamIds) : Promise.resolve([]),
+    ]);
+
+    const revealed = state === ROUND_STATE.REVEALED;
+
+    return {
+        instanceId: String(round.instanceId),
+        questionIndex: round.questionIndex ?? 0,
+        state,
+        openedAt: round.openedAt,
+        // The deadline, as an absolute instant. Clients count down to this
+        // corrected by `serverTime`; they never start a timer of their own.
+        endsAt: round.endsAt,
+        durationSeconds: round.durationSeconds,
+
+        scope: isTeamScope ? 'team' : 'individual',
+        targeted: isTargeted(round, team.teamId),
+        targetKind: round.target?.kind ?? 'all',
+        targetTeams,
+        myTeamId: team.teamId,
+        myTeamName: team.teamName,
+
+        answered: Boolean(mine),
+        myOption: mine?.option ?? null,
+        // In team scope this is the teammate who got there first, which the app
+        // shows instead of a bare "already answered".
+        answeredBy: mine && mine.participantId !== viewer ? (mine.name || null) : null,
+
+        // Correctness exists on the row from the moment it is written, and is
+        // withheld until the host reveals. Anything else lets the first answer
+        // in the room tell everyone else what to pick.
+        reveal: revealed ? {
+            correctAnswer: question?.correctAnswer ?? null,
+            isCorrect: mine?.isCorrect ?? false,
+            pointsAwarded: mine?.pointsAwarded ?? 0,
+        } : null,
+    };
+}
+
+function findMyAnswer(instanceId, viewer, teamKey) {
+    if (!viewer && !teamKey) return Promise.resolve(null);
+    const where = teamKey ? { instanceId, teamKey } : { instanceId, participantId: viewer };
+    return LiveAnswer.findOne(where)
+        .select('option participantId name isCorrect pointsAwarded')
+        .lean()
+        .catch(() => null);
+}
+
+async function namesForTeams(eventId, teamIds) {
+    const ids = Array.isArray(teamIds) ? teamIds.filter(Boolean) : [];
+    if (!ids.length) return [];
+
+    try {
+        const regs = await EventRegistration.find({ eventId, teamId: { $in: ids } })
+            .select('teamId teamName').lean();
+        return regs.map((r) => ({ teamId: r.teamId, teamName: r.teamName ?? r.teamId }));
+    } catch {
+        // A missing name is cosmetic; the round still runs on ids.
+        return ids.map((teamId) => ({ teamId, teamName: teamId }));
     }
 }

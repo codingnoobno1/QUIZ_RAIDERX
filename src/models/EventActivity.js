@@ -47,6 +47,53 @@ const EventActivitySchema = new mongoose.Schema({
         maxParticipants: { type: Number, default: 500 },
         currentQuestion: { type: Number, default: 0 },
 
+        /**
+         * Who competes as one entrant.
+         *
+         * In `team` scope a team gets one answer and one score: the first
+         * member to answer answers for everyone, enforced by the partial unique
+         * index on LiveAnswer rather than by a disabled button. Applies to
+         * rapid_fire and custom_live alike — the same questions, a different
+         * unit of competition.
+         */
+        scope: { type: String, enum: ['individual', 'team'], default: 'individual' },
+
+        /**
+         * Whether a participant may sit a self-paced quiz more than once.
+         * Off by default: a competitive round is one attempt, and the previous
+         * behaviour — keep the best of unlimited retries — is a practice mode,
+         * not a contest.
+         */
+        allowRetake: { type: Boolean, default: false },
+
+        // ── Host-paced rounds (custom_live) ──────────────────────────────
+        //
+        // The deadline is `endsAt`, an absolute instant, and it is the only
+        // thing that decides whether an answer is late. `state` is stored for
+        // the host's explicit lock and reveal, but readers must put it through
+        // `effectiveRoundState()` — a round whose `endsAt` has passed is closed
+        // whether or not anybody pressed anything.
+        liveRound: {
+            /** New on every open, so a re-asked question is a clean round. */
+            instanceId: { type: mongoose.Schema.Types.ObjectId, default: null },
+            questionIndex: { type: Number, default: 0 },
+            state: {
+                type: String,
+                enum: ['idle', 'open', 'locked', 'revealed'],
+                default: 'idle',
+            },
+            openedAt: { type: Date, default: null },
+            endsAt: { type: Date, default: null },
+            durationSeconds: { type: Number, default: null },
+            revealedAt: { type: Date, default: null },
+
+            /** `all`, or `teams` with the teamIds the host put on the spot. */
+            target: {
+                kind: { type: String, enum: ['all', 'teams'], default: 'all' },
+                teamIds: [{ type: String }],
+            },
+        },
+
         // ── KBC ──────────────────────────────────────────────────────────
         //
         // Kept identical to std's copy of this schema. Mongoose drops unknown

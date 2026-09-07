@@ -35,6 +35,24 @@ const QuizSubmissionSchema = new mongoose.Schema({
         index: true
     },
 
+    /**
+     * Resolved from the participant's registration when the attempt is graded,
+     * not matched by string at report time.
+     *
+     * The leaderboard used to reconstruct team identity afterwards by looking
+     * a `participantId` up against enrollment number, email, registration id
+     * and teamId in turn — so an id that matched none of them silently became a
+     * new solo entrant on the board. Storing the resolution at write time makes
+     * the join an id lookup instead of a guess.
+     *
+     * `teamKey` mirrors `teamId` and exists only in team scope, so the unique
+     * index below can be partial on its presence.
+     */
+    teamId: { type: String, default: null },
+    teamName: { type: String, default: null },
+    teamKey: { type: String },
+    scope: { type: String, enum: ['individual', 'team'], default: 'individual' },
+
     // Result
     answers: [AnswerSchema],
     score: { type: Number, default: 0 },
@@ -53,8 +71,20 @@ const QuizSubmissionSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// One submission per participant per activity
+// One submission per participant per activity.
 QuizSubmissionSchema.index({ activityId: 1, participantId: 1 }, { unique: true });
+
+// Team scope: one attempt for the whole team, whoever gets there first. The
+// constraint simply does not exist for individual rounds, where `teamKey` is
+// absent.
+QuizSubmissionSchema.index(
+    { activityId: 1, teamKey: 1 },
+    {
+        unique: true,
+        name: 'uniq_submission_team',
+        partialFilterExpression: { teamKey: { $exists: true } },
+    },
+);
 
 export default mongoose.models.QuizSubmission
     || mongoose.model('QuizSubmission', QuizSubmissionSchema);
