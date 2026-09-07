@@ -21,6 +21,21 @@ const EventRegistrationSchema = new mongoose.Schema({
         unique: true,
         sparse: true // Only unique among those that have it
     },
+    /**
+     * Who owns this entry.
+     *
+     * Leadership used to be inferred from `email`, the registrant's address —
+     * a mutable contact field. That gave no way to hand a team over when the
+     * leader drops out an hour before the event, and no way for a query to ask
+     * who leads a team at all. Kept identical to std's copy of this schema:
+     * two apps write this collection, and a field one of them does not know
+     * about is dropped silently on save.
+     *
+     * Absent on rows written before this existed, where the registrant is the
+     * leader by construction.
+     */
+    leaderEmail: { type: String, lowercase: true, trim: true },
+
     // The person who registers the entry
     name: {
         type: String,
@@ -42,7 +57,8 @@ const EventRegistrationSchema = new mongoose.Schema({
         email: String,
         enrollmentNumber: String,
         semester: String,
-        inviteStatus: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' }
+        inviteStatus: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
+        role: { type: String, enum: ['leader', 'member'], default: 'member' }
     }],
     status: {
         type: String,

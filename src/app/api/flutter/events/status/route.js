@@ -10,7 +10,7 @@ import FastestFingerSubmission from '@/models/FastestFingerSubmission';
 import EventRegistration from '@/models/EventRegistration';
 import LiveAnswer from '@/models/LiveAnswer';
 import { buildKbcPayload } from '@/lib/kbc/viewerPayload';
-import { ROUND_STATE, effectiveRoundState, isTargeted, resolveParticipantTeam } from '@/lib/live/rounds';
+import { ROUND_STATE, effectiveRoundState, isTargeted, leaderNameOf, resolveParticipantTeam } from '@/lib/live/rounds';
 import { invalidIdResponse, notFound, requireEventUser, serverError } from '@/lib/apiGuards';
 
 /**
@@ -355,11 +355,17 @@ async function buildLiveRound({ activity, quiz, question, req, participantId }) 
         durationSeconds: round.durationSeconds,
 
         scope: isTeamScope ? 'team' : 'individual',
+        // The three fields the "it is your team's turn" screen is built from:
+        // whether this phone is being asked, which team the host named, and who
+        // leads it. Resolved here because a phone knows only the address it
+        // signed in with — it cannot work out who leads its own team.
         targeted: isTargeted(round, team.teamId),
         targetKind: round.target?.kind ?? 'all',
         targetTeams,
         myTeamId: team.teamId,
         myTeamName: team.teamName,
+        myTeamLeaderName: team.leaderName ?? null,
+        isTeamLeader: Boolean(team.isLeader),
 
         answered: Boolean(mine),
         myOption: mine?.option ?? null,
@@ -393,10 +399,17 @@ async function namesForTeams(eventId, teamIds) {
 
     try {
         const regs = await EventRegistration.find({ eventId, teamId: { $in: ids } })
-            .select('teamId teamName').lean();
-        return regs.map((r) => ({ teamId: r.teamId, teamName: r.teamName ?? r.teamId }));
+            .select('teamId teamName name email leaderEmail members').lean();
+
+        return regs.map((r) => ({
+            teamId: r.teamId,
+            teamName: r.teamName ?? r.teamId,
+            // Announced on every phone in the room, not just the team's own —
+            // "Team Kernel Panic, led by Priya" is how a host names who is up.
+            leaderName: leaderNameOf(r),
+        }));
     } catch {
         // A missing name is cosmetic; the round still runs on ids.
-        return ids.map((teamId) => ({ teamId, teamName: teamId }));
+        return ids.map((teamId) => ({ teamId, teamName: teamId, leaderName: null }));
     }
 }

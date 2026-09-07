@@ -247,7 +247,7 @@ export function gradeLiveAnswer({ question, option, receivedAt, liveRound, scori
  */
 export async function resolveParticipantTeam(eventId, email) {
     const lower = String(email ?? '').toLowerCase();
-    if (!lower) return { teamId: null, teamName: null, registrationType: 'solo' };
+    if (!lower) return emptyTeam();
 
     const reg = await EventRegistration.findOne({
         eventId,
@@ -256,13 +256,55 @@ export async function resolveParticipantTeam(eventId, email) {
             { email: lower },
             { 'members.email': lower },
         ],
-    }).select('teamId teamName registrationType name').lean();
+    }).select('teamId teamName registrationType name email leaderEmail members').lean();
 
-    if (!reg) return { teamId: null, teamName: null, registrationType: 'solo' };
+    if (!reg) return emptyTeam();
+
+    const leaderEmail = leaderEmailOf(reg);
 
     return {
         teamId: reg.teamId ?? null,
         teamName: reg.teamName ?? null,
         registrationType: reg.registrationType ?? (reg.teamId ? 'team' : 'solo'),
+        leaderEmail,
+        leaderName: leaderNameOf(reg),
+        // What the app puts the leader's controls behind. Derived here rather
+        // than compared on the phone, because the phone only knows the address
+        // it signed in with.
+        isLeader: Boolean(leaderEmail) && leaderEmail === lower,
     };
+}
+
+const emptyTeam = () => ({
+    teamId: null,
+    teamName: null,
+    registrationType: 'solo',
+    leaderEmail: null,
+    leaderName: null,
+    isLeader: false,
+});
+
+/**
+ * Rows written before `leaderEmail` existed have no explicit owner, and for
+ * those the registrant is the leader by construction — they are the person who
+ * created the entry and invited everyone else.
+ */
+function leaderEmailOf(reg) {
+    const explicit = String(reg?.leaderEmail ?? '').toLowerCase();
+    if (explicit) return explicit;
+    const registrant = String(reg?.email ?? '').toLowerCase();
+    return registrant || null;
+}
+
+/** The leader's display name, wherever in the registration it happens to sit. */
+export function leaderNameOf(reg) {
+    const leader = leaderEmailOf(reg);
+    if (!leader) return reg?.name ?? null;
+
+    if (String(reg?.email ?? '').toLowerCase() === leader) return reg?.name ?? null;
+
+    const member = (reg?.members ?? []).find(
+        (m) => String(m?.email ?? '').toLowerCase() === leader,
+    );
+    return member?.name ?? reg?.name ?? null;
 }

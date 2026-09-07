@@ -29,11 +29,19 @@ import {
  *   - it kept the best of repeated attempts, which in a competitive round means
  *     a participant may retake until satisfied.
  *
+ * Versioned the same way `status` is, and for the same reason: a build of the
+ * mobile client is already deployed and calls this route with a body-supplied
+ * `participantId` and no guarantee of a session. v1 keeps that contract exactly
+ * as it was. v2 — `?v=2` — is the strict one: session identity, team scope, one
+ * attempt. Team-scoped scoring requires v2, because there is no honest way to
+ * score a team from an unauthenticated claim about who is submitting.
+ *
+ * Delete v1 once the store build has rolled over.
+ *
  * Body: { activityId, answers: [{ questionId, selectedOption }], timeTakenSeconds? }
  */
 export async function POST(req) {
-    const auth = await requireEventUser(req);
-    if (!auth.ok) return auth.response;
+    const strict = Number(new URL(req.url).searchParams.get('v')) >= 2;
 
     const parsed = await readJson(req);
     if (!parsed.ok) return parsed.response;
@@ -46,15 +54,25 @@ export async function POST(req) {
     const invalid = invalidIdResponse(activityId, 'activityId');
     if (invalid) return invalid;
 
-    // The identity is the session's, always. A body that disagrees is a client
-    // bug worth seeing in the logs, not a reason to throw away a quiz the
-    // participant has already sat through.
-    const participantId = auth.email;
-    if (parsed.data.participantId && parsed.data.participantId !== participantId) {
-        console.warn('[api:flutter/events/quiz/submit] body participantId ignored', {
-            claimed: parsed.data.participantId,
-            session: participantId,
-        });
+    let participantId;
+
+    if (strict) {
+        const auth = await requireEventUser(req);
+        if (!auth.ok) return auth.response;
+
+        // The identity is the session's. A body that disagrees is a client bug
+        // worth seeing in the logs, not a reason to throw away a quiz the
+        // participant has already sat through.
+        participantId = auth.email;
+        if (parsed.data.participantId && parsed.data.participantId !== participantId) {
+            console.warn('[api:flutter/events/quiz/submit] body participantId ignored', {
+                claimed: parsed.data.participantId,
+                session: participantId,
+            });
+        }
+    } else {
+        participantId = parsed.data.participantId;
+        if (!participantId) return badRequest('participantId is required.');
     }
 
     try {
@@ -65,7 +83,10 @@ export async function POST(req) {
 
         const quiz = activity.quiz ?? {};
         const questions = quiz.questions ?? [];
-        const isTeamScope = quiz.scope === 'team';
+        // Only v2 can be trusted to say who is submitting, so only v2 scores
+        // by team. A v1 client against a team-scoped quiz still submits — it is
+        // simply scored as an individual, which is what it has always done.
+        const isTeamScope = strict && quiz.scope === 'team';
 
         const team = isTeamScope
             ? await resolveParticipantTeam(activity.eventId, participantId)
@@ -86,7 +107,7 @@ export async function POST(req) {
                 : { activityId, participantId },
         ).lean();
 
-        if (existing && !quiz.allowRetake) {
+        if (existing && strict && !quiz.allowRetake) {
             const mine = existing.participantId === participantId;
             return conflict(
                 mine
@@ -219,19 +240,30 @@ function grade(questions, answers) {
 /**
  * GET /api/flutter/events/quiz/submit?activityId=[id]
  *
- * Restore a result when the app reopens. The participant is the session's — the
- * old `participantId` query parameter let anyone read anyone else's attempt,
- * correct answers included, for any activity id they could guess.
+ * Restore a result when the app reopens.
+ *
+ * Under v2 the participant is the session's. The v1 `participantId` query
+ * parameter let anyone read anyone else's attempt — correct answers included —
+ * for any activity id they could guess, and it survives only until the deployed
+ * client stops using it.
  */
 export async function GET(req) {
-    const auth = await requireEventUser(req);
-    if (!auth.ok) return auth.response;
-
     const { searchParams } = new URL(req.url);
+    const strict = Number(searchParams.get('v')) >= 2;
     const activityId = searchParams.get('activityId');
 
     const invalid = invalidIdResponse(activityId, 'activityId');
     if (invalid) return invalid;
+
+    let viewer;
+    if (strict) {
+        const auth = await requireEventUser(req);
+        if (!auth.ok) return auth.response;
+        viewer = auth.email;
+    } else {
+        viewer = searchParams.get('participantId');
+        if (!viewer) return badRequest('participantId is required.');
+    }
 
     try {
         await connectDB();
@@ -240,15 +272,15 @@ export async function GET(req) {
             .select('eventId quiz.scope').lean();
         if (!activity) return notFound('Quiz activity not found.');
 
-        const isTeamScope = activity.quiz?.scope === 'team';
+        const isTeamScope = strict && activity.quiz?.scope === 'team';
         const team = isTeamScope
-            ? await resolveParticipantTeam(activity.eventId, auth.email)
+            ? await resolveParticipantTeam(activity.eventId, viewer)
             : { teamId: null };
 
         const submission = await QuizSubmission.findOne(
             isTeamScope && team.teamId
                 ? { activityId, teamKey: team.teamId }
-                : { activityId, participantId: auth.email },
+                : { activityId, participantId: viewer },
         ).lean();
 
         if (!submission) return NextResponse.json({ success: true, submitted: false });
