@@ -186,7 +186,11 @@ const EventActivitySchema = new mongoose.Schema({
         url: { type: String },
         points: { type: Number, default: 200 },
         durationMinutes: { type: Number, default: 20 },
-        secretKey: { type: String }
+        secretKey: { type: String },
+        // Team id -> score, written only by the signed external-score callback.
+        // Declared here as well as in the admin app: without it, strict mode
+        // strips the `$set` and a correctly signed score is silently not saved.
+        scores: { type: Map, of: Number, default: undefined }
     },
     announcement: {
         message: { type: String },

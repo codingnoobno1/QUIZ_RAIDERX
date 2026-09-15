@@ -58,7 +58,16 @@ const EventRegistrationSchema = new mongoose.Schema({
         enrollmentNumber: String,
         semester: String,
         inviteStatus: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
-        role: { type: String, enum: ['leader', 'member'], default: 'member' }
+        role: { type: String, enum: ['leader', 'member'], default: 'member' },
+        // Per-member pass and door log, written by the admin API's pass route.
+        // Kept in step with the admin app's schema: a field one copy of this
+        // model does not declare is a field that can disappear on a save.
+        passGenerated: { type: Boolean, default: false },
+        passUrl: { type: String },
+        entryTime: { type: Date },
+        exitTime: { type: Date },
+        entryCount: { type: Number, default: 0 },
+        exitCount: { type: Number, default: 0 }
     }],
     status: {
         type: String,

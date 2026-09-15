@@ -33,9 +33,12 @@ export const isEmail = (value) => typeof value === 'string' && EMAIL.test(value.
 // ── Responses ────────────────────────────────────────────────────────────────
 
 export const badRequest = (error, extra = {}) => NextResponse.json({ error, ...extra }, { status: 400 });
-export const unauthorized = (error = 'Sign in to continue.') => NextResponse.json({ error }, { status: 401 });
-export const forbidden = (error = 'You do not have permission to do that.') => NextResponse.json({ error }, { status: 403 });
-export const notFound = (error = 'Not found') => NextResponse.json({ error }, { status: 404 });
+// Every response helper takes `extra`. `forbidden` and `notFound` used not to,
+// so a machine-readable `code` passed to them (NOT_YOUR_TURN, NOT_LEADER) was
+// dropped without a word, and clients that branch on the code never saw one.
+export const unauthorized = (error = 'Sign in to continue.', extra = {}) => NextResponse.json({ error, ...extra }, { status: 401 });
+export const forbidden = (error = 'You do not have permission to do that.', extra = {}) => NextResponse.json({ error, ...extra }, { status: 403 });
+export const notFound = (error = 'Not found', extra = {}) => NextResponse.json({ error, ...extra }, { status: 404 });
 export const conflict = (error, extra = {}) => NextResponse.json({ error, ...extra }, { status: 409 });
 
 /**

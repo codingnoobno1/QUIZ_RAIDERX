@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import Quiz from '@/models/Quiz';
+import { requireAdmin } from '@/lib/apiGuards';
 
-export async function GET() {
+/**
+ * GET /api/admin/quizzes — quiz titles for the admin list.
+ *
+ * Admin-guarded like every other route under /api/admin. It only ever exposed
+ * titles, not questions, but an admin path that answers anonymous callers
+ * invites the next field added to that `.select()` to leak.
+ */
+export async function GET(req) {
+    const auth = await requireAdmin(req);
+    if (!auth.ok) return auth.response;
+
     await connectDB();
     try {
         const quizzes = await Quiz.find({})

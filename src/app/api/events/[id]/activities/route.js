@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import EventActivity from '@/models/EventActivity';
+import { startActivity, stopActivity } from '@/lib/live/activities';
 import {
   requireAdmin,
   readJson,
@@ -22,14 +23,6 @@ import {
  * GET   -> every activity for this event (admin sees drafts too)
  * POST  -> { activityId, action: 'start' | 'stop' | 'reset' }
  */
-
-/** One event runs one thing at a time; the status poll assumes exactly that. */
-async function stopOthers(eventId, exceptId) {
-  await EventActivity.updateMany(
-    { eventId, status: 'active', ...(exceptId ? { _id: { $ne: exceptId } } : {}) },
-    { $set: { status: 'completed' } },
-  );
-}
 
 export async function GET(req, { params }) {
   const { id } = await params;
@@ -100,26 +93,13 @@ export async function POST(req, { params }) {
         return conflict('That activity is already running.', { code: 'ALREADY_ACTIVE' });
       }
 
-      // Starting one thing stops whatever else was running, so the room is
-      // never shown two live activities by a poll that returns findOne().
-      await stopOthers(id, activity._id);
-
-      activity.status = 'active';
-      activity.activatedAt = new Date();
-
-      // A KBC show always re-enters at the lobby: restarting mid-hot-seat with
-      // a stale contestant and a burnt lifeline would be worse than restarting
-      // clean.
-      if (activity.quiz?.quizType === 'kbc') {
-        activity.quiz.phase = 'lobby';
-        activity.quiz.activeContestant = undefined;
-        activity.quiz.answerState = { locked: false, lockedOption: null, lockedAt: null };
-        activity.quiz.audiencePoll = { status: 'idle', resultsVisible: false, questionIndex: null };
-        activity.quiz.timer = { startedAt: null, endsAt: null, durationSeconds: null };
-      }
+      // Starting one thing stops whatever else was running, and clears live
+      // state left over from a previous run. The rules live in one module so
+      // the admin API's `activate` cannot quietly disagree with this one.
+      await startActivity(activity);
     }
 
-    if (action === 'stop') activity.status = 'completed';
+    if (action === 'stop') stopActivity(activity);
 
     if (action === 'reset') {
       activity.status = 'inactive';
