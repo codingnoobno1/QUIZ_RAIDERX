@@ -289,7 +289,7 @@ const emptyTeam = () => ({
  * those the registrant is the leader by construction — they are the person who
  * created the entry and invited everyone else.
  */
-function leaderEmailOf(reg) {
+export function leaderEmailOf(reg) {
     const explicit = String(reg?.leaderEmail ?? '').toLowerCase();
     if (explicit) return explicit;
     const registrant = String(reg?.email ?? '').toLowerCase();

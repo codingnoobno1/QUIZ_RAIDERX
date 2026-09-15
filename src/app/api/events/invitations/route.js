@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import EventRegistration from '@/models/EventRegistration';
+import { leaderEmailOf } from '@/lib/live/rounds';
 // Required for populate('eventId'): Mongoose resolves the ref by model name, and
 // a process that never imported Event throws MissingSchemaError instead.
 import Event from '@/models/Event';
@@ -44,13 +45,23 @@ export async function GET(req) {
         // ANY member has that email and ANY member is pending — not necessarily
         // the same one — so an already-accepted member kept seeing their
         // invitation as outstanding.
-        const invitations = await EventRegistration.find({
-            members: { $elemMatch: { email: auth.email, inviteStatus: 'pending' } },
-        })
-            .populate('eventId')
-            .lean();
+        const [invitations, seats] = await Promise.all([
+            EventRegistration.find({
+                members: { $elemMatch: { email: auth.email, inviteStatus: 'pending' } },
+            })
+                .populate('eventId')
+                .lean(),
+            EventRegistration.find({ participantEmails: auth.email }).select('eventId').lean(),
+        ]);
 
-        return NextResponse.json({ data: invitations }, { status: 200 });
+        // An invitation to an event where this person already holds a seat can
+        // never be accepted. Accepting now declines the rest automatically, but
+        // invitations left pending before that fix still exist — hide them here
+        // instead of rewriting other teams' rosters in a read.
+        const seatedAt = new Set(seats.map((s) => String(s.eventId)));
+        const open = invitations.filter((inv) => !seatedAt.has(String(inv.eventId?._id ?? inv.eventId)));
+
+        return NextResponse.json({ data: open }, { status: 200 });
     } catch (error) {
         return serverError(error, 'events/invitations/list');
     }
@@ -148,10 +159,41 @@ async function accept(registrationId, email) {
         return conflict('That invitation was just answered.', { code: 'ALREADY_ANSWERED' });
     }
 
+    const autoDeclined = await declineOtherInvites(updated.eventId, updated._id, email);
+
     return NextResponse.json(
-        { message: 'Invitation accepted', inviteStatus: 'accepted', data: updated },
+        { message: 'Invitation accepted', inviteStatus: 'accepted', autoDeclined, data: updated },
         { status: 200 },
     );
+}
+
+/**
+ * One person, one team, per event: once a seat is claimed, every other
+ * invitation for that event is answered on their behalf.
+ *
+ * Previously they stayed pending, so the invitee kept seeing offers they could
+ * no longer take, and accepting one failed with a seat conflict the moment they
+ * tried. Leaders of those teams now see a decline and can invite someone else.
+ *
+ * The seat is already claimed when this runs, so a failure here must not undo
+ * or fail the accept — the stale invites are hidden from the list regardless.
+ */
+async function declineOtherInvites(eventId, keepRegistrationId, email) {
+    try {
+        const result = await EventRegistration.updateMany(
+            {
+                eventId,
+                _id: { $ne: keepRegistrationId },
+                members: { $elemMatch: { email, inviteStatus: 'pending' } },
+            },
+            { $set: { 'members.$[m].inviteStatus': 'rejected' } },
+            { arrayFilters: [{ 'm.email': email, 'm.inviteStatus': 'pending' }] },
+        );
+        return result.modifiedCount ?? 0;
+    } catch (error) {
+        console.error('[api:events/invitations] auto-decline after accept failed', error);
+        return 0;
+    }
 }
 
 /**
@@ -216,13 +258,16 @@ export async function DELETE(req) {
         await connectDB();
 
         const registration = await EventRegistration.findById(registrationId)
-            .select('email members')
+            .select('email leaderEmail members')
             .lean();
 
         if (!registration) return notFound('That registration no longer exists.');
 
-        if ((registration.email ?? '').toLowerCase() !== auth.email) {
-            return forbidden('Only the team leader can withdraw an invitation.');
+        // `leaderEmail`, not the registrant. Checking `email` meant that after a
+        // leadership transfer the new leader could not withdraw invitations and
+        // the old leader still could, while the app's roster said the opposite.
+        if (leaderEmailOf(registration) !== auth.email) {
+            return forbidden('Only the team leader can withdraw an invitation.', { code: 'NOT_LEADER' });
         }
 
         const invite = (registration.members ?? []).find(

@@ -49,7 +49,9 @@ export default function TeamsPage() {
         {() =>
           teams.map((team) => {
             const event = eventFor(team.eventId);
-            const isLeader = (team.email ?? '').toLowerCase() === (user?.email ?? '').toLowerCase();
+            // From `leaderEmail`. Comparing against the registrant labelled the
+            // wrong person as leader for any team whose leadership was handed over.
+            const isLeader = team.isLedBy(user?.email);
             const accepted = team.members.filter((m) => m.inviteStatus === 'accepted').length + 1;
             const pending = team.members.filter((m) => m.inviteStatus === 'pending').length;
 
@@ -78,10 +80,23 @@ export default function TeamsPage() {
                 </Stack>
 
                 <Stack spacing={0.75} sx={{ mt: 2 }}>
-                  <MemberRow name={team.name} email={team.email} status="accepted" role="Leader" />
-                  {team.members.map((m) => (
-                    <MemberRow key={m.email} name={m.name || m.email} email={m.email} status={m.inviteStatus} />
-                  ))}
+                  <MemberRow
+                    name={team.name}
+                    email={team.email}
+                    status="accepted"
+                    role={team.isLedBy(team.email) ? 'Leader' : undefined}
+                  />
+                  {team.members
+                    .filter((m) => m.email.toLowerCase() !== team.email.toLowerCase())
+                    .map((m) => (
+                      <MemberRow
+                        key={m.email}
+                        name={m.name || m.email}
+                        email={m.email}
+                        status={m.inviteStatus}
+                        role={team.isLedBy(m.email) ? 'Leader' : undefined}
+                      />
+                    ))}
                 </Stack>
 
                 {event && (

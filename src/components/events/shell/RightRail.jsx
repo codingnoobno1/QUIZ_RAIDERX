@@ -56,10 +56,21 @@ export default function RightRail({ user }) {
                 </Stack>
 
                 <Stack spacing={0.5} sx={{ mt: 1.25 }}>
-                  <Member name={team.name} role="Leader" status="accepted" />
-                  {team.members.map((m) => (
-                    <Member key={m.email} name={m.name || m.email} status={m.inviteStatus} />
-                  ))}
+                  <Member
+                    name={team.name}
+                    role={team.isLedBy(team.email) ? 'Leader' : undefined}
+                    status="accepted"
+                  />
+                  {team.members
+                    .filter((m) => m.email.toLowerCase() !== team.email.toLowerCase())
+                    .map((m) => (
+                      <Member
+                        key={m.email}
+                        name={m.name || m.email}
+                        role={team.isLedBy(m.email) ? 'Leader' : undefined}
+                        status={m.inviteStatus}
+                      />
+                    ))}
                 </Stack>
               </Box>
             );

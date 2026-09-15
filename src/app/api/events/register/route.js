@@ -124,6 +124,10 @@ export async function POST(req) {
         if (isTeam) {
             registrationData.teamName = clean(teamName);
             registrationData.teamId = generateTeamId();
+            // Leadership is recorded, not inferred. Without this every new team
+            // relied on the registrant fallback, and a transfer was the only
+            // thing that ever wrote the field.
+            registrationData.leaderEmail = leaderEmail;
             registrationData.members = teamMembers.map((m) => ({
                 name: clean(m?.name),
                 email: normaliseEmail(m?.email),

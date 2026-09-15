@@ -177,10 +177,21 @@ export default function ActionPanel({ event, registration, onNavigate }) {
                   MEMBERS
                 </Typography>
                 <Stack spacing={0.75}>
-                  <MemberRow name={registration.name} role="Leader" status="accepted" />
-                  {registration.members.map((m) => (
-                    <MemberRow key={m.email} name={m.name || m.email} status={m.inviteStatus} />
-                  ))}
+                  <MemberRow
+                    name={registration.name}
+                    role={registration.isLedBy(registration.email) ? 'Leader' : undefined}
+                    status="accepted"
+                  />
+                  {registration.members
+                    .filter((m) => m.email.toLowerCase() !== registration.email.toLowerCase())
+                    .map((m) => (
+                      <MemberRow
+                        key={m.email}
+                        name={m.name || m.email}
+                        role={registration.isLedBy(m.email) ? 'Leader' : undefined}
+                        status={m.inviteStatus}
+                      />
+                    ))}
                 </Stack>
               </Box>
             )}

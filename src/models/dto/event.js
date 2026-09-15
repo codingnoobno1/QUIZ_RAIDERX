@@ -137,7 +137,12 @@ export function toRegistration(json) {
     enrollmentNumber: str(m?.enrollmentNumber),
     semester: str(m?.semester),
     inviteStatus: str(m?.inviteStatus, 'pending'),
+    role: str(m?.role, 'member'),
   }));
+
+  // Rows written before `leaderEmail` existed have no explicit owner; the
+  // registrant leads those by construction. Everywhere else, the field wins.
+  const leaderEmail = (str(json.leaderEmail) || str(json.email)).toLowerCase();
 
   return {
     id: id(json._id ?? json.id),
@@ -152,6 +157,8 @@ export function toRegistration(json) {
     enrollmentNumber: str(json.enrollmentNumber),
     semester: str(json.semester),
     members,
+    /** Who leads the team. Not necessarily `email`: leadership can be handed over. */
+    leaderEmail,
     status: str(json.status, 'pending'),
     entryTime: date(json.entryTime),
     exitTime: date(json.exitTime),
@@ -161,6 +168,10 @@ export function toRegistration(json) {
     // ── derived ──
     get isTeam() {
       return this.registrationType === 'team';
+    },
+    /** Does this address lead the team? Case-insensitive. */
+    isLedBy(email) {
+      return Boolean(email) && this.leaderEmail === String(email).toLowerCase();
     },
     /** What the QR encodes — teamId for a team, registration id for a solo. */
     get passId() {
