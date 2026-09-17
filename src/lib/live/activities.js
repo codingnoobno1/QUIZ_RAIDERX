@@ -80,7 +80,7 @@ const idleRound = (questionIndex) => ({
 const EDITABLE = {
     quiz: [
         'quizType', 'questions', 'timePerQuestion', 'scoring', 'shuffle',
-        'autoAdvance', 'maxParticipants', 'scope', 'allowRetake',
+        'autoAdvance', 'maxParticipants', 'scope', 'allowRetake', 'paper',
     ],
     voting: ['question', 'options', 'allowMultiple', 'showLiveResults', 'votingDurationSeconds'],
     hunt: ['checkpoints', 'ordered'],
@@ -88,7 +88,7 @@ const EDITABLE = {
     announcement: ['message', 'displaySeconds'],
 };
 
-const QUESTION_FIELDS = ['text', 'options', 'correctAnswer', 'points', 'imageUrl'];
+const QUESTION_FIELDS = ['text', 'options', 'correctAnswer', 'difficulty', 'points', 'imageUrl'];
 const CHECKPOINT_FIELDS = [
     'checkpointId', 'hint', 'location', 'challengeType', 'quizRef', 'externalUrl', 'points', 'order',
 ];

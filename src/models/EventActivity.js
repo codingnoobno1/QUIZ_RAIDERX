@@ -4,6 +4,13 @@ const QuestionSchema = new mongoose.Schema({
     text: { type: String, required: true },
     options: [{ type: String }],
     correctAnswer: { type: String, required: true },
+    /**
+     * What a generated paper draws on, and what decides the question's value
+     * when the paper defines a points table. Questions written before this
+     * existed count as medium.
+     */
+    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium', index: true },
+    /** Fallback value, used when no paper points table applies. */
     points: { type: Number, default: 10 },
     imageUrl: { type: String }
 }, { _id: true });
@@ -65,6 +72,30 @@ const EventActivitySchema = new mongoose.Schema({
          * not a contest.
          */
         allowRetake: { type: Boolean, default: false },
+
+        // ── Generated papers (Round 2) ───────────────────────────────────
+        //
+        // With `enabled`, the questions on this activity become a bank and each
+        // team sits its own draw from it: `counts` per difficulty, shuffled
+        // question and option order, worth `points` by difficulty, inside one
+        // `durationMinutes` window. Which questions a team was dealt is stored
+        // on a QuizPaper, so the same team always sees the same paper.
+        paper: {
+            enabled: { type: Boolean, default: false },
+            counts: {
+                easy: { type: Number, default: 8 },
+                medium: { type: Number, default: 10 },
+                hard: { type: Number, default: 5 },
+            },
+            points: {
+                easy: { type: Number, default: 5 },
+                medium: { type: Number, default: 11 },
+                hard: { type: Number, default: 20 },
+            },
+            durationMinutes: { type: Number, default: 30 },
+            shuffleQuestions: { type: Boolean, default: true },
+            shuffleOptions: { type: Boolean, default: true },
+        },
 
         // ── Host-paced rounds (custom_live) ──────────────────────────────
         //
