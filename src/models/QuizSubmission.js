@@ -12,7 +12,9 @@ const AnswerSchema = new mongoose.Schema({
     selectedOption: { type: String },
     correctAnswer: { type: String },
     isCorrect: { type: Boolean, default: false },
-    pointsAwarded: { type: Number, default: 0 }
+    pointsAwarded: { type: Number, default: 0 },
+    /** A power question, earned by submitting early. */
+    isPower: { type: Boolean, default: false }
 }, { _id: false });
 
 const QuizSubmissionSchema = new mongoose.Schema({

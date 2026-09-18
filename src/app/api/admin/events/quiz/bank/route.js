@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import EventActivity from '@/models/EventActivity';
 import QuizPaper from '@/models/QuizPaper';
-import { bankShortfalls, dealPaper, paperConfig, renderPaper, tally } from '@/lib/quiz/paper';
+import { bankShortfalls, dealPaper, inPool, paperConfig, renderPaper, tally } from '@/lib/quiz/paper';
 import { requireAdmin, invalidIdResponse, notFound, serverError } from '@/lib/apiGuards';
 
 /**
@@ -34,11 +34,12 @@ export async function GET(req) {
         const quiz = activity.quiz ?? {};
         const config = paperConfig(quiz);
         const questions = quiz.questions ?? [];
-        const shortfalls = bankShortfalls(questions, config.counts);
+        const shortfalls = bankShortfalls(questions, config.counts, config.power);
 
         const asked = Object.values(config.counts).reduce((a, b) => a + b, 0);
         const maxScore = Object.entries(config.counts)
             .reduce((sum, [d, n]) => sum + n * (config.points[d] ?? 0), 0);
+        const powerMax = config.power.enabled ? config.power.count * config.power.points : 0;
 
         const [issued, submitted] = await Promise.all([
             QuizPaper.countDocuments({ activityId }),
@@ -49,7 +50,16 @@ export async function GET(req) {
             activity: { id: String(activity._id), title: activity.title },
             enabled: Boolean(quiz.paper?.enabled),
             bankSize: questions.length,
-            available: tally(questions),
+            // Per pool: the regular bank is what papers draw on; power and
+            // tie-break questions are reserves that never appear on a paper.
+            available: tally(inPool(questions, 'regular')),
+            pools: {
+                regular: inPool(questions, 'regular').length,
+                power: inPool(questions, 'power').length,
+                tiebreak: inPool(questions, 'tiebreak').length,
+            },
+            power: config.power,
+            maxScoreWithPower: maxScore + powerMax,
             asks: config.counts,
             pointsPerDifficulty: config.points,
             questionsPerPaper: asked,

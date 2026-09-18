@@ -1,10 +1,8 @@
-import mongoose from 'mongoose';
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import EventActivity from '@/models/EventActivity';
-import LiveAnswer from '@/models/LiveAnswer';
-import QuizSubmission from '@/models/QuizSubmission';
 import { resolveParticipantTeam } from '@/lib/live/rounds';
+import { applyCut, rankActivity } from '@/lib/quiz/standings';
 import { requireEventUser, invalidIdResponse, notFound, serverError } from '@/lib/apiGuards';
 
 /**
@@ -16,13 +14,11 @@ import { requireEventUser, invalidIdResponse, notFound, serverError } from '@/li
  * rankings in a team round would publish who on each team answered, which is
  * exactly what team scope is meant to stop mattering.
  *
- * Two sources, because two kinds of quiz write two shapes:
- *   custom_live          → LiveAnswer, one document per answer
- *   rapid_fire/preloaded → QuizSubmission, one document per attempt
- *
- * Ranking is score first, then least accumulated time — so of two teams on the
- * same score, the one that answered faster is ahead. That time was measured
- * server-side at submit and cannot be improved by a client.
+ * Ranking comes from `lib/quiz/standings`, the same function the organiser's
+ * advancement screen uses, so a phone and the console cannot disagree about
+ * who came 6th. When the activity sets an advancement count, each row says
+ * whether it is currently going through — and once an organiser confirms the
+ * cut, the confirmed list wins over the live calculation.
  *
  * Safe to poll: it reads and never writes.
  */
@@ -38,31 +34,38 @@ export async function GET(req) {
         await connectDB();
 
         const activity = await EventActivity.findById(activityId)
-            .select('type eventId quiz.quizType quiz.scope quiz.questions.points')
+            .select('type eventId quiz.quizType quiz.scope quiz.advancement')
             .lean();
 
         if (!activity || activity.type !== 'quiz') return notFound('Quiz activity not found.');
 
         const isTeamScope = activity.quiz?.scope === 'team';
-        const rows = activity.quiz?.quizType === 'custom_live'
-            ? await fromLiveAnswers(activity._id, isTeamScope)
-            : await fromSubmissions(activity._id, isTeamScope);
+        const advancement = activity.quiz?.advancement ?? {};
+        const count = advancement.count ?? 0;
+        const confirmed = advancement.confirmed?.at ? new Set(advancement.confirmed.keys ?? []) : null;
 
-        // Ranked in memory rather than with $limit in the pipeline, because the
-        // caller's own position has to be findable even when it is not on the
-        // visible board. An activity is capped at `maxParticipants` (500 by
-        // default), so the full grouping is small.
-        rows.sort((a, b) => (b.score - a.score) || (a.totalElapsedMs - b.totalElapsedMs));
-        const ranked = rows.map((row, i) => ({ rank: i + 1, ...row }));
+        const { rankings, tieAtCut } = applyCut(await rankActivity(activity), count);
+        const final = confirmed
+            ? rankings.map((r) => ({ ...r, advancing: confirmed.has(r.key), tiedAtCut: false }))
+            : rankings;
 
         return NextResponse.json({
             success: true,
             data: {
                 activityId: String(activity._id),
                 scope: isTeamScope ? 'team' : 'individual',
-                totalEntrants: ranked.length,
-                rankings: ranked.slice(0, limit),
-                me: await findMe(req, activity, ranked, isTeamScope),
+                totalEntrants: final.length,
+                rankings: final.slice(0, limit),
+                advancement: count > 0
+                    ? {
+                        count,
+                        confirmed: Boolean(confirmed),
+                        // Only meaningful before confirmation; afterwards the
+                        // organiser has decided it.
+                        tieAtCut: confirmed ? false : tieAtCut.length > 0,
+                    }
+                    : null,
+                me: await findMe(req, activity, final, isTeamScope),
                 serverTime: new Date().toISOString(),
             },
         });
@@ -76,69 +79,6 @@ function clampLimit(raw) {
     const n = Number(raw);
     if (!Number.isFinite(n)) return 50;
     return Math.min(Math.max(Math.trunc(n), 1), 200);
-}
-
-async function fromLiveAnswers(activityId, isTeamScope) {
-    const grouped = await LiveAnswer.aggregate([
-        { $match: { activityId: new mongoose.Types.ObjectId(String(activityId)) } },
-        {
-            $group: {
-                _id: isTeamScope ? '$teamKey' : '$participantId',
-                score: { $sum: '$pointsAwarded' },
-                correct: { $sum: { $cond: ['$isCorrect', 1, 0] } },
-                answered: { $sum: 1 },
-                totalElapsedMs: { $sum: '$elapsedMs' },
-                displayName: { $first: isTeamScope ? '$teamName' : '$name' },
-                teamId: { $first: '$teamId' },
-                teamName: { $first: '$teamName' },
-            },
-        },
-    ]);
-
-    return grouped
-        .filter((row) => row._id)
-        .map((row) => ({
-            key: String(row._id),
-            name: row.displayName || String(row._id),
-            teamId: row.teamId ?? null,
-            teamName: row.teamName ?? null,
-            score: row.score ?? 0,
-            correct: row.correct ?? 0,
-            answered: row.answered ?? 0,
-            totalElapsedMs: row.totalElapsedMs ?? 0,
-        }));
-}
-
-async function fromSubmissions(activityId, isTeamScope) {
-    const grouped = await QuizSubmission.aggregate([
-        { $match: { activityId: new mongoose.Types.ObjectId(String(activityId)) } },
-        {
-            $group: {
-                _id: isTeamScope ? '$teamId' : '$participantId',
-                // One submission per entrant is the intent, enforced by the
-                // unique index. $max is the safety net for rows written before
-                // that index existed.
-                score: { $max: '$score' },
-                correct: { $max: '$correctCount' },
-                answered: { $max: '$totalQuestions' },
-                totalElapsedMs: { $min: { $multiply: [{ $ifNull: ['$timeTakenSeconds', 0] }, 1000] } },
-                teamName: { $first: '$teamName' },
-            },
-        },
-    ]);
-
-    return grouped
-        .filter((row) => row._id)
-        .map((row) => ({
-            key: String(row._id),
-            name: (isTeamScope ? row.teamName : null) || String(row._id),
-            teamId: isTeamScope ? String(row._id) : null,
-            teamName: row.teamName ?? null,
-            score: row.score ?? 0,
-            correct: row.correct ?? 0,
-            answered: row.answered ?? 0,
-            totalElapsedMs: row.totalElapsedMs ?? 0,
-        }));
 }
 
 /**

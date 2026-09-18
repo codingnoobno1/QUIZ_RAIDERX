@@ -10,6 +10,13 @@ const QuestionSchema = new mongoose.Schema({
      * existed count as medium.
      */
     difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium', index: true },
+    /**
+     * Which draw a question belongs to. `regular` questions make up papers;
+     * `power` questions are dealt only to teams that submit early; `tiebreak`
+     * questions are held back for resolving ties. Kept apart so a reserve
+     * question can never turn up on someone's ordinary paper.
+     */
+    pool: { type: String, enum: ['regular', 'power', 'tiebreak'], default: 'regular' },
     /** Fallback value, used when no paper points table applies. */
     points: { type: Number, default: 10 },
     imageUrl: { type: String }
@@ -95,6 +102,34 @@ const EventActivitySchema = new mongoose.Schema({
             durationMinutes: { type: Number, default: 30 },
             shuffleQuestions: { type: Boolean, default: true },
             shuffleOptions: { type: Boolean, default: true },
+
+            /**
+             * Power questions: a reward for finishing early. A team that submits
+             * its regular paper within `cutoffMinutes` of opening it is dealt
+             * `count` questions from the power pool, each worth `points`, to
+             * answer inside the time it has left.
+             */
+            power: {
+                enabled: { type: Boolean, default: false },
+                count: { type: Number, default: 2 },
+                points: { type: Number, default: 25 },
+                cutoffMinutes: { type: Number, default: 25 },
+            },
+        },
+
+        /**
+         * How many entrants go through to the next round. The cut is computed
+         * from the board; `confirmed` freezes it once an organiser signs it off,
+         * so a late re-grade cannot quietly change who advanced.
+         */
+        advancement: {
+            count: { type: Number, default: 0 },
+            confirmed: {
+                keys: [{ type: String }],
+                names: [{ type: String }],
+                at: { type: Date, default: null },
+                by: { type: String, default: null },
+            },
         },
 
         // ── Host-paced rounds (custom_live) ──────────────────────────────

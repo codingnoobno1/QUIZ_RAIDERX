@@ -75,6 +75,12 @@ export function paperConfig(quiz) {
         durationMinutes: p.durationMinutes ?? PAPER_DEFAULTS.durationMinutes,
         shuffleQuestions: p.shuffleQuestions !== false,
         shuffleOptions: p.shuffleOptions !== false,
+        power: {
+            enabled: Boolean(p.power?.enabled),
+            count: p.power?.count ?? 2,
+            points: p.power?.points ?? 25,
+            cutoffMinutes: p.power?.cutoffMinutes ?? 25,
+        },
     };
 }
 
@@ -85,11 +91,17 @@ export function paperConfig(quiz) {
  * worst kind: a team sitting down to a paper that is short of hard questions,
  * discovered at the moment they open it.
  */
-export function bankShortfalls(questions, counts) {
-    const have = tally(questions);
-    return DIFFICULTIES
+export function bankShortfalls(questions, counts, power) {
+    const have = tally(inPool(questions, 'regular'));
+    const rows = DIFFICULTIES
         .map((d) => ({ difficulty: d, need: counts[d] ?? 0, have: have[d] ?? 0 }))
         .filter((row) => row.have < row.need);
+
+    if (power?.enabled) {
+        const powerHave = inPool(questions, 'power').length;
+        if (powerHave < power.count) rows.push({ pool: 'power', need: power.count, have: powerHave });
+    }
+    return rows;
 }
 
 export function tally(questions) {
@@ -101,6 +113,11 @@ export function tally(questions) {
 /** Questions written before difficulty existed count as medium. */
 export const difficultyOf = (q) =>
     DIFFICULTIES.includes(q?.difficulty) ? q.difficulty : 'medium';
+
+/** Questions written before pools existed are regular. */
+export const poolOf = (q) => (q?.pool === 'power' || q?.pool === 'tiebreak' ? q.pool : 'regular');
+
+export const inPool = (questions, pool) => (questions ?? []).filter((q) => poolOf(q) === pool);
 
 /**
  * What a question is worth.
@@ -132,7 +149,9 @@ export function dealPaper({ questions, config, seed }) {
     const rand = seededRandom(seed);
     const byDifficulty = { easy: [], medium: [], hard: [] };
 
-    for (const q of questions ?? []) byDifficulty[difficultyOf(q)].push(q);
+    // The regular pool only. Power and tie-break questions are held back for
+    // their own draws, so a reserve question cannot surface on an ordinary paper.
+    for (const q of inPool(questions, 'regular')) byDifficulty[difficultyOf(q)].push(q);
 
     let picked = [];
     for (const difficulty of DIFFICULTIES) {
@@ -157,14 +176,55 @@ export function dealPaper({ questions, config, seed }) {
     };
 }
 
+/**
+ * Deal the power questions for an early finisher.
+ *
+ * Seeded from the paper's own seed plus a suffix, so the power draw is as
+ * reproducible as the regular one and independent of it.
+ */
+export function dealPower({ questions, config, seed }) {
+    const rand = seededRandom(`${seed}:power`);
+    const pool = shuffled(inPool(questions, 'power'), rand).slice(0, config.power.count);
+
+    return pool.map((q) => ({
+        questionId: String(q._id),
+        difficulty: difficultyOf(q),
+        points: config.power.points,
+        optionOrder: config.shuffleOptions
+            ? shuffled(q.options.map((_, i) => i), rand)
+            : q.options.map((_, i) => i),
+    }));
+}
+
+/**
+ * Whether this paper can still earn its power questions, and until when.
+ * The unlock deadline is measured from when the paper was opened.
+ */
+export function powerStatus(paper, config, now = new Date()) {
+    if (!config.power.enabled) return { enabled: false };
+
+    const unlockBy = new Date(new Date(paper.startedAt).getTime() + config.power.cutoffMinutes * 60000);
+    const unlocked = Boolean(paper.regularSubmittedAt) && (paper.powerItems?.length ?? 0) > 0;
+
+    return {
+        enabled: true,
+        count: config.power.count,
+        pointsEach: config.power.points,
+        unlockBy,
+        unlocked,
+        stillEligible: !paper.regularSubmittedAt && !paper.submittedAt && now <= unlockBy,
+        missed: !unlocked && (Boolean(paper.submittedAt) || now > unlockBy),
+    };
+}
+
 // ── Presentation ─────────────────────────────────────────────────────────────
 
 /**
  * The paper as the participant sees it: options in their dealt order, and no
  * answers. The client never receives `correctAnswer` for an open paper.
  */
-export function renderPaper(paper, questionsById) {
-    return (paper.items ?? [])
+export function renderPaper(paper, questionsById, which = 'items') {
+    return (paper[which] ?? [])
         .map((item, index) => {
             const q = questionsById.get(String(item.questionId));
             if (!q) return null;
@@ -195,8 +255,15 @@ export function gradePaper(paper, questionsById) {
     let score = 0;
     let correctCount = 0;
     let totalPossible = 0;
+    let regularScore = 0;
+    let powerScore = 0;
 
-    const answers = (paper.items ?? []).map((item) => {
+    const tagged = [
+        ...(paper.items ?? []).map((item) => ({ item, isPower: false })),
+        ...(paper.powerItems ?? []).map((item) => ({ item, isPower: true })),
+    ];
+
+    const answers = tagged.map(({ item, isPower }) => {
         const q = questionsById.get(String(item.questionId));
         const selected = saved.get(String(item.questionId)) ?? null;
         const isCorrect = Boolean(selected) && selected === q?.correctAnswer;
@@ -206,6 +273,8 @@ export function gradePaper(paper, questionsById) {
         if (isCorrect) {
             score += pointsAwarded;
             correctCount += 1;
+            if (isPower) powerScore += pointsAwarded;
+            else regularScore += pointsAwarded;
         }
 
         return {
@@ -215,15 +284,18 @@ export function gradePaper(paper, questionsById) {
             correctAnswer: q?.correctAnswer ?? '',
             isCorrect,
             pointsAwarded,
+            isPower,
         };
     });
 
     return {
         answers,
         score,
+        regularScore,
+        powerScore,
         correctCount,
         totalPossible,
-        totalQuestions: paper.items?.length ?? 0,
+        totalQuestions: tagged.length,
         percentage: totalPossible > 0 ? Math.round((score / totalPossible) * 100) : 0,
     };
 }
@@ -244,8 +316,9 @@ export function answerMap(paper) {
  */
 export function paperState(paper, now = new Date()) {
     if (paper?.submittedAt) return 'submitted';
-    if (!paper?.endsAt) return 'open';
-    return now.getTime() > new Date(paper.endsAt).getTime() + GRACE_MS ? 'closed' : 'open';
+    if (paper?.endsAt && now.getTime() > new Date(paper.endsAt).getTime() + GRACE_MS) return 'closed';
+    if (paper?.regularSubmittedAt) return 'power';
+    return 'open';
 }
 
 export const remainingMs = (paper, now = new Date()) =>

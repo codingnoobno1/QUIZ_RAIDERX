@@ -148,7 +148,23 @@ export async function GET(req) {
                 // rapid_fire / preloaded: the pack. v1 carries the answers for
                 // local grading (see the version note above); v2 does not, and
                 // those clients read their score from the submit response.
-                questions: q.quizType !== 'custom_live'
+                // A generated-paper quiz sends no questions here at all. Its
+                // list is the whole bank — 60 questions, every reserve included
+                // — and each team is meant to see only its own 23, dealt by the
+                // paper endpoint. The flag tells the client to go there.
+                paper: q.paper?.enabled
+                    ? {
+                        enabled: true,
+                        durationMinutes: q.paper.durationMinutes ?? 30,
+                        questionsPerPaper: (q.paper.counts?.easy ?? 8)
+                            + (q.paper.counts?.medium ?? 10)
+                            + (q.paper.counts?.hard ?? 5),
+                        power: q.paper.power?.enabled
+                            ? { count: q.paper.power.count ?? 2, pointsEach: q.paper.power.points ?? 25 }
+                            : null,
+                    }
+                    : null,
+                questions: q.quizType !== 'custom_live' && !q.paper?.enabled
                     ? questions.map(qu => ({
                         _id: qu._id,
                         text: qu.text,

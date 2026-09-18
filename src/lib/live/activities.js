@@ -80,7 +80,7 @@ const idleRound = (questionIndex) => ({
 const EDITABLE = {
     quiz: [
         'quizType', 'questions', 'timePerQuestion', 'scoring', 'shuffle',
-        'autoAdvance', 'maxParticipants', 'scope', 'allowRetake', 'paper',
+        'autoAdvance', 'maxParticipants', 'scope', 'allowRetake', 'paper', 'advancement',
     ],
     voting: ['question', 'options', 'allowMultiple', 'showLiveResults', 'votingDurationSeconds'],
     hunt: ['checkpoints', 'ordered'],
@@ -88,7 +88,7 @@ const EDITABLE = {
     announcement: ['message', 'displaySeconds'],
 };
 
-const QUESTION_FIELDS = ['text', 'options', 'correctAnswer', 'difficulty', 'points', 'imageUrl'];
+const QUESTION_FIELDS = ['text', 'options', 'correctAnswer', 'difficulty', 'pool', 'points', 'imageUrl'];
 const CHECKPOINT_FIELDS = [
     'checkpointId', 'hint', 'location', 'challengeType', 'quizRef', 'externalUrl', 'points', 'order',
 ];
@@ -115,6 +115,11 @@ export function sectionFor(type, body) {
     if (type === 'quiz' && Array.isArray(section.questions)) {
         section.questions = section.questions.map((q) => pick(q, [...QUESTION_FIELDS, '_id']));
     }
+    // Only the size of the cut is configuration. Who actually advanced is
+    // written by the sign-off endpoint alone, so a config edit cannot rewrite it.
+    if (type === 'quiz' && section.advancement !== undefined) {
+        section.advancement = { count: Math.max(0, Number(section.advancement?.count) || 0) };
+    }
     if (type === 'hunt' && Array.isArray(section.checkpoints)) {
         section.checkpoints = section.checkpoints.map((c, i) => ({
             ...pick(c, [...CHECKPOINT_FIELDS, '_id']),
@@ -140,6 +145,11 @@ export function updatePaths(type, body) {
 
     const section = sectionFor(type, body);
     for (const [key, value] of Object.entries(section)) {
+        if (type === 'quiz' && key === 'advancement') {
+            // A dotted path, so the confirmed list beside it survives the edit.
+            $set['quiz.advancement.count'] = value.count;
+            continue;
+        }
         $set[`${type}.${key}`] = value;
     }
 

@@ -8,9 +8,11 @@ import {
     GRACE_MS,
     bankShortfalls,
     dealPaper,
+    dealPower,
     gradePaper,
     paperConfig,
     paperState,
+    powerStatus,
     remainingMs,
     renderPaper,
 } from '@/lib/quiz/paper';
@@ -35,6 +37,11 @@ import {
  * Three things are the server's alone: which questions this team was dealt,
  * when their thirty minutes end, and whether an answer is right. The client
  * gets questions with options in their dealt order and never a correct answer.
+ *
+ * A paper has up to two stages. `open` is the regular paper. Submitting it
+ * before the power cutoff locks those answers and deals the power questions,
+ * moving the paper to `power` until the same deadline. Submitting after the
+ * cutoff, or with power questions switched off, finalises straight away.
  *
  * The deadline needs no scheduled job. A paper whose `endsAt` has passed is
  * closed to writes, and the next read finalises it from whatever was saved —
@@ -61,7 +68,7 @@ export async function GET(req) {
         let paper = await QuizPaper.findOne({ activityId, ownerKey: owner.key });
 
         if (!paper) {
-            const shortfalls = bankShortfalls(quiz.questions, config.counts);
+            const shortfalls = bankShortfalls(quiz.questions, config.counts, config.power);
             if (shortfalls.length) {
                 // Refused rather than dealt short. A team discovering mid-round
                 // that their paper has four hard questions instead of five has
@@ -79,10 +86,10 @@ export async function GET(req) {
         // rather than to whenever this read happened, so the score reaches the
         // board without anyone having to press submit.
         if (paperState(paper) === 'closed') {
-            paper = await finalise(paper, activity, quiz, config, new Date(paper.endsAt));
+            paper = await finalise(paper, activity, quiz, new Date(paper.endsAt));
         }
 
-        return NextResponse.json({ success: true, data: await present(paper, quiz, config) });
+        return NextResponse.json({ success: true, data: present(paper, quiz, config) });
     } catch (error) {
         return serverError(error, 'flutter/events/quiz/paper/read');
     }
@@ -92,7 +99,9 @@ export async function GET(req) {
  * PATCH { activityId, answers: { [questionId]: option } }
  *
  * Merges rather than replaces, so a save that crosses another one cannot wipe
- * an answer, and a dropped request costs at most one selection.
+ * an answer, and a dropped request costs at most one selection. Only questions
+ * in the paper's current stage are writable: once the regular paper is handed
+ * in for power questions, those answers are final.
  */
 export async function PATCH(req) {
     const auth = await requireEventUser(req);
@@ -111,32 +120,36 @@ export async function PATCH(req) {
 
         const context = await load(activityId, auth);
         if (context.response) return context.response;
-        const { quiz, config, owner } = context;
+        const { quiz, owner } = context;
 
         const paper = await QuizPaper.findOne({ activityId, ownerKey: owner.key });
         if (!paper) return notFound('Open the paper before answering it.', { code: 'NO_PAPER' });
 
         const state = paperState(paper);
-        if (state !== 'open') {
-            return conflict(
-                state === 'submitted' ? 'This paper has been submitted.' : 'Time is up for this paper.',
-                { code: state === 'submitted' ? 'ALREADY_SUBMITTED' : 'TOO_LATE' },
-            );
-        }
+        if (state === 'submitted') return conflict('This paper has been submitted.', { code: 'ALREADY_SUBMITTED' });
+        if (state === 'closed') return conflict('Time is up for this paper.', { code: 'TOO_LATE' });
 
-        const onPaper = new Map(paper.items.map((i) => [String(i.questionId), i]));
+        const writable = state === 'power' ? paper.powerItems : paper.items;
+        const onStage = new Set(writable.map((i) => String(i.questionId)));
         const optionsById = new Map((quiz.questions ?? []).map((q) => [String(q._id), q.options ?? []]));
         const $set = {};
 
         for (const [questionId, option] of Object.entries(answers)) {
-            // Only questions on this entrant's own paper, and only options the
-            // question actually offers.
-            if (!onPaper.has(String(questionId))) continue;
+            // Only questions in this stage of this entrant's own paper, and only
+            // options the question actually offers.
+            if (!onStage.has(String(questionId))) continue;
             if (option !== null && !optionsById.get(String(questionId))?.includes(option)) continue;
             $set[`answers.${questionId}`] = option;
         }
 
-        if (!Object.keys($set).length) return badRequest('No answer matched this paper.');
+        if (!Object.keys($set).length) {
+            return badRequest(
+                state === 'power'
+                    ? 'Your regular answers are locked; only the power questions can be answered now.'
+                    : 'No answer matched this paper.',
+                { code: 'NOT_ON_PAPER' },
+            );
+        }
 
         const saved = await QuizPaper.findOneAndUpdate(
             { _id: paper._id, submittedAt: null },
@@ -157,7 +170,7 @@ export async function PATCH(req) {
     }
 }
 
-/** POST { activityId } — submit now. */
+/** POST { activityId } — hand in the current stage. */
 export async function POST(req) {
     const auth = await requireEventUser(req);
     if (!auth.ok) return auth.response;
@@ -180,25 +193,31 @@ export async function POST(req) {
         if (!paper) return notFound('There is no paper to submit.', { code: 'NO_PAPER' });
 
         if (paper.submittedAt) {
-            return NextResponse.json({
-                success: true,
-                alreadySubmitted: true,
-                data: await present(paper, quiz, config),
-            });
+            return NextResponse.json({ success: true, alreadySubmitted: true, data: present(paper, quiz, config) });
         }
 
         const now = new Date();
+
         if (now.getTime() > new Date(paper.endsAt).getTime() + GRACE_MS) {
             // Late, but not lost: finalise what was saved before the deadline.
-            const finalised = await finalise(paper, activity, quiz, config, new Date(paper.endsAt));
+            const finalised = await finalise(paper, activity, quiz, new Date(paper.endsAt));
             return conflict('Time was up, so the answers saved before the deadline were submitted.', {
                 code: 'TOO_LATE',
-                data: await present(finalised, quiz, config),
+                data: present(finalised, quiz, config),
             });
         }
 
-        const finalised = await finalise(paper, activity, quiz, config, now);
-        return NextResponse.json({ success: true, data: await present(finalised, quiz, config) });
+        // Regular paper handed in early enough: lock it and deal the power
+        // questions. Anything else ends the paper here.
+        if (!paper.regularSubmittedAt && powerStatus(paper, config, now).stillEligible) {
+            const unlocked = await unlockPower(paper, activity, quiz, config, now);
+            if (unlocked) {
+                return NextResponse.json({ success: true, powerUnlocked: true, data: present(unlocked, quiz, config) });
+            }
+        }
+
+        const finalised = await finalise(paper, activity, quiz, now);
+        return NextResponse.json({ success: true, data: present(finalised, quiz, config) });
     } catch (error) {
         return serverError(error, 'flutter/events/quiz/paper/submit');
     }
@@ -249,6 +268,8 @@ async function load(activityId, auth) {
     };
 }
 
+const seedOf = (activity, ownerKey) => `${activity._id}:${ownerKey}`;
+
 /**
  * Deal and store the paper.
  *
@@ -258,12 +279,7 @@ async function load(activityId, auth) {
  */
 async function issue({ activity, quiz, config, owner, email }) {
     const now = new Date();
-    const { items } = dealPaper({
-        questions: quiz.questions,
-        config,
-        seed: `${activity._id}:${owner.key}`,
-    });
-
+    const { items } = dealPaper({ questions: quiz.questions, config, seed: seedOf(activity, owner.key) });
     const durationSeconds = Math.max(1, Math.round(config.durationMinutes * 60));
 
     try {
@@ -289,13 +305,36 @@ async function issue({ activity, quiz, config, owner, email }) {
 }
 
 /**
+ * Lock the regular paper and deal the power questions.
+ *
+ * Conditional on the regular stage still being open, so two devices handing in
+ * at once cannot deal twice. Returns null if there is nothing to deal, and the
+ * caller finalises instead.
+ */
+async function unlockPower(paper, activity, quiz, config, now) {
+    const powerItems = dealPower({ questions: quiz.questions, config, seed: seedOf(activity, paper.ownerKey) });
+    if (powerItems.length < config.power.count) return null;
+
+    const byId = new Map((quiz.questions ?? []).map((q) => [String(q._id), q]));
+    const regular = gradePaper({ ...paper.toObject(), powerItems: [] }, byId);
+
+    const updated = await QuizPaper.findOneAndUpdate(
+        { _id: paper._id, regularSubmittedAt: null, submittedAt: null },
+        { $set: { regularSubmittedAt: now, powerItems, regularScore: regular.score } },
+        { new: true },
+    );
+
+    return updated ?? QuizPaper.findById(paper._id);
+}
+
+/**
  * Grade, stamp, and write a QuizSubmission.
  *
  * The submission is what every existing reader already understands — the
  * leaderboard, the reports, the one-attempt indexes — so a generated paper
  * lands on the same board as every other quiz without special cases.
  */
-async function finalise(paper, activity, quiz, config, at) {
+async function finalise(paper, activity, quiz, at) {
     const questionsById = new Map((quiz.questions ?? []).map((q) => [String(q._id), q]));
     const graded = gradePaper(paper, questionsById);
 
@@ -305,6 +344,8 @@ async function finalise(paper, activity, quiz, config, at) {
             $set: {
                 submittedAt: at,
                 score: graded.score,
+                regularScore: graded.regularScore,
+                powerScore: graded.powerScore,
                 correctCount: graded.correctCount,
                 totalPossible: graded.totalPossible,
             },
@@ -315,9 +356,12 @@ async function finalise(paper, activity, quiz, config, at) {
     // Someone else submitted in the gap; theirs stands.
     if (!stamped) return QuizPaper.findById(paper._id);
 
+    // Timed to when the regular paper went in, which is what early submission
+    // rewards and what ties break on. A power stage does not add to it.
+    const handedIn = paper.regularSubmittedAt ?? at;
     const timeTakenSeconds = Math.max(
         0,
-        Math.round((at.getTime() - new Date(paper.startedAt).getTime()) / 1000),
+        Math.round((new Date(handedIn).getTime() - new Date(paper.startedAt).getTime()) / 1000),
     );
 
     try {
@@ -353,10 +397,11 @@ async function finalise(paper, activity, quiz, config, at) {
  * Correct answers appear only once it is submitted — the same rule as the live
  * round: nothing that could tell a team what to pick while they can still pick.
  */
-async function present(paper, quiz, config) {
+function present(paper, quiz, config) {
     const questionsById = new Map((quiz.questions ?? []).map((q) => [String(q._id), q]));
     const state = paperState(paper);
-    const answers = paper.answers instanceof Map ? paper.answers : new Map();
+    const answers = paper.answers instanceof Map ? paper.answers : new Map(Object.entries(paper.answers ?? {}));
+    const regularPossible = paper.items?.reduce((sum, i) => sum + i.points, 0) ?? 0;
 
     const base = {
         paperId: String(paper._id),
@@ -369,13 +414,17 @@ async function present(paper, quiz, config) {
         scope: paper.scope,
         teamName: paper.teamName,
         totalQuestions: paper.items?.length ?? 0,
-        totalPossible: paper.items?.reduce((sum, i) => sum + i.points, 0) ?? 0,
-        answeredCount: answers.size,
+        totalPossible: regularPossible,
+        answeredCount: (paper.items ?? []).filter((i) => answers.has(String(i.questionId))).length,
         savedAnswers: Object.fromEntries(answers),
         questions: renderPaper(paper, questionsById),
-        // How long the client should wait before asking again. Tight while the
-        // clock runs so a reopened paper shows the right time left.
-        pollAfterMs: state === 'open' ? 15000 : 60000,
+        regularLocked: Boolean(paper.regularSubmittedAt),
+        power: {
+            ...powerStatus(paper, config),
+            questions: paper.powerItems?.length ? renderPaper(paper, questionsById, 'powerItems') : [],
+        },
+        // How long the client should wait before asking again.
+        pollAfterMs: state === 'open' || state === 'power' ? 15000 : 60000,
     };
 
     if (state !== 'submitted') return base;
@@ -385,6 +434,8 @@ async function present(paper, quiz, config) {
         ...base,
         submittedAt: paper.submittedAt,
         score: paper.score,
+        regularScore: paper.regularScore,
+        powerScore: paper.powerScore,
         correctCount: paper.correctCount,
         percentage: graded.percentage,
         result: graded.answers,

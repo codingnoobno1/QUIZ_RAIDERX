@@ -41,6 +41,16 @@ const QuizPaperSchema = new mongoose.Schema({
 
     items: [PaperItemSchema],
 
+    /**
+     * Power stage. Set when the regular paper is submitted before the cutoff:
+     * the regular answers lock, `powerItems` are dealt, and the paper stays open
+     * for them until the same `endsAt`.
+     */
+    regularSubmittedAt: { type: Date, default: null },
+    powerItems: [PaperItemSchema],
+    regularScore: { type: Number, default: 0 },
+    powerScore: { type: Number, default: 0 },
+
     /** The clock starts when the paper is first opened, not when the round does. */
     startedAt: { type: Date, required: true },
     endsAt: { type: Date, required: true },
