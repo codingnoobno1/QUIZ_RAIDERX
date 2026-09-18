@@ -108,7 +108,15 @@ export function useEventStatus(eventId, participantId, { fast = false } = {}) {
     queryKey: eventKeys.status(eventId, participantId),
     queryFn: ({ signal }) => eventRepository.getEventStatus({ eventId, participantId, signal }),
     enabled: Boolean(eventId),
-    refetchInterval: fast ? POLL.ACTIVITY_MS : POLL.LOBBY_MS,
+    // Inside an activity, poll at the cadence the server asks for — one second
+    // while a host-paced question is open. A fixed interval is how two laptops
+    // saw the same question seconds apart. Bounded, so a bad value cannot turn
+    // this into a hot loop or a stall.
+    refetchInterval: (query) => {
+      if (!fast) return POLL.LOBBY_MS;
+      const asked = query.state.data?.pollAfterMs;
+      return asked ? Math.min(Math.max(asked, 750), POLL.ACTIVITY_MS) : POLL.ACTIVITY_MS;
+    },
     refetchIntervalInBackground: false,
     // Keep the last good status on screen while a poll is in flight, so the
     // lobby never flickers back to "loading" every interval.
@@ -192,6 +200,43 @@ export function useSwitchActivity(eventId) {
       qc.invalidateQueries({ queryKey: eventKeys.detail(eventId) });
       qc.invalidateQueries({ queryKey: eventKeys.list() });
     },
+  });
+}
+
+/** This entrant's generated paper. Refetched rarely: the clock runs locally from `endsAt`. */
+export function usePaper(activityId, enabled = true) {
+  return useQuery({
+    queryKey: [...eventKeys.all, 'paper', activityId ?? null],
+    queryFn: ({ signal }) => eventRepository.getPaper({ activityId, signal }),
+    enabled: Boolean(activityId) && enabled,
+    retry: false,
+    refetchOnWindowFocus: true,
+    // A reopened tab re-reads the paper, so a deadline that passed while the
+    // laptop slept is finalised and shown rather than ticking on stale state.
+    refetchInterval: (query) => query.state.data?.data?.pollAfterMs ?? false,
+  });
+}
+
+export function useSavePaperAnswers(activityId) {
+  return useMutation({
+    mutationFn: (answers) => eventRepository.savePaperAnswers({ activityId, answers }),
+  });
+}
+
+export function useSubmitPaper(activityId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => eventRepository.submitPaper({ activityId }),
+    onSettled: () => qc.invalidateQueries({ queryKey: [...eventKeys.all, 'paper', activityId ?? null] }),
+  });
+}
+
+/** One answer to a host-opened question. The status poll carries the result. */
+export function useRoundAnswer(activityId, eventId, participantId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars) => eventRepository.submitRoundAnswer({ activityId, ...vars }),
+    onSettled: () => qc.invalidateQueries({ queryKey: eventKeys.status(eventId, participantId) }),
   });
 }
 

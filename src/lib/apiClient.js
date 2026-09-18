@@ -44,24 +44,37 @@ const MESSAGES = {
 };
 
 export class ApiError extends Error {
-  constructor({ message, status = null, type = ApiErrorType.UNKNOWN }) {
+  constructor({ message, status = null, type = ApiErrorType.UNKNOWN, code = null, data = null }) {
     super(message || MESSAGES[type]);
     this.name = 'ApiError';
     this.status = status;
     this.type = type;
+    /**
+     * The server's machine-readable reason (TOO_LATE, ALREADY_SUBMITTED,
+     * NOT_YOUR_TURN…). Refusals that look alike as sentences need different
+     * screens, and a status code alone cannot tell them apart.
+     */
+    this.code = code;
+    /** The full response body, for refusals that carry state (a submitted paper, say). */
+    this.data = data;
   }
 
   /** Prefer the server's own message when it sent one, else the typed default. */
   static async fromResponse(res) {
     const type = typeForStatus(res.status);
-    let serverMessage = null;
+    let body = null;
     try {
-      const body = await res.clone().json();
-      serverMessage = body?.message || body?.error || null;
+      body = await res.clone().json();
     } catch {
-      // Non-JSON body — fall through to the typed default.
+      // Not JSON — an HTML error page, or nothing. The typed default stands.
     }
-    return new ApiError({ message: serverMessage || MESSAGES[type], status: res.status, type });
+    return new ApiError({
+      message: body?.message || body?.error || null,
+      status: res.status,
+      type,
+      code: body?.code ?? null,
+      data: body,
+    });
   }
 
   get isRetryable() {

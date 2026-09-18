@@ -33,14 +33,20 @@ export const ACTIVITY_META = {
 
 export const metaFor = (type) => ACTIVITY_META[type] ?? { icon: LiveTvRoundedIcon, tone: color.brand, label: 'Activity' };
 
-export default function ActivityRenderer({ activity, participantId, eventId, onExit }) {
+export default function ActivityRenderer({ activity, participantId, eventId, serverTime, onExit }) {
   switch (activity.type) {
     case 'quiz':
       // KBC is a live show with roles, not a worksheet everyone fills in.
       return activity.quiz?.quizType === 'kbc' ? (
         <KbcActivity activity={activity} participantId={participantId} eventId={eventId} onExit={onExit} />
       ) : (
-        <QuizActivity activity={activity} participantId={participantId} onExit={onExit} />
+        <QuizActivity
+          activity={activity}
+          participantId={participantId}
+          eventId={eventId}
+          serverTime={serverTime}
+          onExit={onExit}
+        />
       );
     case 'voting':
       return <VotingActivity activity={activity} participantId={participantId} onExit={onExit} />;

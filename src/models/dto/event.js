@@ -241,15 +241,32 @@ export function toLiveActivity(json) {
             points: num(q.activeQuestion.points, 10),
           }
         : null,
-      /** rapid_fire / preloaded: full pack, graded locally then confirmed server-side. */
+      /**
+       * rapid_fire / preloaded: the question pack, without answers. The v2
+       * status payload withholds them and the server grades on submit; there is
+       * deliberately no `correctAnswer` here for a component to reach for.
+       */
       questions: list(q.questions).map((qu) => ({
         id: id(qu?._id ?? qu?.id),
         text: str(qu?.text, 'Question unavailable'),
         options: list(qu?.options).map((o) => str(o)),
-        correctAnswer: str(qu?.correctAnswer),
         points: num(qu?.points, 10),
         imageUrl: str(qu?.imageUrl) || null,
       })),
+      scope: str(q.scope, 'individual'),
+      /** Round 2: each team is dealt its own paper by the paper endpoint. */
+      paper: q.paper?.enabled
+        ? {
+            enabled: true,
+            durationMinutes: num(q.paper.durationMinutes, 30),
+            questionsPerPaper: num(q.paper.questionsPerPaper, 23),
+            power: q.paper.power
+              ? { count: num(q.paper.power.count, 2), pointsEach: num(q.paper.power.pointsEach, 25) }
+              : null,
+          }
+        : null,
+      /** custom_live: the server's round — deadline, targeting, answer state. */
+      liveRound: q.liveRound ? toLiveRound(q.liveRound) : null,
     };
   }
 
@@ -300,6 +317,42 @@ export function toLiveActivity(json) {
   return base;
 }
 
+/**
+ * The host-paced round, as the server describes it. Nothing here is computed on
+ * the client: whether this device may answer, how long is left, and whether the
+ * answer may be shown are all the server's.
+ */
+function toLiveRound(r) {
+  return {
+    instanceId: str(r.instanceId) || null,
+    questionIndex: num(r.questionIndex),
+    state: str(r.state, 'idle'),
+    endsAt: date(r.endsAt),
+    durationSeconds: num(r.durationSeconds),
+    scope: str(r.scope, 'individual'),
+    targeted: r.targeted !== false,
+    targetKind: str(r.targetKind, 'all'),
+    targetTeams: list(r.targetTeams).map((t) => ({
+      teamId: str(t?.teamId),
+      teamName: str(t?.teamName),
+      leaderName: str(t?.leaderName) || null,
+    })),
+    myTeamName: str(r.myTeamName) || null,
+    myTeamLeaderName: str(r.myTeamLeaderName) || null,
+    isTeamLeader: bool(r.isTeamLeader),
+    answered: bool(r.answered),
+    myOption: str(r.myOption) || null,
+    answeredBy: str(r.answeredBy) || null,
+    reveal: r.reveal
+      ? {
+          correctAnswer: str(r.reveal.correctAnswer) || null,
+          isCorrect: bool(r.reveal.isCorrect),
+          pointsAwarded: num(r.reveal.pointsAwarded),
+        }
+      : null,
+  };
+}
+
 /** The whole status envelope: { success, data: { activeActivity, onDuty, serverTime } } */
 export function toEventStatus(json) {
   const data = json?.data ?? json ?? {};
@@ -308,6 +361,8 @@ export function toEventStatus(json) {
     onDuty: bool(data.onDuty),
     activeActivity: data.activeActivity ? toLiveActivity(data.activeActivity) : null,
     serverTime: date(data.serverTime),
+    /** The server's requested cadence: tight while a question is open. */
+    pollAfterMs: num(data.pollAfterMs, 0) || null,
     get isLive() {
       return Boolean(this.activeActivity);
     },

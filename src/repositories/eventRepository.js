@@ -133,7 +133,7 @@ export const eventRepository = {
    * Polled; a 401 here must not sign the user out mid-event.
    */
   async getEventStatus({ eventId, participantId, signal }) {
-    const qs = new URLSearchParams({ eventId });
+    const qs = new URLSearchParams({ eventId, v: '2' });
     if (participantId) qs.set('participantId', participantId);
     return toEventStatus(
       await api.get(`/api/flutter/events/status?${qs}`, {
@@ -144,19 +144,54 @@ export const eventRepository = {
     );
   },
 
-  /** POST /api/flutter/events/quiz/submit — server grades and keeps the best score. */
+  /**
+   * POST /api/flutter/events/quiz/submit?v=2 — the server grades, from the
+   * session's identity, one attempt per entrant. v1 took the participant from
+   * this body and kept the best of unlimited retries.
+   */
   async submitQuiz({ activityId, participantId, answers, timeTakenSeconds }) {
-    return api.post('/api/flutter/events/quiz/submit', {
-      activityId,
-      participantId,
-      answers,
-      timeTakenSeconds,
-    });
+    return api.post(
+      '/api/flutter/events/quiz/submit?v=2',
+      { activityId, participantId, answers, timeTakenSeconds },
+      { signOutOn401: false, retries: 0 },
+    );
+  },
+
+  // ── Generated papers (Round 2) ────────────────────────────────────────────
+
+  /** GET — deal or re-open this entrant's paper. Idempotent: the same paper every time. */
+  async getPaper({ activityId, signal }) {
+    const qs = new URLSearchParams({ activityId });
+    return api.get(`/api/flutter/events/quiz/paper?${qs}`, { signal, signOutOn401: false, retries: 1 });
+  },
+
+  /** PATCH — save answers as they are chosen. Merges; never replaces. */
+  async savePaperAnswers({ activityId, answers }) {
+    return api.patch('/api/flutter/events/quiz/paper', { activityId, answers }, { signOutOn401: false });
+  },
+
+  /** POST — hand in the current stage (regular, or power). */
+  async submitPaper({ activityId }) {
+    return api.post('/api/flutter/events/quiz/paper', { activityId }, { signOutOn401: false, retries: 0 });
+  },
+
+  // ── Host-paced rounds ─────────────────────────────────────────────────────
+
+  /**
+   * POST /api/flutter/events/quiz/answer — one answer to one opened question.
+   * Distinct from `submitLiveAnswer`, which is the KBC show's endpoint.
+   */
+  async submitRoundAnswer({ activityId, instanceId, option }) {
+    return api.post(
+      '/api/flutter/events/quiz/answer',
+      { activityId, instanceId, option },
+      { signOutOn401: false, retries: 0 },
+    );
   },
 
   /** GET /api/flutter/events/quiz/submit — restore a previous attempt. */
   async getQuizSubmission({ activityId, participantId, signal }) {
-    const qs = new URLSearchParams({ activityId, participantId });
+    const qs = new URLSearchParams({ activityId, participantId, v: '2' });
     return api.get(`/api/flutter/events/quiz/submit?${qs}`, { signal, signOutOn401: false });
   },
 

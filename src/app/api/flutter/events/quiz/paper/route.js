@@ -394,8 +394,8 @@ async function finalise(paper, activity, quiz, at) {
 /**
  * The paper as the client may see it.
  *
- * Correct answers appear only once it is submitted — the same rule as the live
- * round: nothing that could tell a team what to pick while they can still pick.
+ * Never a correct answer, open or submitted: while the round runs, a finished
+ * team's answer key is still a live answer key for everyone else.
  */
 function present(paper, quiz, config) {
     const questionsById = new Map((quiz.questions ?? []).map((q) => [String(q._id), q]));
@@ -429,6 +429,11 @@ function present(paper, quiz, config) {
 
     if (state !== 'submitted') return base;
 
+    // Totals only. No per-question marks and no correct answers: other teams
+    // are still sitting papers that share questions with this one, and a team
+    // that finished early could read the answers out across the room. Even
+    // right/wrong per question gives that away. The breakdown belongs to the
+    // organiser's report, and to the participant once the round is over.
     const graded = gradePaper(paper, questionsById);
     return {
         ...base,
@@ -437,7 +442,7 @@ function present(paper, quiz, config) {
         regularScore: paper.regularScore,
         powerScore: paper.powerScore,
         correctCount: paper.correctCount,
+        totalPossible: graded.totalPossible,
         percentage: graded.percentage,
-        result: graded.answers,
     };
 }

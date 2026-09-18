@@ -84,6 +84,7 @@ export default function LobbyView({ event, participantId }) {
                 activity={activity}
                 participantId={participantId}
                 eventId={event.id}
+                serverTime={status?.serverTime}
                 onExit={() => setOpenActivityId(null)}
               />
             </ErrorBoundary>
