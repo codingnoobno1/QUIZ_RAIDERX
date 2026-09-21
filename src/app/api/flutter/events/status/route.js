@@ -11,6 +11,7 @@ import EventRegistration from '@/models/EventRegistration';
 import LiveAnswer from '@/models/LiveAnswer';
 import { buildKbcPayload } from '@/lib/kbc/viewerPayload';
 import { ROUND_STATE, effectiveRoundState, isTargeted, leaderNameOf, resolveParticipantTeam } from '@/lib/live/rounds';
+import { teamIsQualified } from '@/lib/rounds/qualification';
 import { invalidIdResponse, notFound, requireEventUser, serverError } from '@/lib/apiGuards';
 
 /**
@@ -113,6 +114,17 @@ export async function GET(req) {
         if (activeActivity.type === 'quiz') {
             const q = activeActivity.quiz ?? {};
             const questions = Array.isArray(q.questions) ? q.questions : [];
+            let qualified = true;
+            if (q.qualificationRoundId) {
+                const auth = await requireEventUser(req);
+                if (!auth.ok) return auth.response;
+                const team = await resolveParticipantTeam(activeActivity.eventId, auth.email);
+                qualified = await teamIsQualified({
+                    quiz: q,
+                    eventId: activeActivity.eventId,
+                    teamId: team.teamId,
+                });
+            }
 
             // Host-paced rounds index off the round, not off `currentQuestion`,
             // so a stale write to one cannot desync the other. They are kept in
@@ -130,18 +142,22 @@ export async function GET(req) {
                 quizType: q.quizType,
                 scope: q.scope ?? 'individual',
                 timePerQuestion: q.timePerQuestion,
+                roundDurationSeconds: q.roundDurationSeconds ?? 0,
+                roundClock: q.quizType === 'custom_live' ? (q.roundClock ?? null) : null,
                 totalQuestions: questions.length,
                 currentQuestion: index,
                 autoAdvance: q.autoAdvance,
                 shuffle: q.shuffle,
+                qualified,
                 // custom_live: only the current question, and never its answer.
-                activeQuestion: q.quizType === 'custom_live' && current ? {
+                activeQuestion: qualified && q.quizType === 'custom_live' && current ? {
                     // The id is what the grader matches on. Without it the client
                     // could only send the index, which matched nothing — every
                     // host-paced answer scored zero.
                     _id: current._id,
                     index,
                     text: current.text,
+                    type: current.type ?? 'choice',
                     options: current.options,
                     points: current.points
                 } : null,
@@ -164,10 +180,11 @@ export async function GET(req) {
                             : null,
                     }
                     : null,
-                questions: q.quizType !== 'custom_live' && !q.paper?.enabled
+                questions: qualified && q.quizType !== 'custom_live' && !q.paper?.enabled
                     ? questions.map(qu => ({
                         _id: qu._id,
                         text: qu.text,
+                        type: qu.type ?? 'choice',
                         options: qu.options,
                         ...(version === 1 ? { correctAnswer: qu.correctAnswer } : {}),
                         points: qu.points,
@@ -184,6 +201,8 @@ export async function GET(req) {
                     req,
                     participantId
                 });
+                safe.quiz.liveRound.qualified = qualified && safe.quiz.liveRound.qualified !== false;
+                if (safe.quiz.liveRound.qualified === false) safe.quiz.activeQuestion = null;
             }
         }
 
@@ -357,6 +376,7 @@ async function buildLiveRound({ activity, quiz, question, req, participantId }) 
         findMyAnswer(round.instanceId, viewer, isTeamScope ? team.teamId : null),
         targetsTeams ? namesForTeams(activity.eventId, round.target.teamIds) : Promise.resolve([]),
     ]);
+    const qualified = await teamIsQualified({ quiz, eventId: activity.eventId, teamId: team.teamId });
 
     const revealed = state === ROUND_STATE.REVEALED;
 
@@ -375,7 +395,8 @@ async function buildLiveRound({ activity, quiz, question, req, participantId }) 
         // whether this phone is being asked, which team the host named, and who
         // leads it. Resolved here because a phone knows only the address it
         // signed in with — it cannot work out who leads its own team.
-        targeted: isTargeted(round, team.teamId),
+        qualified,
+        targeted: qualified && isTargeted(round, team.teamId),
         targetKind: round.target?.kind ?? 'all',
         targetTeams,
         myTeamId: team.teamId,

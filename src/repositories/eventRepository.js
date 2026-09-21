@@ -13,6 +13,7 @@ import {
   toRegistrations,
   toInvitations,
   toEventStatus,
+  toEventRounds,
   toVoteResults,
 } from '@/models/dto/event';
 
@@ -124,6 +125,40 @@ export const eventRepository = {
     );
   },
 
+  /** PATCH the organiser-editable quiz configuration. */
+  async updateActivity({ activityId, quiz, questionType }) {
+    return api.patch('/api/admin/events/activities', {
+      id: activityId,
+      action: 'update',
+      quiz,
+      questionType,
+    });
+  },
+
+  /** GET the organiser's round rosters and the registered-team pool. */
+  async getAdminRounds(eventId, { signal } = {}) {
+    const res = await api.get(
+      `/api/admin/events/rounds?eventId=${encodeURIComponent(eventId)}`,
+      { signal, signOutOn401: false },
+    );
+    return res?.data ?? { rounds: [], teams: [] };
+  },
+
+  /** Create a roster for a paper, live or online competition round. */
+  async createEventRound(body) {
+    return api.post('/api/admin/events/rounds', body, { signOutOn401: false });
+  },
+
+  /** Replace a roster or change its publication state. */
+  async updateEventRound(body) {
+    return api.patch('/api/admin/events/rounds', body, { signOutOn401: false });
+  },
+
+  /** Freeze the top-N standings and populate its configured next-round roster. */
+  async confirmAdvancement({ activityId, count, replace = false }) {
+    return api.post('/api/admin/events/quiz/standings', { activityId, count, replace });
+  },
+
   // ── Live event engine ──────────────────────────────────────────────────────
   // These endpoints were built for the Flutter client and are unchanged here —
   // the web is simply becoming a second consumer of the same contract.
@@ -140,6 +175,20 @@ export const eventRepository = {
         signal,
         signOutOn401: false,
         retries: 1, // another poll is POLL.LOBBY_MS away; don't pile up
+      }),
+    );
+  },
+
+  /**
+   * GET /api/flutter/events/rounds — the qualifier board, as published by the
+   * organiser. A 401 here must not sign the user out: it sits beside the poll.
+   */
+  async getEventRounds(eventId, { signal } = {}) {
+    return toEventRounds(
+      await api.get(`/api/flutter/events/rounds?eventId=${encodeURIComponent(eventId)}`, {
+        signal,
+        signOutOn401: false,
+        retries: 1,
       }),
     );
   },
@@ -208,6 +257,15 @@ export const eventRepository = {
   /** POST /api/events/live/command — host only. */
   async sendLiveCommand({ activityId, action, payload }) {
     return api.post('/api/events/live/command', { activityId, action, payload });
+  },
+
+  /** GET the host-only state for a live quiz control strip. */
+  async getLiveConsole(activityId, { signal } = {}) {
+    const res = await api.get(
+      `/api/events/live/command?activityId=${encodeURIComponent(activityId)}`,
+      { signal, signOutOn401: false },
+    );
+    return res?.data ?? null;
   },
 
   /** POST /api/flutter/events/vote */

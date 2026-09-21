@@ -24,6 +24,9 @@ export const eventKeys = {
   submission: (activityId, participantId) => [...eventKeys.all, 'submission', activityId, participantId],
   votes: (activityId, participantId) => [...eventKeys.all, 'votes', activityId, participantId ?? null],
   activities: (eventId) => [...eventKeys.all, 'activities', eventId],
+  rounds: (eventId) => [...eventKeys.all, 'rounds', eventId],
+  adminRounds: (eventId) => [...eventKeys.all, 'admin-rounds', eventId],
+  liveConsole: (activityId) => [...eventKeys.all, 'live-console', activityId],
 };
 
 /** eventsProvider */
@@ -125,6 +128,26 @@ export function useEventStatus(eventId, participantId, { fast = false } = {}) {
   });
 }
 
+/**
+ * The qualifier board — who is through to each round.
+ *
+ * Polled far slower than the status: an organiser publishes a roster a handful
+ * of times in an evening, and a team that has just been knocked out should not
+ * have the list snatched off their screen a second later either.
+ */
+export function useEventRounds(eventId) {
+  return useQuery({
+    queryKey: eventKeys.rounds(eventId),
+    queryFn: ({ signal }) => eventRepository.getEventRounds(eventId, { signal }),
+    enabled: Boolean(eventId),
+    refetchInterval: POLL.ROUNDS_MS,
+    refetchIntervalInBackground: false,
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+    retry: false,
+  });
+}
+
 /** Restore a prior attempt — quiz_mode_screen.dart:57-85 */
 export function useQuizSubmission(activityId, participantId, enabled = true) {
   return useQuery({
@@ -190,6 +213,28 @@ export function useActivities(eventId, enabled = true) {
   });
 }
 
+export function useAdminRounds(eventId, enabled = true) {
+  return useQuery({
+    queryKey: eventKeys.adminRounds(eventId),
+    queryFn: ({ signal }) => eventRepository.getAdminRounds(eventId, { signal }),
+    enabled: Boolean(eventId) && enabled,
+    retry: false,
+    staleTime: 5_000,
+  });
+}
+
+export function useLiveConsole(activityId, enabled = true) {
+  return useQuery({
+    queryKey: eventKeys.liveConsole(activityId),
+    queryFn: ({ signal }) => eventRepository.getLiveConsole(activityId, { signal }),
+    enabled: Boolean(activityId) && enabled,
+    retry: false,
+    refetchInterval: 1_000,
+    refetchIntervalInBackground: false,
+    placeholderData: (previous) => previous,
+  });
+}
+
 /** Start / stop / reset. Invalidates the event too, so badges follow at once. */
 export function useSwitchActivity(eventId) {
   const qc = useQueryClient();
@@ -199,6 +244,56 @@ export function useSwitchActivity(eventId) {
       qc.invalidateQueries({ queryKey: eventKeys.activities(eventId) });
       qc.invalidateQueries({ queryKey: eventKeys.detail(eventId) });
       qc.invalidateQueries({ queryKey: eventKeys.list() });
+    },
+  });
+}
+
+export function useUpdateActivity(eventId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars) => eventRepository.updateActivity(vars),
+    onSettled: () => qc.invalidateQueries({ queryKey: eventKeys.activities(eventId) }),
+  });
+}
+
+export function useLiveCommand(activityId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ action, payload }) => eventRepository.sendLiveCommand({ activityId, action, payload }),
+    onSettled: () => qc.invalidateQueries({ queryKey: eventKeys.liveConsole(activityId) }),
+  });
+}
+
+export function useCreateEventRound(eventId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars) => eventRepository.createEventRound({ eventId, ...vars }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: eventKeys.adminRounds(eventId) });
+      qc.invalidateQueries({ queryKey: eventKeys.rounds(eventId) });
+    },
+  });
+}
+
+export function useUpdateEventRound(eventId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars) => eventRepository.updateEventRound(vars),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: eventKeys.adminRounds(eventId) });
+      qc.invalidateQueries({ queryKey: eventKeys.rounds(eventId) });
+    },
+  });
+}
+
+export function useConfirmAdvancement(eventId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars) => eventRepository.confirmAdvancement(vars),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: eventKeys.activities(eventId) });
+      qc.invalidateQueries({ queryKey: eventKeys.adminRounds(eventId) });
+      qc.invalidateQueries({ queryKey: eventKeys.rounds(eventId) });
     },
   });
 }

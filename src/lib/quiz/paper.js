@@ -232,6 +232,7 @@ export function renderPaper(paper, questionsById, which = 'items') {
                 number: index + 1,
                 questionId: String(item.questionId),
                 text: q.text,
+                type: q.type ?? 'choice',
                 imageUrl: q.imageUrl,
                 difficulty: item.difficulty,
                 points: item.points,
@@ -266,7 +267,12 @@ export function gradePaper(paper, questionsById) {
     const answers = tagged.map(({ item, isPower }) => {
         const q = questionsById.get(String(item.questionId));
         const selected = saved.get(String(item.questionId)) ?? null;
-        const isCorrect = Boolean(selected) && selected === q?.correctAnswer;
+        const normalise = (value) => String(value ?? '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+        const isCorrect = Boolean(String(selected ?? '').trim()) && (
+            q?.type === 'text'
+                ? normalise(selected) === normalise(q?.correctAnswer)
+                : selected === q?.correctAnswer
+        );
         const pointsAwarded = isCorrect ? item.points : 0;
 
         totalPossible += item.points;

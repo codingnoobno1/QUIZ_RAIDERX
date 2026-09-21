@@ -4,6 +4,7 @@ import EventActivity from '@/models/EventActivity';
 import QuizPaper from '@/models/QuizPaper';
 import QuizSubmission from '@/models/QuizSubmission';
 import { resolveParticipantTeam } from '@/lib/live/rounds';
+import { teamIsQualified } from '@/lib/rounds/qualification';
 import {
     GRACE_MS,
     bankShortfalls,
@@ -131,14 +132,16 @@ export async function PATCH(req) {
 
         const writable = state === 'power' ? paper.powerItems : paper.items;
         const onStage = new Set(writable.map((i) => String(i.questionId)));
-        const optionsById = new Map((quiz.questions ?? []).map((q) => [String(q._id), q.options ?? []]));
+        const questionsById = new Map((quiz.questions ?? []).map((q) => [String(q._id), q]));
         const $set = {};
 
         for (const [questionId, option] of Object.entries(answers)) {
             // Only questions in this stage of this entrant's own paper, and only
-            // options the question actually offers.
+            // a valid choice — or bounded text for a no-choice question.
             if (!onStage.has(String(questionId))) continue;
-            if (option !== null && !optionsById.get(String(questionId))?.includes(option)) continue;
+            const question = questionsById.get(String(questionId));
+            if (typeof option === 'string' && option.length > 1000) continue;
+            if (option !== null && question?.type !== 'text' && !question?.options?.includes(option)) continue;
             $set[`answers.${questionId}`] = option;
         }
 
@@ -251,6 +254,14 @@ async function load(activityId, auth) {
         return {
             response: conflict('This round is sat by teams, and you are not registered with one.', {
                 code: 'NO_TEAM',
+            }),
+        };
+    }
+
+    if (!(await teamIsQualified({ quiz, eventId: activity.eventId, teamId: team.teamId }))) {
+        return {
+            response: forbidden('Your team did not qualify for this round.', {
+                code: 'NOT_QUALIFIED',
             }),
         };
     }

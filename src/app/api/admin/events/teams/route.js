@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import EventActivity from '@/models/EventActivity';
-import EventRegistration from '@/models/EventRegistration';
-import { leaderNameOf } from '@/lib/live/rounds';
+import { listEventTeams } from '@/lib/rounds/roster';
 import { requireAdmin, invalidIdResponse, badRequest, serverError } from '@/lib/apiGuards';
 
 /**
@@ -38,23 +37,10 @@ export async function GET(req) {
         const invalid = invalidIdResponse(eventId, 'eventId');
         if (invalid) return invalid;
 
-        const registrations = await EventRegistration.find({ eventId, registrationType: 'team' })
-            .select('teamId teamName leaderEmail email name members')
-            .sort({ teamName: 1 })
-            .lean();
-
-        const teams = registrations
-            .filter((r) => r.teamId)
-            .map((r) => ({
-                teamId: r.teamId,
-                teamName: r.teamName ?? r.teamId,
-                leaderEmail: String(r.leaderEmail || r.email || '').toLowerCase(),
-                leaderName: leaderNameOf(r) ?? '',
-                memberCount: 1 + (r.members?.length ?? 0),
-                acceptedCount: 1 + (r.members ?? []).filter((m) => m.inviteStatus === 'accepted').length,
-            }));
-
-        return NextResponse.json({ success: true, data: teams });
+        // Shared with the round-roster editor (`lib/rounds/roster`): a team that
+        // appeared in one list and not the other would be a team the organiser
+        // can target with a question but cannot advance to the next round.
+        return NextResponse.json({ success: true, data: await listEventTeams(eventId) });
     } catch (error) {
         return serverError(error, 'admin/events/teams');
     }

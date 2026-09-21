@@ -44,6 +44,7 @@ export async function startActivity(activity) {
     }
     if (quiz?.quizType === 'custom_live') {
         quiz.liveRound = idleRound(quiz.liveRound?.questionIndex ?? 0);
+        quiz.roundClock = { startedAt: null, endsAt: null, durationSeconds: null };
     }
 }
 
@@ -52,6 +53,9 @@ export function stopActivity(activity) {
     activity.completedAt = new Date();
     if (activity.quiz?.quizType === 'custom_live' && activity.quiz.liveRound?.instanceId) {
         activity.quiz.liveRound = idleRound(activity.quiz.liveRound.questionIndex ?? 0);
+    }
+    if (activity.quiz?.quizType === 'custom_live') {
+        activity.quiz.roundClock = { startedAt: null, endsAt: null, durationSeconds: null };
     }
 }
 
@@ -79,8 +83,9 @@ const idleRound = (questionIndex) => ({
  */
 const EDITABLE = {
     quiz: [
-        'quizType', 'questions', 'timePerQuestion', 'scoring', 'shuffle',
+        'quizType', 'questions', 'timePerQuestion', 'roundDurationSeconds', 'scoring', 'shuffle',
         'autoAdvance', 'maxParticipants', 'scope', 'allowRetake', 'paper', 'advancement',
+        'qualificationRoundId',
     ],
     voting: ['question', 'options', 'allowMultiple', 'showLiveResults', 'votingDurationSeconds'],
     hunt: ['checkpoints', 'ordered'],
@@ -88,7 +93,7 @@ const EDITABLE = {
     announcement: ['message', 'displaySeconds'],
 };
 
-const QUESTION_FIELDS = ['text', 'options', 'correctAnswer', 'difficulty', 'pool', 'points', 'imageUrl'];
+const QUESTION_FIELDS = ['text', 'type', 'options', 'correctAnswer', 'difficulty', 'pool', 'points', 'imageUrl'];
 const CHECKPOINT_FIELDS = [
     'checkpointId', 'hint', 'location', 'challengeType', 'quizRef', 'externalUrl', 'points', 'order',
 ];
@@ -118,7 +123,10 @@ export function sectionFor(type, body) {
     // Only the size of the cut is configuration. Who actually advanced is
     // written by the sign-off endpoint alone, so a config edit cannot rewrite it.
     if (type === 'quiz' && section.advancement !== undefined) {
-        section.advancement = { count: Math.max(0, Number(section.advancement?.count) || 0) };
+        section.advancement = {
+            count: Math.max(0, Number(section.advancement?.count) || 0),
+            targetRoundId: section.advancement?.targetRoundId || null,
+        };
     }
     if (type === 'hunt' && Array.isArray(section.checkpoints)) {
         section.checkpoints = section.checkpoints.map((c, i) => ({
@@ -148,6 +156,7 @@ export function updatePaths(type, body) {
         if (type === 'quiz' && key === 'advancement') {
             // A dotted path, so the confirmed list beside it survives the edit.
             $set['quiz.advancement.count'] = value.count;
+            $set['quiz.advancement.targetRoundId'] = value.targetRoundId;
             continue;
         }
         $set[`${type}.${key}`] = value;

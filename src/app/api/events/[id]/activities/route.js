@@ -37,7 +37,12 @@ export async function GET(req, { params }) {
     await connectDB();
 
     const activities = await EventActivity.find({ eventId: id })
-      .select('type title description status activatedAt quiz.quizType quiz.phase quiz.questions')
+      .select([
+        'type title description status activatedAt',
+        'quiz.quizType quiz.phase quiz.questions quiz.scope quiz.shuffle',
+        'quiz.timePerQuestion quiz.roundDurationSeconds quiz.qualificationRoundId',
+        'quiz.advancement',
+      ].join(' '))
       .sort({ createdAt: 1 })
       .lean();
 
@@ -51,6 +56,27 @@ export async function GET(req, { params }) {
         activatedAt: a.activatedAt ?? null,
         quizType: a.quiz?.quizType ?? null,
         phase: a.quiz?.phase ?? null,
+        questionType: a.quiz?.questions?.length
+          ? (a.quiz.questions.every((question) => (question.type ?? 'choice') === 'text') ? 'text'
+            : a.quiz.questions.every((question) => (question.type ?? 'choice') === 'choice') ? 'choice'
+              : 'mixed')
+          : 'choice',
+        scope: a.quiz?.scope ?? null,
+        shuffle: a.quiz?.shuffle ?? null,
+        timePerQuestion: a.quiz?.timePerQuestion ?? null,
+        roundDurationSeconds: a.quiz?.roundDurationSeconds ?? null,
+        qualificationRoundId: a.quiz?.qualificationRoundId
+          ? String(a.quiz.qualificationRoundId)
+          : null,
+        advancement: a.quiz?.advancement
+          ? {
+              count: a.quiz.advancement.count ?? 0,
+              targetRoundId: a.quiz.advancement.targetRoundId
+                ? String(a.quiz.advancement.targetRoundId)
+                : null,
+              confirmedAt: a.quiz.advancement.confirmed?.at ?? null,
+            }
+          : null,
         // Count only — the questions themselves carry the answers.
         questionCount: a.quiz?.questions?.length ?? 0,
       })),

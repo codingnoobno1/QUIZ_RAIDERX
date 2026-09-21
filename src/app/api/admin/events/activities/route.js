@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import EventActivity from '@/models/EventActivity';
+import EventRound from '@/models/EventRound';
 import {
     ACTIVITY_TYPES,
     refusedKeys,
@@ -14,6 +15,7 @@ import {
     requireAdmin,
     readJson,
     invalidIdResponse,
+    isObjectId,
     badRequest,
     notFound,
     conflict,
@@ -147,6 +149,41 @@ export async function PATCH(req) {
         }
 
         if (action === 'update') {
+            const nextScope = rest.quiz?.scope ?? activity.quiz?.scope;
+            const nextQualification = rest.quiz?.qualificationRoundId !== undefined
+                ? rest.quiz.qualificationRoundId
+                : activity.quiz?.qualificationRoundId;
+            if (nextQualification && nextScope !== 'team') {
+                return badRequest('A qualification roster requires team scoring.');
+            }
+
+            // Both pointers are checked here, when the organiser picks them,
+            // rather than where they are used. A roster id from another event
+            // matches nothing at read time, so the eligibility check refused
+            // every team with "your team did not qualify" — which sends the
+            // organiser looking through the roster instead of at the setting
+            // that is wrong. The advancement pointer had the same hole in the
+            // other direction: it was only checked at the moment the cut was
+            // confirmed, which is the worst moment to find out.
+            for (const [key, roundId] of [
+                ['qualificationRoundId', rest.quiz?.qualificationRoundId],
+                ['advancement.targetRoundId', rest.quiz?.advancement?.targetRoundId],
+            ]) {
+                if (!roundId) continue;
+                if (!isObjectId(String(roundId))) {
+                    return badRequest(`${key} is not a valid round id.`, { code: 'INVALID_ROUND' });
+                }
+                const belongs = await EventRound.exists({
+                    _id: String(roundId),
+                    eventId: activity.eventId,
+                });
+                if (!belongs) {
+                    return badRequest(`That round is not one of this event's rounds.`, {
+                        code: 'WRONG_EVENT',
+                        field: key,
+                    });
+                }
+            }
             // Refuse rather than silently drop. A console that thinks it set a
             // field it did not will show the operator something untrue.
             const refused = refusedKeys(activity.type, rest);
@@ -158,6 +195,15 @@ export async function PATCH(req) {
             }
 
             const $set = updatePaths(activity.type, rest);
+            if (rest.questionType !== undefined) {
+                if (activity.type !== 'quiz' || !['choice', 'text'].includes(rest.questionType)) {
+                    return badRequest('questionType must be "choice" or "text" for a quiz.');
+                }
+                // A round is normally authored consistently. This safe bulk
+                // switch preserves every question and correct answer while
+                // changing whether participants see choices or a text box.
+                $set['quiz.questions.$[].type'] = rest.questionType;
+            }
             if (!Object.keys($set).length) return badRequest('Nothing to update.');
 
             const updated = await EventActivity.findByIdAndUpdate(

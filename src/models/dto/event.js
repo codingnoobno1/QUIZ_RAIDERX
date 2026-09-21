@@ -226,10 +226,19 @@ export function toLiveActivity(json) {
     base.quiz = {
       quizType: str(q.quizType, 'rapid_fire'),
       timePerQuestion: num(q.timePerQuestion, 10),
+      roundDurationSeconds: num(q.roundDurationSeconds),
+      roundClock: q.roundClock
+        ? {
+            startedAt: date(q.roundClock.startedAt),
+            endsAt: date(q.roundClock.endsAt),
+            durationSeconds: num(q.roundClock.durationSeconds),
+          }
+        : null,
       totalQuestions: num(q.totalQuestions),
       currentQuestion: num(q.currentQuestion),
       autoAdvance: bool(q.autoAdvance, true),
       shuffle: bool(q.shuffle),
+      qualified: q.qualified !== false,
       /** custom_live: the host controls which question is showing. */
       activeQuestion: q.activeQuestion
         ? {
@@ -237,6 +246,7 @@ export function toLiveActivity(json) {
             id: id(q.activeQuestion._id ?? q.activeQuestion.id),
             index: num(q.activeQuestion.index),
             text: str(q.activeQuestion.text, 'Question unavailable'),
+            type: str(q.activeQuestion.type, 'choice'),
             options: list(q.activeQuestion.options).map((o) => str(o)),
             points: num(q.activeQuestion.points, 10),
           }
@@ -249,6 +259,7 @@ export function toLiveActivity(json) {
       questions: list(q.questions).map((qu) => ({
         id: id(qu?._id ?? qu?.id),
         text: str(qu?.text, 'Question unavailable'),
+        type: str(qu?.type, 'choice'),
         options: list(qu?.options).map((o) => str(o)),
         points: num(qu?.points, 10),
         imageUrl: str(qu?.imageUrl) || null,
@@ -330,6 +341,7 @@ function toLiveRound(r) {
     endsAt: date(r.endsAt),
     durationSeconds: num(r.durationSeconds),
     scope: str(r.scope, 'individual'),
+    qualified: r.qualified !== false,
     targeted: r.targeted !== false,
     targetKind: str(r.targetKind, 'all'),
     targetTeams: list(r.targetTeams).map((t) => ({
@@ -410,5 +422,38 @@ export function toVoteResults(json) {
     get hasVoted() {
       return Boolean(this.myVote);
     },
+  };
+}
+
+/**
+ * The qualifier board from `/api/flutter/events/rounds` — which teams are
+ * through to each round.
+ *
+ * `youAreIn` is the server's answer, not ours: every client must agree about
+ * whether a team made the cut, and a board that computed it locally would
+ * disagree the first time a name was edited.
+ */
+export function toEventRounds(json) {
+  const data = json?.data ?? json ?? {};
+
+  return {
+    eventId: str(data.eventId),
+    yourTeamId: str(data.yourTeamId) || null,
+    yourTeamName: str(data.yourTeamName) || null,
+    rounds: list(data.rounds).map((r) => ({
+      id: id(r.id ?? r._id),
+      roundNumber: num(r.roundNumber, 0),
+      title: str(r.title, 'Round'),
+      format: str(r.format, 'other'),
+      status: str(r.status, 'published'),
+      teamCount: num(r.teamCount, list(r.teams).length),
+      publishedAt: date(r.publishedAt),
+      youAreIn: bool(r.youAreIn),
+      teams: list(r.teams).map((t) => ({
+        teamId: str(t.teamId),
+        teamName: str(t.teamName, 'Unnamed team'),
+        isYou: bool(t.isYou),
+      })),
+    })),
   };
 }

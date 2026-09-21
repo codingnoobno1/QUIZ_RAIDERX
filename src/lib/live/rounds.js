@@ -42,6 +42,12 @@ export const LIVE_COMMAND = {
  */
 export const GRACE_MS = 800;
 
+/** Whether the overall host-paced envelope has elapsed. */
+export function roundClockExpired(roundClock, now = new Date()) {
+    return Boolean(roundClock?.endsAt)
+        && now.getTime() > new Date(roundClock.endsAt).getTime() + GRACE_MS;
+}
+
 /**
  * What the round actually is right now, as opposed to what was last written.
  *
@@ -119,6 +125,13 @@ export function canRunLive(action, quiz, payload) {
         return { ok: false, reason: `Cannot ${action} while the round is ${state}.` };
     }
 
+    if (
+        (action === LIVE_COMMAND.OPEN_QUESTION || action === LIVE_COMMAND.NEXT_QUESTION)
+        && roundClockExpired(quiz?.roundClock)
+    ) {
+        return { ok: false, reason: 'The overall round time is up.' };
+    }
+
     const reason = GUARDS[action]?.(quiz, payload);
     if (reason) return { ok: false, reason };
 
@@ -134,6 +147,10 @@ export function canRunLive(action, quiz, payload) {
  */
 export function applyLiveEffects({ action, payload = {}, quiz, now, newInstanceId }) {
     const round = quiz.liveRound ?? {};
+
+    if (action === LIVE_COMMAND.OPEN_QUESTION || action === LIVE_COMMAND.NEXT_QUESTION) {
+        ensureRoundClock(quiz, now);
+    }
 
     switch (action) {
         case LIVE_COMMAND.OPEN_QUESTION:
@@ -168,6 +185,10 @@ export function applyLiveEffects({ action, payload = {}, quiz, now, newInstanceI
                 revealedAt: null,
                 target: { kind: 'all', teamIds: [] },
             };
+            if (quiz.roundClock?.startedAt) {
+                const scheduledEnd = new Date(quiz.roundClock.endsAt ?? now);
+                quiz.roundClock.endsAt = scheduledEnd < now ? scheduledEnd : now;
+            }
             break;
 
         default:
@@ -184,13 +205,18 @@ function openQuestion(quiz, index, payload, now, newInstanceId) {
         ? payload.target.teamIds.map(String).filter(Boolean)
         : [];
 
+    const requestedEnd = new Date(now.getTime() + duration * 1000);
+    const overallEnd = quiz.roundClock?.endsAt ? new Date(quiz.roundClock.endsAt) : null;
+    const endsAt = overallEnd && overallEnd < requestedEnd ? overallEnd : requestedEnd;
+    const effectiveDuration = Math.max(1, Math.ceil((endsAt.getTime() - now.getTime()) / 1000));
+
     quiz.liveRound = {
         instanceId: newInstanceId,
         questionIndex: index,
         state: ROUND_STATE.OPEN,
         openedAt: now,
-        endsAt: new Date(now.getTime() + duration * 1000),
-        durationSeconds: duration,
+        endsAt,
+        durationSeconds: effectiveDuration,
         revealedAt: null,
         target: {
             kind: teamIds.length ? 'teams' : 'all',
@@ -201,6 +227,18 @@ function openQuestion(quiz, index, payload, now, newInstanceId) {
     // Kept in step so the existing `currentQuestion` readers — the console, the
     // legacy status payload — do not have to learn about liveRound.
     quiz.currentQuestion = index;
+}
+
+/** Start the one clock shared by every question in this host-paced activity. */
+function ensureRoundClock(quiz, now) {
+    if (quiz.roundClock?.endsAt) return;
+    const duration = Math.max(0, Number(quiz.roundDurationSeconds) || 0);
+    if (!duration) return;
+    quiz.roundClock = {
+        startedAt: now,
+        endsAt: new Date(now.getTime() + duration * 1000),
+        durationSeconds: duration,
+    };
 }
 
 // ── Scoring ──────────────────────────────────────────────────────────────────
@@ -216,7 +254,13 @@ function openQuestion(quiz, index, payload, now, newInstanceId) {
  */
 export function gradeLiveAnswer({ question, option, receivedAt, liveRound, scoring }) {
     const base = Number(question?.points) || 10;
-    const isCorrect = Boolean(option) && option === question?.correctAnswer;
+    const isText = question?.type === 'text';
+    const normalise = (value) => String(value ?? '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    const isCorrect = Boolean(String(option ?? '').trim()) && (
+        isText
+            ? normalise(option) === normalise(question?.correctAnswer)
+            : option === question?.correctAnswer
+    );
 
     if (!isCorrect) return { isCorrect: false, pointsAwarded: 0 };
     if (scoring !== 'speed_bonus') return { isCorrect: true, pointsAwarded: base };

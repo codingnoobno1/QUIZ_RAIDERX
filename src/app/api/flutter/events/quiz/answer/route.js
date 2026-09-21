@@ -7,9 +7,11 @@ import {
     GRACE_MS,
     effectiveRoundState,
     isTargeted,
+    roundClockExpired,
     gradeLiveAnswer,
     resolveParticipantTeam,
 } from '@/lib/live/rounds';
+import { teamIsQualified } from '@/lib/rounds/qualification';
 import {
     requireEventUser,
     readJson,
@@ -50,10 +52,14 @@ export async function POST(req) {
     const parsed = await readJson(req);
     if (!parsed.ok) return parsed.response;
 
-    const { activityId, instanceId, option } = parsed.data;
+    const { activityId, instanceId } = parsed.data;
+    // `option` remains the wire name for existing clients. New clients may use
+    // the clearer `answer` for typed questions.
+    const option = parsed.data.answer ?? parsed.data.option;
 
     if (!activityId || !instanceId) return badRequest('activityId and instanceId are required.');
-    if (typeof option !== 'string' || !option) return badRequest('option is required.');
+    if (typeof option !== 'string' || !option.trim()) return badRequest('An answer is required.');
+    if (option.length > 1000) return badRequest('The answer is too long.');
 
     for (const [value, label] of [[activityId, 'activityId'], [instanceId, 'instanceId']]) {
         const invalid = invalidIdResponse(value, label);
@@ -73,6 +79,10 @@ export async function POST(req) {
 
         const quiz = activity.quiz ?? {};
         const round = quiz.liveRound ?? {};
+
+        if (roundClockExpired(quiz.roundClock, receivedAt)) {
+            return conflict('The overall round time is up.', { code: 'ROUND_TIME_UP' });
+        }
 
         if (!round.instanceId) {
             return conflict('No question is open.', { code: 'ROUND_CLOSED' });
@@ -101,7 +111,8 @@ export async function POST(req) {
 
         const question = quiz.questions?.[round.questionIndex ?? 0];
         if (!question) return notFound('That question no longer exists.');
-        if (!question.options?.includes(option)) {
+        const isTextQuestion = question.type === 'text';
+        if (!isTextQuestion && !question.options?.includes(option)) {
             return badRequest('That is not one of the options.');
         }
 
@@ -110,6 +121,10 @@ export async function POST(req) {
 
         if (isTeamScope && !team.teamId) {
             return forbidden('This round is scored by team, and you are not registered with one.');
+        }
+
+        if (!(await teamIsQualified({ quiz, eventId: activity.eventId, teamId: team.teamId }))) {
+            return forbidden('Your team did not qualify for this round.', { code: 'NOT_QUALIFIED' });
         }
 
         if (isTeamScope) teamKeyForRetry = team.teamId;

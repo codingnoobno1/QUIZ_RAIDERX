@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 
 const QuestionSchema = new mongoose.Schema({
     text: { type: String, required: true },
+    /**
+     * `choice` keeps the existing A/B/C/D behaviour. `text` is the no-choice
+     * path used by written/typed live questions; it is graded server-side after
+     * trimming whitespace and folding case.
+     */
+    type: { type: String, enum: ['choice', 'text'], default: 'choice' },
     options: [{ type: String }],
     correctAnswer: { type: String, required: true },
     /**
@@ -55,6 +61,8 @@ const EventActivitySchema = new mongoose.Schema({
         quizType: { type: String, enum: ['rapid_fire', 'custom_live', 'preloaded', 'kbc'], default: 'rapid_fire' },
         questions: [QuestionSchema],
         timePerQuestion: { type: Number, default: 10 },
+        /** Overall host-paced envelope. Starts with the first opened question. */
+        roundDurationSeconds: { type: Number, default: 1800, min: 0 },
         scoring: { type: String, enum: ['correct_only', 'speed_bonus', 'partial'], default: 'correct_only' },
         shuffle: { type: Boolean, default: true },
         autoAdvance: { type: Boolean, default: true },
@@ -124,6 +132,8 @@ const EventActivitySchema = new mongoose.Schema({
          */
         advancement: {
             count: { type: Number, default: 0 },
+            /** Optional EventRound roster populated when the cut is confirmed. */
+            targetRoundId: { type: mongoose.Schema.Types.ObjectId, ref: 'EventRound', default: null },
             confirmed: {
                 keys: [{ type: String }],
                 names: [{ type: String }],
@@ -131,6 +141,9 @@ const EventActivitySchema = new mongoose.Schema({
                 by: { type: String, default: null },
             },
         },
+
+        /** If set, only teams on this EventRound roster may sit the activity. */
+        qualificationRoundId: { type: mongoose.Schema.Types.ObjectId, ref: 'EventRound', default: null },
 
         // ── Host-paced rounds (custom_live) ──────────────────────────────
         //
@@ -158,6 +171,13 @@ const EventActivitySchema = new mongoose.Schema({
                 kind: { type: String, enum: ['all', 'teams'], default: 'all' },
                 teamIds: [{ type: String }],
             },
+        },
+
+        /** Absolute deadline for the whole custom_live activity. */
+        roundClock: {
+            startedAt: { type: Date, default: null },
+            endsAt: { type: Date, default: null },
+            durationSeconds: { type: Number, default: null },
         },
 
         // ── KBC ──────────────────────────────────────────────────────────

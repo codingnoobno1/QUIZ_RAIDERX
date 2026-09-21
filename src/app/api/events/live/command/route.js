@@ -107,6 +107,7 @@ export async function POST(req) {
 
             quiz.liveRound.state = verdict.nextState;
             activity.markModified('quiz.liveRound');
+            activity.markModified('quiz.roundClock');
             await activity.save();
 
             return NextResponse.json({
@@ -119,6 +120,7 @@ export async function POST(req) {
                     durationSeconds: quiz.liveRound.durationSeconds,
                     target: quiz.liveRound.target,
                 },
+                roundClock: quiz.roundClock ?? null,
                 serverTime: now.toISOString(),
                 changedBy: auth.actor.email || auth.actor.name,
             });
@@ -363,6 +365,7 @@ export async function GET(req) {
                 question: question
                     ? {
                           text: question.text,
+                          type: question.type ?? 'choice',
                           options: question.options,
                           points: question.points,
                           correctAnswer: question.correctAnswer, // host only
@@ -422,6 +425,7 @@ async function liveConsoleState(activity) {
         question: question
             ? {
                   text: question.text,
+                  type: question.type ?? 'choice',
                   options: question.options,
                   points: question.points,
                   correctAnswer: question.correctAnswer, // host only
@@ -435,6 +439,7 @@ async function liveConsoleState(activity) {
             revealedAt: round.revealedAt ?? null,
             target: round.target ?? { kind: 'all', teamIds: [] },
         },
+        roundClock: quiz.roundClock ?? null,
         answers: answers.map((a) => ({
             participantId: a.participantId,
             name: a.name,

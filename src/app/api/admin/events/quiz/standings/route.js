@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongo';
 import EventActivity from '@/models/EventActivity';
+import EventRound from '@/models/EventRound';
 import { applyCut, rankActivity } from '@/lib/quiz/standings';
+import { indexTeams, listEventTeams } from '@/lib/rounds/roster';
 import {
     requireAdmin,
     readJson,
@@ -123,10 +125,60 @@ export async function POST(req) {
             by: auth.actor?.email || auth.actor?.name || 'admin',
         };
 
-        await EventActivity.updateOne(
+        const targetRoundId = activity.quiz?.advancement?.targetRoundId;
+        let targetRound = null;
+        let targetTeams = null;
+        if (targetRoundId) {
+            if (activity.quiz?.scope !== 'team') {
+                return badRequest('Automatic round rosters require a team-scoped quiz.', {
+                    code: 'TEAM_SCOPE_REQUIRED',
+                });
+            }
+
+            targetRound = await EventRound.findById(targetRoundId);
+            if (!targetRound) return notFound('The configured advancement round no longer exists.');
+            if (String(targetRound.eventId) !== String(activity.eventId)) {
+                return badRequest('The configured advancement round belongs to another event.', {
+                    code: 'WRONG_EVENT',
+                });
+            }
+
+            const pool = await listEventTeams(activity.eventId);
+            const byId = indexTeams(pool);
+            const unknown = chosen.filter((id) => !byId.has(id));
+            if (unknown.length) {
+                return conflict('Some advancing teams are no longer registered for this event.', {
+                    code: 'UNKNOWN_TEAM',
+                    unknown,
+                });
+            }
+            targetTeams = chosen.map((id) => ({
+                teamId: id,
+                teamName: byId.get(id).teamName,
+                addedAt: new Date(),
+                addedBy: confirmed.by,
+            }));
+        }
+
+        const writes = [EventActivity.updateOne(
             { _id: activityId },
             { $set: { 'quiz.advancement.count': count, 'quiz.advancement.confirmed': confirmed } },
-        );
+        )];
+
+        if (targetRound) {
+            targetRound.teams = targetTeams;
+            targetRound.updatedBy = confirmed.by;
+            targetRound.audit.push({
+                at: new Date(),
+                by: confirmed.by,
+                action: 'sync-advancement',
+                teamIds: chosen,
+                detail: `Top ${count} from ${activity.title}`,
+            });
+            writes.push(targetRound.save());
+        }
+
+        await Promise.all(writes);
 
         const updated = await EventActivity.findById(activityId)
             .select('type title eventId quiz.quizType quiz.scope quiz.advancement').lean();
@@ -149,6 +201,7 @@ async function standings(activity) {
         activity: { id: String(activity._id), title: activity.title },
         scope: activity.quiz?.scope === 'team' ? 'team' : 'individual',
         advancementCount: count,
+        targetRoundId: advancement.targetRoundId ? String(advancement.targetRoundId) : null,
         cutScore,
         tieAtCut: tieAtCut.length > 0,
         confirmed: confirmedAt

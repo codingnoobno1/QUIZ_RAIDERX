@@ -23,6 +23,11 @@ export const POLL = {
   ACTIVITY_MS: 7_000,
   /** custom_live quizzes follow the host's current question index. */
   LIVE_QUESTION_MS: 5_000,
+  /**
+   * The qualifier board. An organiser publishes a round's roster a handful of
+   * times in a whole evening, so this rides well behind the lobby poll.
+   */
+  ROUNDS_MS: 60_000,
 };
 
 // ── Domain limits ────────────────────────────────────────────────────────────
@@ -35,7 +40,21 @@ export const TEAM = {
 };
 
 export const SESSION = {
-  DURATION_MS: 15 * 60 * 1000,
+  /**
+   * The participant's event session.
+   *
+   * Nothing renews it: `attachEventSession` is called once, at sign-in. So this
+   * has to outlast the longest thing a participant can be sitting in one go.
+   * At 15 minutes it did not — a team sitting the default 30-minute paper
+   * (`quiz.roundDurationSeconds`) was refused at the halfway mark, mid-answer,
+   * with no way to save or submit, and the only cure was signing in again and
+   * finding the round already over.
+   *
+   * A sliding session would be better than a long one. It needs the cookie
+   * re-issued on every authenticated response, which nothing does today, so the
+   * honest fix for now is a window that covers a whole event sitting.
+   */
+  DURATION_MS: 4 * 60 * 60 * 1000,
 };
 
 // ── Layout ───────────────────────────────────────────────────────────────────

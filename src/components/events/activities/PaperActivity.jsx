@@ -22,6 +22,7 @@ import {
     DialogContent,
     DialogTitle,
     Stack,
+    TextField,
     Typography,
 } from '@mui/material';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
@@ -270,6 +271,28 @@ function PaperSheet({ activity, paper, refetch }) {
                         />
                     )}
 
+                    {question.type === 'text' ? (
+                        <TextField
+                            fullWidth
+                            multiline
+                            minRows={3}
+                            value={answers[question.questionId] ?? ''}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setAnswers((a) => ({ ...a, [question.questionId]: value }));
+                                pending.current[question.questionId] = value;
+                                setSaveState('saving');
+                            }}
+                            onBlur={flush}
+                            disabled={remaining <= 0}
+                            placeholder="Type your answer"
+                            inputProps={{ maxLength: 1000, 'aria-label': `Answer for question ${index + 1}` }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': { color: color.text, bgcolor: 'rgba(255,255,255,0.02)' },
+                                '& fieldset': { borderColor: color.border },
+                            }}
+                        />
+                    ) : (
                     <Stack spacing={1.25} role="radiogroup" aria-label={`Answers for question ${index + 1}`}>
                         {question.options.map((option, i) => {
                             const picked = answers[question.questionId] === option;
@@ -323,6 +346,7 @@ function PaperSheet({ activity, paper, refetch }) {
                             );
                         })}
                     </Stack>
+                    )}
 
                     <Stack direction="row" spacing={1.5} sx={{ mt: 3 }}>
                         <NavButton onClick={() => setIndex((i) => Math.max(i - 1, 0))} disabled={index === 0}>
@@ -339,7 +363,7 @@ function PaperSheet({ activity, paper, refetch }) {
                         )}
                     </Stack>
                     <Typography sx={{ mt: 1.25, color: color.textFaint, fontSize: '0.72rem' }}>
-                        Keys: ← → to move · 1–4 or A–D to answer. Answers save as you choose them and can be changed until you submit.
+                        Keys: ← → to move{question.type === 'text' ? '' : ' · 1–4 or A–D to answer'}. Answers save as you work and can be changed until you submit.
                     </Typography>
                 </Box>
 
@@ -603,6 +627,11 @@ function Refusal({ error, onRetry, onExit }) {
                 };
             case 'NO_TEAM':
                 return { title: 'You’re not on a team', body: 'This round is sat by teams. Ask your team leader to invite you.' };
+            case 'NOT_QUALIFIED':
+                return {
+                    title: 'Your team is not in this round',
+                    body: 'The organiser has restricted this quiz to the published qualifier roster.',
+                };
             default:
                 return { title: 'Couldn’t open your paper', body: error?.message || 'Check your connection and try again.' };
         }

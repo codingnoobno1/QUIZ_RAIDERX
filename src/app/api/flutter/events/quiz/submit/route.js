@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongo';
 import EventActivity from '@/models/EventActivity';
 import QuizSubmission from '@/models/QuizSubmission';
 import { resolveParticipantTeam } from '@/lib/live/rounds';
+import { teamIsQualified } from '@/lib/rounds/qualification';
 import {
     requireEventUser,
     readJson,
@@ -96,6 +97,20 @@ export async function POST(req) {
             return conflict('This quiz is scored by team, and you are not registered with one.', {
                 code: 'NO_TEAM',
             });
+        }
+
+
+        // A legacy v1 caller supplies its own identity, so it cannot prove it
+        // belongs to a restricted roster. Restricted rounds deliberately
+        // require the session-backed contract.
+        if (quiz.qualificationRoundId && !strict) {
+            return conflict('Update the app to enter this restricted round.', {
+                code: 'CLIENT_UPDATE_REQUIRED',
+            });
+        }
+
+        if (!(await teamIsQualified({ quiz, eventId: activity.eventId, teamId: team.teamId }))) {
+            return conflict('Your team did not qualify for this round.', { code: 'NOT_QUALIFIED' });
         }
 
         // One attempt, unless the activity says otherwise. Checked here so the
@@ -210,7 +225,12 @@ function grade(questions, answers) {
     const graded = questions.map((q) => {
         const submitted = answers.find((a) => a.questionId === q._id?.toString());
         const selected = submitted?.selectedOption ?? null;
-        const isCorrect = selected !== null && selected === q.correctAnswer;
+        const normalise = (value) => String(value ?? '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+        const isCorrect = selected !== null && (
+            q.type === 'text'
+                ? Boolean(String(selected).trim()) && normalise(selected) === normalise(q.correctAnswer)
+                : selected === q.correctAnswer
+        );
         const pointsAwarded = isCorrect ? (q.points || 10) : 0;
 
         if (isCorrect) {

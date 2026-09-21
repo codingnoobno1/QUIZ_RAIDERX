@@ -20,7 +20,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Button, LinearProgress, Stack, Typography } from '@mui/material';
+import { Box, Button, LinearProgress, Stack, TextField, Typography } from '@mui/material';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
@@ -36,6 +36,16 @@ export default function QuizActivity({ activity, participantId, eventId, serverT
   const quiz = activity.quiz;
 
   if (quiz?.paper?.enabled) return <PaperActivity activity={activity} onExit={onExit} />;
+
+  if (quiz?.qualified === false) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography sx={{ color: color.amber, fontWeight: 800 }}>This round is for qualified teams.</Typography>
+        <Typography sx={{ color: color.textMuted, mt: 1 }}>Your team is not on this round&apos;s roster.</Typography>
+        <Button onClick={onExit} sx={{ mt: 2, textTransform: 'none' }}>Back to lobby</Button>
+      </Box>
+    );
+  }
 
   const isLive = quiz?.quizType === 'custom_live';
   if (isLive) {
@@ -87,6 +97,7 @@ function SelfPacedQuiz({ activity, participantId, onExit }) {
 
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState({}); // questionId -> option
+  const [draft, setDraft] = useState('');
   const [timeLeft, setTimeLeft] = useState(perQuestion);
   const [done, setDone] = useState(false);
   const startedAt = useRef(Date.now());
@@ -138,6 +149,8 @@ function SelfPacedQuiz({ activity, participantId, onExit }) {
   }, [timed, timeLeft, done, question, advance]);
 
   useEffect(() => () => clearTimeout(advanceTimer.current), []);
+
+  useEffect(() => setDraft(''), [question?.id]);
 
   if (!question) {
     return <ResultView score={0} total={0} title={activity.title} onExit={onExit} />;
@@ -205,10 +218,43 @@ function SelfPacedQuiz({ activity, participantId, onExit }) {
         }}
       />
 
-      <QuestionBody question={question} chosen={chosen} onChoose={choose} />
+      {question.type === 'text' ? (
+        <>
+          <Typography sx={{ color: color.text, fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.45, mb: 2.5 }}>
+            {question.text}
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            value={chosen ?? draft}
+            onChange={(event) => setDraft(event.target.value)}
+            disabled={Boolean(chosen)}
+            placeholder="Type your answer"
+            inputProps={{ maxLength: 1000, 'aria-label': 'Typed answer' }}
+            sx={{
+              '& .MuiOutlinedInput-root': { color: color.text, bgcolor: 'rgba(255,255,255,0.02)' },
+              '& fieldset': { borderColor: color.border },
+            }}
+          />
+          {timed && (
+            <PrimaryButton disabled={Boolean(chosen) || !draft.trim()} onClick={() => choose(draft.trim())}>
+              Lock typed answer
+            </PrimaryButton>
+          )}
+        </>
+      ) : (
+        <QuestionBody question={question} chosen={chosen} onChoose={choose} />
+      )}
 
       {!timed && (
-        <PrimaryButton disabled={!chosen} onClick={advance}>
+        <PrimaryButton
+          disabled={question.type === 'text' ? (!chosen && !draft.trim()) : !chosen}
+          onClick={() => {
+            if (question.type === 'text' && !chosen) choose(draft.trim());
+            advance();
+          }}
+        >
           {isLast ? 'Finish' : 'Next question'}
         </PrimaryButton>
       )}
@@ -225,9 +271,11 @@ function LiveQuiz({ activity, participantId, eventId, serverTime, onExit }) {
   const offset = useServerOffset(serverTime);
   const open = round?.state === 'open';
   const remaining = useRemaining(round?.endsAt, offset, open);
+  const roundRemaining = useRemaining(activity.quiz.roundClock?.endsAt, offset, Boolean(activity.quiz.roundClock?.endsAt));
 
   const answer = useRoundAnswer(activity.id, eventId, participantId);
   const [pending, setPending] = useState(null);
+  const [draft, setDraft] = useState('');
   const [refusal, setRefusal] = useState(null);
   const lastInstance = useRef(round?.instanceId ?? null);
 
@@ -237,6 +285,7 @@ function LiveQuiz({ activity, participantId, eventId, serverTime, onExit }) {
       lastInstance.current = round?.instanceId ?? null;
       setRefusal(null);
       setPending(null);
+      setDraft('');
     }
   }, [round?.instanceId]);
 
@@ -249,6 +298,16 @@ function LiveQuiz({ activity, participantId, eventId, serverTime, onExit }) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
         <Typography sx={{ color: color.amber, fontWeight: 700 }}>This live quiz needs the updated event server.</Typography>
+        <Button onClick={onExit} sx={{ mt: 2, textTransform: 'none' }}>Back to lobby</Button>
+      </Box>
+    );
+  }
+
+  if (round.qualified === false) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography sx={{ color: color.amber, fontWeight: 800 }}>This round is for qualified teams.</Typography>
+        <Typography sx={{ color: color.textMuted, mt: 1 }}>Your team is not on the published qualifier roster.</Typography>
         <Button onClick={onExit} sx={{ mt: 2, textTransform: 'none' }}>Back to lobby</Button>
       </Box>
     );
@@ -300,25 +359,57 @@ function LiveQuiz({ activity, participantId, eventId, serverTime, onExit }) {
         <Typography sx={{ color: color.green, fontSize: '0.72rem', fontWeight: 800, letterSpacing: 1.5 }}>
           ● LIVE · QUESTION {round.questionIndex + 1}
         </Typography>
-        <Typography
-          sx={{
-            color: !open ? color.textFaint : remaining <= 3000 ? color.red : remaining <= 7000 ? color.amber : color.brand,
-            fontWeight: 800,
-            fontSize: '1.2rem',
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {open ? formatClock(remaining) : round.state === 'locked' ? 'LOCKED' : 'REVEALED'}
-        </Typography>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          {activity.quiz.roundClock?.endsAt && (
+            <Typography sx={{ color: roundRemaining <= 60_000 ? color.red : color.textMuted, fontWeight: 750, fontSize: '0.78rem', fontVariantNumeric: 'tabular-nums' }}>
+              ROUND {formatClock(roundRemaining)}
+            </Typography>
+          )}
+          <Typography
+            sx={{
+              color: !open ? color.textFaint : remaining <= 3000 ? color.red : remaining <= 7000 ? color.amber : color.brand,
+              fontWeight: 800,
+              fontSize: '1.2rem',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {open ? formatClock(remaining) : round.state === 'locked' ? 'LOCKED' : 'REVEALED'}
+          </Typography>
+        </Stack>
       </Stack>
 
-      <QuestionBody
-        question={{ text: question.text, options: question.options }}
-        chosen={chosen}
-        onChoose={choose}
-        disabled={!canAnswer}
-        correctOption={revealed ? round.reveal?.correctAnswer : null}
-      />
+      {question.type === 'text' ? (
+        <>
+          <Typography sx={{ color: color.text, fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.45, mb: 2.5 }}>
+            {question.text}
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            value={chosen ?? draft}
+            onChange={(e) => setDraft(e.target.value)}
+            disabled={!canAnswer || Boolean(chosen)}
+            placeholder="Type your answer"
+            inputProps={{ maxLength: 1000, 'aria-label': 'Typed answer' }}
+            sx={{
+              '& .MuiOutlinedInput-root': { color: color.text, bgcolor: 'rgba(255,255,255,0.02)' },
+              '& fieldset': { borderColor: color.border },
+            }}
+          />
+          <PrimaryButton disabled={!canAnswer || !draft.trim()} onClick={() => choose(draft.trim())}>
+            Lock typed answer
+          </PrimaryButton>
+        </>
+      ) : (
+        <QuestionBody
+          question={{ text: question.text, options: question.options }}
+          chosen={chosen}
+          onChoose={choose}
+          disabled={!canAnswer}
+          correctOption={revealed ? round.reveal?.correctAnswer : null}
+        />
+      )}
 
       {refusal && <Note tone={color.amber}>{refusal}</Note>}
       {round.answered && !revealed && (

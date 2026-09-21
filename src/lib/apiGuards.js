@@ -14,6 +14,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import jwt from 'jsonwebtoken';
 import { authOptions } from '@/lib/auth';
+import { SESSION } from '@/config/constants';
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 
@@ -182,8 +183,11 @@ function sessionSecret() {
 
 /**
  * Attach a signed participant session to a response.
- * Lifetime matches SESSION.DURATION_MS so the cookie and the client's own
- * 15-minute session expire together.
+ *
+ * The token and the cookie both take their lifetime from `SESSION.DURATION_MS`.
+ * They used to carry the same number written out by hand in three places —
+ * which is how the comment here went on claiming they matched a constant that
+ * nothing actually read.
  */
 export function attachEventSession(response, user) {
   const secret = sessionSecret();
@@ -192,10 +196,12 @@ export function attachEventSession(response, user) {
     return response;
   }
 
+  const lifetimeSeconds = Math.floor(SESSION.DURATION_MS / 1000);
+
   const token = jwt.sign(
     { email: String(user.email).toLowerCase(), name: user.name, uuid: user.uuid },
     secret,
-    { expiresIn: '15m' },
+    { expiresIn: lifetimeSeconds },
   );
 
   response.cookies.set(EVENT_COOKIE, token, {
@@ -203,7 +209,7 @@ export function attachEventSession(response, user) {
     sameSite: 'lax',
     secure: IS_PROD,
     path: '/',
-    maxAge: 15 * 60,
+    maxAge: lifetimeSeconds,
   });
 
   return response;

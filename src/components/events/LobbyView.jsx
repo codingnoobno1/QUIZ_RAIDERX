@@ -22,6 +22,7 @@ import AsyncBoundary from '@/components/async/AsyncBoundary';
 import EmptyState from '@/components/async/EmptyState';
 import ErrorBoundary from '@/components/async/ErrorBoundary';
 import ActivityRenderer, { metaFor } from './activities';
+import RoundRoster from './RoundRoster';
 
 export default function LobbyView({ event, participantId }) {
   const [openActivityId, setOpenActivityId] = useState(null);
@@ -95,6 +96,11 @@ export default function LobbyView({ event, participantId }) {
           )
         }
       </AsyncBoundary>
+
+      {/* Who is through to each round. Hidden while an activity is open: that
+          screen is the thing the participant is doing, and a qualifier board
+          under a running question is a distraction from it. */}
+      {!isOpen && <RoundRoster eventId={event.id} />}
     </Box>
   );
 }
