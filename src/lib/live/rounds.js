@@ -252,7 +252,19 @@ function ensureRoundClock(quiz, now) {
  * fast it arrived — speed is a tie-break between correct answers, not a
  * consolation for incorrect ones.
  */
-export function gradeLiveAnswer({ question, option, receivedAt, liveRound, scoring }) {
+/**
+ * What a wrong answer costs at this question's difficulty.
+ *
+ * Zero unless the round switched penalties on, so a round that has never heard
+ * of negative marking keeps scoring the way it always did.
+ */
+export function penaltyFor(question, penalties) {
+    if (!penalties?.enabled) return 0;
+    const tier = question?.difficulty ?? 'medium';
+    return Math.max(0, Number(penalties[tier]) || 0);
+}
+
+export function gradeLiveAnswer({ question, option, receivedAt, liveRound, scoring, penalties }) {
     const base = Number(question?.points) || 10;
     const isText = question?.type === 'text';
     const normalise = (value) => String(value ?? '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
@@ -262,7 +274,13 @@ export function gradeLiveAnswer({ question, option, receivedAt, liveRound, scori
             : option === question?.correctAnswer
     );
 
-    if (!isCorrect) return { isCorrect: false, pointsAwarded: 0 };
+    // Charged only for answering wrongly. A team that stays silent or skips
+    // never reaches this function, so silence costs nothing — the penalty is
+    // meant to price a guess, not to punish running out of time.
+    if (!isCorrect) {
+        const penalty = penaltyFor(question, penalties);
+        return { isCorrect: false, pointsAwarded: penalty > 0 ? -penalty : 0 };
+    }
     if (scoring !== 'speed_bonus') return { isCorrect: true, pointsAwarded: base };
 
     const endsAt = liveRound?.endsAt ? new Date(liveRound.endsAt).getTime() : null;

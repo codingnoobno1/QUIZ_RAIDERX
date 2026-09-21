@@ -85,7 +85,7 @@ const EDITABLE = {
     quiz: [
         'quizType', 'questions', 'timePerQuestion', 'roundDurationSeconds', 'scoring', 'shuffle',
         'autoAdvance', 'maxParticipants', 'scope', 'allowRetake', 'paper', 'advancement',
-        'qualificationRoundId',
+        'qualificationRoundId', 'penalties',
     ],
     voting: ['question', 'options', 'allowMultiple', 'showLiveResults', 'votingDurationSeconds'],
     hunt: ['checkpoints', 'ordered'],

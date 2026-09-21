@@ -143,6 +143,7 @@ export async function POST(req) {
             receivedAt,
             liveRound: round,
             scoring: quiz.scoring,
+            penalties: quiz.penalties,
         });
 
         await LiveAnswer.create({

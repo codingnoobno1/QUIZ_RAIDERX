@@ -14,8 +14,17 @@ const QuestionSchema = new mongoose.Schema({
      * What a generated paper draws on, and what decides the question's value
      * when the paper defines a points table. Questions written before this
      * existed count as medium.
+     *
+     * `impossible` is the fourth tier a team can choose in a difficulty round.
+     * Generated papers deal from `counts`, which names only the first three, so
+     * an impossible question is never dealt onto an ordinary paper by accident.
      */
-    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium', index: true },
+    difficulty: {
+        type: String,
+        enum: ['easy', 'medium', 'hard', 'impossible'],
+        default: 'medium',
+        index: true,
+    },
     /**
      * Which draw a question belongs to. `regular` questions make up papers;
      * `power` questions are dealt only to teams that submit early; `tiebreak`
@@ -64,6 +73,31 @@ const EventActivitySchema = new mongoose.Schema({
         /** Overall host-paced envelope. Starts with the first opened question. */
         roundDurationSeconds: { type: Number, default: 1800, min: 0 },
         scoring: { type: String, enum: ['correct_only', 'speed_bonus', 'partial'], default: 'correct_only' },
+
+        /**
+         * What a wrong answer costs, per difficulty.
+         *
+         * A round where teams pick their own difficulty needs a reason not to
+         * pick the highest one every time; without a penalty the expected value
+         * of guessing at 300 points is never worse than answering an easy
+         * question correctly.
+         *
+         * Held as positive magnitudes and subtracted, so a glance at the config
+         * cannot leave you wondering whether a stored -50 means minus fifty or
+         * minus minus fifty. Off by default with every tier at zero, so no
+         * existing round starts scoring differently.
+         *
+         * Only a wrong answer is charged. Not answering is not a wrong answer —
+         * a team that runs out of time, or skips, scores zero rather than
+         * losing points for staying silent.
+         */
+        penalties: {
+            enabled: { type: Boolean, default: false },
+            easy: { type: Number, default: 0, min: 0 },
+            medium: { type: Number, default: 0, min: 0 },
+            hard: { type: Number, default: 0, min: 0 },
+            impossible: { type: Number, default: 0, min: 0 },
+        },
         shuffle: { type: Boolean, default: true },
         autoAdvance: { type: Boolean, default: true },
         maxParticipants: { type: Number, default: 500 },
