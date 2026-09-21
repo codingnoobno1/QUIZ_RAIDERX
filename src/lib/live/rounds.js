@@ -29,7 +29,39 @@ export const LIVE_COMMAND = {
     REVEAL_QUESTION: 'REVEAL_QUESTION',
     NEXT_QUESTION: 'NEXT_QUESTION',
     END_ROUND: 'END_ROUND',
+
+    // A difficulty round: the team whose turn it is names its own tier before
+    // a question is served. These move `quiz.choice` and deliberately leave
+    // `quiz.liveRound` alone — choosing happens between questions, never
+    // during one.
+    OFFER_CHOICE: 'OFFER_CHOICE',
+    LOCK_CHOICE: 'LOCK_CHOICE',
+    CLEAR_CHOICE: 'CLEAR_CHOICE',
 };
+
+export const DIFFICULTY_TIERS = ['easy', 'medium', 'hard', 'impossible'];
+
+export const CHOICE_STATE = { IDLE: 'idle', OPEN: 'open', LOCKED: 'locked' };
+
+/** The commands that touch the choice rather than the question. */
+const CHOICE_COMMANDS = new Set([
+    LIVE_COMMAND.OFFER_CHOICE,
+    LIVE_COMMAND.LOCK_CHOICE,
+    LIVE_COMMAND.CLEAR_CHOICE,
+]);
+
+/**
+ * Whether this team may still name a tier.
+ *
+ * The deadline is the server's, like every other deadline here: a phone with a
+ * slow clock must not be able to choose late, and one with a fast clock must
+ * not be cut off early.
+ */
+export function choiceIsOpen(choice, now = new Date()) {
+    if (choice?.state !== CHOICE_STATE.OPEN) return false;
+    if (!choice?.endsAt) return true;
+    return now.getTime() <= new Date(choice.endsAt).getTime() + GRACE_MS;
+}
 
 /**
  * Allowance for the network leg.
@@ -83,6 +115,12 @@ const ALLOWED_FROM = {
     [LIVE_COMMAND.REVEAL_QUESTION]: [ROUND_STATE.OPEN, ROUND_STATE.LOCKED],
     [LIVE_COMMAND.NEXT_QUESTION]: [ROUND_STATE.LOCKED, ROUND_STATE.REVEALED],
     [LIVE_COMMAND.END_ROUND]: Object.values(ROUND_STATE),
+
+    // Not while a question is open. Asking a team to pick a difficulty while
+    // it is answering one is two decisions at once.
+    [LIVE_COMMAND.OFFER_CHOICE]: [ROUND_STATE.IDLE, ROUND_STATE.LOCKED, ROUND_STATE.REVEALED],
+    [LIVE_COMMAND.LOCK_CHOICE]: [ROUND_STATE.IDLE, ROUND_STATE.LOCKED, ROUND_STATE.REVEALED],
+    [LIVE_COMMAND.CLEAR_CHOICE]: Object.values(ROUND_STATE),
 };
 
 const NEXT_STATE = {
@@ -109,7 +147,55 @@ const GUARDS = {
         const next = (quiz.liveRound?.questionIndex ?? 0) + 1;
         return next < total ? null : 'That was the last question.';
     },
+
+    [LIVE_COMMAND.OFFER_CHOICE]: (quiz, payload) => {
+        if (!String(payload?.teamId ?? '').trim()) {
+            return 'Name the team whose turn it is.';
+        }
+        const seconds = Number(payload?.durationSeconds);
+        if (payload?.durationSeconds !== undefined && (!Number.isFinite(seconds) || seconds <= 0)) {
+            return 'The time to choose must be a positive number of seconds.';
+        }
+        return null;
+    },
+
+    [LIVE_COMMAND.LOCK_CHOICE]: (quiz, payload) => {
+        const choice = quiz.choice ?? {};
+        if (choice.state !== CHOICE_STATE.OPEN) return 'No team has been offered a choice.';
+
+        // The host may name the tier themselves, which is how a team that said
+        // nothing still gets a question rather than stalling the round.
+        const forced = payload?.difficulty;
+        if (forced !== undefined && !DIFFICULTY_TIERS.includes(forced)) {
+            return `Difficulty must be one of ${DIFFICULTY_TIERS.join(', ')}.`;
+        }
+        if (forced === undefined && !choice.difficulty) {
+            return 'That team has not chosen yet. Name a difficulty to lock one for them.';
+        }
+        return null;
+    },
 };
+
+/**
+ * A question may only be served at the tier the team locked in.
+ *
+ * The whole point of letting a team pick its own difficulty is that the pick
+ * binds — serving a hard question to a team that said easy would take the
+ * penalty they never agreed to. Checked here rather than trusted to the host,
+ * who is reading a question list under time pressure.
+ */
+function choiceMismatch(quiz, index) {
+    const choice = quiz.choice ?? {};
+    if (choice.state !== CHOICE_STATE.LOCKED || !choice.difficulty) return null;
+
+    const question = quiz.questions?.[index];
+    if (!question) return null;
+
+    const tier = question.difficulty ?? 'medium';
+    if (tier === choice.difficulty) return null;
+
+    return `${choice.teamName || 'That team'} chose ${choice.difficulty}; question ${index + 1} is ${tier}.`;
+}
 
 /**
  * @returns {{ ok: true, nextState: string } | { ok: false, reason: string }}
@@ -134,6 +220,18 @@ export function canRunLive(action, quiz, payload) {
 
     const reason = GUARDS[action]?.(quiz, payload);
     if (reason) return { ok: false, reason };
+
+    if (action === LIVE_COMMAND.OPEN_QUESTION || action === LIVE_COMMAND.NEXT_QUESTION) {
+        const index = action === LIVE_COMMAND.OPEN_QUESTION
+            ? Number(payload?.questionIndex)
+            : (quiz.liveRound?.questionIndex ?? 0) + 1;
+        const mismatch = choiceMismatch(quiz, index);
+        if (mismatch) return { ok: false, reason: mismatch };
+    }
+
+    // A choice command decides who is up and at what tier. It must not move the
+    // question from locked back to open, so it leaves the round where it is.
+    if (CHOICE_COMMANDS.has(action)) return { ok: true, nextState: state };
 
     return { ok: true, nextState: NEXT_STATE[action] };
 }
@@ -174,7 +272,73 @@ export function applyLiveEffects({ action, payload = {}, quiz, now, newInstanceI
             }
             break;
 
+        case LIVE_COMMAND.OFFER_CHOICE: {
+            const seconds = Number(payload.durationSeconds);
+            const window = Number.isFinite(seconds) && seconds > 0 ? seconds : 30;
+            quiz.choice = {
+                state: CHOICE_STATE.OPEN,
+                teamId: String(payload.teamId).trim(),
+                teamName: String(payload.teamName ?? '').trim() || null,
+                offeredAt: now,
+                endsAt: new Date(now.getTime() + window * 1000),
+                durationSeconds: window,
+                difficulty: null,
+                chosenAt: null,
+                chosenBy: null,
+            };
+            // The question is served only to the team that is up, so targeting
+            // follows the offer rather than being set again by hand.
+            quiz.liveRound = {
+                ...(quiz.liveRound ?? {}),
+                target: { kind: 'teams', teamIds: [String(payload.teamId).trim()] },
+            };
+            break;
+        }
+
+        case LIVE_COMMAND.LOCK_CHOICE: {
+            const forced = payload.difficulty;
+            quiz.choice = {
+                ...(quiz.choice ?? {}),
+                state: CHOICE_STATE.LOCKED,
+                difficulty: forced ?? quiz.choice?.difficulty ?? null,
+                chosenAt: quiz.choice?.chosenAt ?? now,
+                // A tier the host had to supply is recorded as theirs, so the
+                // board can never imply a team picked something it did not.
+                chosenBy: forced ? 'host' : (quiz.choice?.chosenBy ?? 'host'),
+            };
+            break;
+        }
+
+        case LIVE_COMMAND.CLEAR_CHOICE:
+            quiz.choice = {
+                state: CHOICE_STATE.IDLE,
+                teamId: null,
+                teamName: null,
+                offeredAt: null,
+                endsAt: null,
+                durationSeconds: null,
+                difficulty: null,
+                chosenAt: null,
+                chosenBy: null,
+            };
+            quiz.liveRound = {
+                ...(quiz.liveRound ?? {}),
+                target: { kind: 'all', teamIds: [] },
+            };
+            break;
+
         case LIVE_COMMAND.END_ROUND:
+            quiz.choice = {
+                state: CHOICE_STATE.IDLE,
+                teamId: null,
+                teamName: null,
+                offeredAt: null,
+                endsAt: null,
+                durationSeconds: null,
+                difficulty: null,
+                chosenAt: null,
+                chosenBy: null,
+            };
             quiz.liveRound = {
                 instanceId: null,
                 questionIndex: round.questionIndex ?? 0,
@@ -369,4 +533,45 @@ export function leaderNameOf(reg) {
         (m) => String(m?.email ?? '').toLowerCase() === leader,
     );
     return member?.name ?? reg?.name ?? null;
+}
+
+/**
+ * A team naming its own tier.
+ *
+ * Separate from the command table because this one is not the host's: it comes
+ * from a participant, and every refusal here is about whether *this* team may
+ * choose *now*. Returns a reason rather than throwing, so the route can answer
+ * with the right status and the right sentence.
+ *
+ * A team may change its mind while the window is open — the tap that matters is
+ * the last one before the host locks it. A first tap that could not be undone
+ * would make a mis-tap cost a round.
+ */
+export function applyTeamChoice(quiz, { teamId, difficulty, email, now = new Date() }) {
+    const choice = quiz?.choice ?? {};
+
+    if (choice.state === CHOICE_STATE.LOCKED) {
+        return { ok: false, code: 'CHOICE_LOCKED', reason: 'That choice has already been locked in.' };
+    }
+    if (choice.state !== CHOICE_STATE.OPEN) {
+        return { ok: false, code: 'NO_CHOICE_OPEN', reason: 'Nobody has been asked to choose right now.' };
+    }
+    if (!teamId || String(choice.teamId) !== String(teamId)) {
+        return { ok: false, code: 'NOT_YOUR_TURN', reason: 'It is another team’s turn to choose.' };
+    }
+    if (!choiceIsOpen(choice, now)) {
+        return { ok: false, code: 'CHOICE_CLOSED', reason: 'The time to choose has passed.' };
+    }
+    if (!DIFFICULTY_TIERS.includes(difficulty)) {
+        return { ok: false, code: 'UNKNOWN_DIFFICULTY', reason: `Choose one of ${DIFFICULTY_TIERS.join(', ')}.` };
+    }
+
+    quiz.choice = {
+        ...choice,
+        difficulty,
+        chosenAt: now,
+        chosenBy: email ?? null,
+    };
+
+    return { ok: true, choice: quiz.choice };
 }

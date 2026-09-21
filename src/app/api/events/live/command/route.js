@@ -108,6 +108,7 @@ export async function POST(req) {
             quiz.liveRound.state = verdict.nextState;
             activity.markModified('quiz.liveRound');
             activity.markModified('quiz.roundClock');
+            activity.markModified('quiz.choice');
             await activity.save();
 
             return NextResponse.json({
@@ -121,6 +122,7 @@ export async function POST(req) {
                     target: quiz.liveRound.target,
                 },
                 roundClock: quiz.roundClock ?? null,
+                choice: quiz.choice ?? null,
                 serverTime: now.toISOString(),
                 changedBy: auth.actor.email || auth.actor.name,
             });
@@ -440,6 +442,16 @@ async function liveConsoleState(activity) {
             target: round.target ?? { kind: 'all', teamIds: [] },
         },
         roundClock: quiz.roundClock ?? null,
+        // The console's difficulty panel is built from this. Without it the
+        // host cannot see whose turn it is or what they picked.
+        choice: quiz.choice?.state && quiz.choice.state !== 'idle' ? {
+            state: quiz.choice.state,
+            teamId: quiz.choice.teamId ?? null,
+            teamName: quiz.choice.teamName ?? null,
+            difficulty: quiz.choice.difficulty ?? null,
+            endsAt: quiz.choice.endsAt ?? null,
+            chosenBy: quiz.choice.chosenBy ?? null,
+        } : null,
         answers: answers.map((a) => ({
             participantId: a.participantId,
             name: a.name,

@@ -91,6 +91,25 @@ const EventActivitySchema = new mongoose.Schema({
          * a team that runs out of time, or skips, scores zero rather than
          * losing points for staying silent.
          */
+        /**
+         * Whose turn it is, and at what tier — a difficulty round's own small
+         * state, kept apart from `liveRound` because choosing happens between
+         * questions, never during one. Written only by the live command route
+         * and the team's own choice endpoint, never by a config edit.
+         */
+        choice: {
+            state: { type: String, enum: ['idle', 'open', 'locked'], default: 'idle' },
+            teamId: { type: String, default: null },
+            teamName: { type: String, default: null },
+            offeredAt: { type: Date, default: null },
+            endsAt: { type: Date, default: null },
+            durationSeconds: { type: Number, default: null },
+            difficulty: { type: String, enum: ['easy', 'medium', 'hard', 'impossible', null], default: null },
+            chosenAt: { type: Date, default: null },
+            /** The team member's address, or `host` when the host named it for them. */
+            chosenBy: { type: String, default: null },
+        },
+
         penalties: {
             enabled: { type: Boolean, default: false },
             easy: { type: Number, default: 0, min: 0 },

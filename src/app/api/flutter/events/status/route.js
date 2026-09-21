@@ -349,12 +349,46 @@ async function participantHasSubmitted(activity, participantId) {
  * decided any of them could show a non-targeted team the question early, or
  * reveal the answer to whoever opened the developer tools.
  */
+/**
+ * The difficulty a team is being asked to name, if any.
+ *
+ * `mine` is the whole question a chooser screen asks — "am I the one being
+ * asked right now" — answered here so a phone never has to compare team ids it
+ * only half knows.
+ */
+function shapeChoice(quiz, teamId) {
+    const choice = quiz?.choice;
+    if (!choice?.state || choice.state === 'idle') return null;
+    return {
+        state: choice.state,
+        mine: Boolean(teamId) && String(choice.teamId ?? '') === String(teamId),
+        teamId: choice.teamId ?? null,
+        teamName: choice.teamName ?? null,
+        difficulty: choice.difficulty ?? null,
+        endsAt: choice.endsAt ?? null,
+    };
+}
+
 async function buildLiveRound({ activity, quiz, question, req, participantId }) {
     const round = quiz.liveRound ?? {};
     const now = new Date();
 
     if (!round.instanceId) {
-        return { state: ROUND_STATE.IDLE, instanceId: null, questionIndex: round.questionIndex ?? 0 };
+        // A team is asked to choose *before* the first question opens, so this
+        // early return has to carry the choice too — otherwise the one screen
+        // that needs it is the one screen that never receives it.
+        const auth = await requireEventUser(req);
+        const early = auth.ok
+            ? await resolveParticipantTeam(activity.eventId, auth.email)
+            : { teamId: null, teamName: null };
+        return {
+            state: ROUND_STATE.IDLE,
+            instanceId: null,
+            questionIndex: round.questionIndex ?? 0,
+            myTeamId: early.teamId,
+            myTeamName: early.teamName,
+            choice: shapeChoice(quiz, early.teamId),
+        };
     }
 
     const state = effectiveRoundState(round, now);
@@ -397,6 +431,8 @@ async function buildLiveRound({ activity, quiz, question, req, participantId }) 
         // signed in with — it cannot work out who leads its own team.
         qualified,
         targeted: qualified && isTargeted(round, team.teamId),
+
+        choice: shapeChoice(quiz, team.teamId),
         targetKind: round.target?.kind ?? 'all',
         targetTeams,
         myTeamId: team.teamId,
