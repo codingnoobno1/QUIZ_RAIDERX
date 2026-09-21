@@ -95,6 +95,10 @@ try {
     imageUrl: e.imageUrl ?? undefined,
     tags: e.tags ?? [],
     onDuty: Boolean(e.onDuty),
+    // Solo, team or both. Dropped before this line existed, so a team-only
+    // event imported as open to solo entries — and a solo entrant cannot sit
+    // a team-scored round.
+    ...(e.participation ? { participation: e.participation } : {}),
     modes: e.modes ?? [],
     organizer: e.organizer ?? undefined,
     eligibility: e.eligibility ?? [],
@@ -139,8 +143,11 @@ try {
     const questions = q.questions.map((question) => ({
       _id: new ObjectId(),
       text: question.text,
+      type: question.type ?? 'choice',
       options: question.options,
       correctAnswer: question.correctAnswer,
+      difficulty: question.difficulty ?? 'medium',
+      pool: question.pool ?? 'regular',
       points: question.points ?? 10,
       ...(question.imageUrl ? { imageUrl: question.imageUrl } : {}),
     }));
@@ -154,10 +161,31 @@ try {
         quizType: q.quizType ?? 'rapid_fire',
         questions,
         timePerQuestion: q.timePerQuestion ?? 30,
+        roundDurationSeconds: q.roundDurationSeconds ?? 1800,
         scoring: q.scoring ?? 'correct_only',
         shuffle: q.shuffle ?? true,
         autoAdvance: q.autoAdvance ?? true,
         maxParticipants: q.maxParticipants ?? 500,
+        scope: q.scope ?? 'individual',
+        allowRetake: q.allowRetake ?? false,
+        ...(q.paper ? { paper: q.paper } : {}),
+        // What a wrong answer costs per tier. Dropped silently before this
+        // line existed, which for a difficulty round means importing the one
+        // rule that makes choosing a hard question a decision at all.
+        ...(q.penalties ? { penalties: q.penalties } : {}),
+        // Whose turn it is. Always imported idle: a round arrives with nobody
+        // mid-choice, whatever the file says.
+        choice: {
+          state: 'idle',
+          teamId: null,
+          teamName: null,
+          offeredAt: null,
+          endsAt: null,
+          durationSeconds: null,
+          difficulty: null,
+          chosenAt: null,
+          chosenBy: null,
+        },
         currentQuestion: 0,
         phase: 'lobby',
         round: 1,
