@@ -21,7 +21,14 @@ import { usePotentialTeammates } from '@/hooks/queries/useEventQueries';
 const emptyMember = () => ({ name: '', email: '', enrollmentNumber: '', semester: '' });
 
 export default function RegistrationForm({ event, user, onSubmit, isSubmitting, error }) {
-  const [type, setType] = useState('solo');
+  // What this event actually runs. An event played in teams should not offer a
+  // solo button at all — taking it left someone registered, seated, and unable
+  // to sit the round, which they found out only once it was live.
+  const participation = event.participation ?? 'both';
+  const allowsSolo = participation !== 'team';
+  const allowsTeam = participation !== 'solo';
+
+  const [type, setType] = useState(allowsSolo ? 'solo' : 'team');
   const [teamName, setTeamName] = useState('');
   const [members, setMembers] = useState([]);
   const [touched, setTouched] = useState(false);
@@ -53,6 +60,7 @@ export default function RegistrationForm({ event, user, onSubmit, isSubmitting, 
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ p: { xs: 2, md: 3 } }}>
+      {allowsSolo && allowsTeam ? (
       <ToggleButtonGroup
         value={type}
         exclusive
@@ -77,6 +85,24 @@ export default function RegistrationForm({ event, user, onSubmit, isSubmitting, 
         <ToggleButton value="solo">Solo</ToggleButton>
         <ToggleButton value="team">Team</ToggleButton>
       </ToggleButtonGroup>
+      ) : (
+        <Typography
+          sx={{
+            mb: 3,
+            px: 1.75,
+            py: 1.25,
+            borderRadius: `${radius.md}px`,
+            bgcolor: tint(color.brand, 0.08),
+            border: `1px solid ${tint(color.brand, 0.3)}`,
+            color: color.text,
+            fontSize: '0.84rem',
+          }}
+        >
+          {allowsTeam
+            ? 'This event is played in teams. Name your team and invite your teammates below.'
+            : 'This event is played individually. There are no teams to join.'}
+        </Typography>
+      )}
 
       {type === 'solo' ? (
         <Panel title="Confirm your details">

@@ -83,8 +83,29 @@ export async function POST(req) {
     try {
         await connectDB();
 
-        const event = await Event.findById(eventId).select('_id title').lean();
+        const event = await Event.findById(eventId).select('_id title participation').lean();
         if (!event) return notFound('That event no longer exists.');
+
+        // Refused here rather than merely hidden on the form. A solo entry to a
+        // team event is not a cosmetic mistake: the person is registered, holds
+        // a seat, and then cannot sit a team-scored round — which they only
+        // discover when the round is already live and the screen tells them to
+        // ask a team leader to invite them to a team they were never allowed
+        // to be on. Events created before this setting existed default to
+        // `both`, so nothing that was valid yesterday is refused today.
+        const participation = event.participation ?? 'both';
+        if (participation === 'team' && !isTeam) {
+            return badRequest('This event is played in teams. Register a team instead.', {
+                code: 'SOLO_NOT_ALLOWED',
+                participation,
+            });
+        }
+        if (participation === 'solo' && isTeam) {
+            return badRequest('This event is played individually. Register yourself instead.', {
+                code: 'TEAM_NOT_ALLOWED',
+                participation,
+            });
+        }
 
         // Seats, not membership. Someone who merely has a PENDING invite from
         // another team is free to register — only an accepted seat blocks them.

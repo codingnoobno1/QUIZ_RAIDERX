@@ -39,6 +39,11 @@ export function toEvent(json) {
     location: str(json.location, 'TBA'),
     imageUrl: str(json.imageUrl) || null,
     tags: list(json.tags).map((t) => str(t)).filter(Boolean),
+    // Events created before this setting existed have no value; they accept
+    // both, which is what they have always done.
+    participation: ['solo', 'team', 'both'].includes(json.participation)
+      ? json.participation
+      : 'both',
     onDuty: bool(json.onDuty),
     createdAt: date(json.createdAt),
     participantCount: num(json.participantCount),

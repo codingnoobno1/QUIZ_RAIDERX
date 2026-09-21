@@ -9,6 +9,26 @@ const eventSchema = new mongoose.Schema({
   imageUrl: { type: String },
   tags: [{ type: String }],
 
+  /**
+   * Who may enter, and how.
+   *
+   * Registration used to accept solo and team entries for every event with no
+   * way to say which an event actually runs. That leaves people stranded: a
+   * participant registers solo, the organiser starts a team-scored round, and
+   * the round tells them to ask a team leader to invite them — for a team they
+   * were never allowed to be on. The mismatch was only discoverable once the
+   * round was live, which is the worst moment.
+   *
+   * `both` is the default because it is what every existing event has been
+   * doing, and a stricter default would retroactively refuse entries that are
+   * already valid.
+   */
+  participation: {
+    type: String,
+    enum: ['solo', 'team', 'both'],
+    default: 'both',
+  },
+
   // ── Event page content ───────────────────────────────────────────────────
   // All optional. The detail page renders a section only when its field is
   // filled, so an event with nothing here looks deliberate rather than broken,

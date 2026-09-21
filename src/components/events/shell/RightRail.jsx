@@ -25,6 +25,9 @@ export default function RightRail({ user }) {
   const myTeams = registrations.filter((r) => r.isTeam);
   const upcoming = events.filter((e) => e.isUpcoming).slice(0, 3);
 
+  const eventTitleFor = (team) =>
+    team.event?.title ?? events.find((e) => e.id === team.eventId)?.title ?? null;
+
   return (
     <Stack spacing={1.5}>
       {invitations.length > 0 && (
@@ -54,6 +57,17 @@ export default function RightRail({ user }) {
                   </Typography>
                   <Chip tone={color.green}>{accepted} in</Chip>
                 </Stack>
+
+                {/* Which event this team is for. A team belongs to exactly one
+                    event, but this rail spans the whole dashboard and shows the
+                    first one it finds — so beside an event that the viewer
+                    entered solo, it read as "you are on a team" for a team that
+                    has nothing to do with the page. */}
+                {eventTitleFor(team) && (
+                  <Typography sx={{ color: color.textFaint, fontSize: '0.68rem', mt: 0.25 }}>
+                    {eventTitleFor(team)}
+                  </Typography>
+                )}
 
                 <Stack spacing={0.5} sx={{ mt: 1.25 }}>
                   <Member
