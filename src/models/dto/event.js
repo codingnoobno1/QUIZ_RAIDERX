@@ -87,8 +87,28 @@ export function toEvent(json) {
     get isUpcoming() {
       return this.date ? this.date.getTime() > Date.now() : false;
     },
+    /**
+     * Finished — which is not the same as "its timestamp is behind us".
+     *
+     * `date` is a day stamp: it is stored at midnight, and the hour lives
+     * separately in `time` as free text ("9 AM"), so there is no instant here
+     * that means "the event started". Comparing midnight to the clock therefore
+     * declared an event finished from 00:00 on the very morning it ran — the
+     * detail page said "This event has finished" beside a "Live now" badge,
+     * registration was closed all day, and the event filed itself under Past
+     * while it was happening.
+     *
+     * Without an end time the honest boundary is the end of the event's day.
+     * Local midnight, because the date renders to the reader in local time too.
+     *
+     * (`isUpcoming` still means strictly later than now, so an event today is
+     * neither upcoming nor past — that is what `isToday` and `stage` are for.)
+     */
     get isPast() {
-      return this.date ? this.date.getTime() < Date.now() : false;
+      if (!this.date) return false;
+      const endOfDay = new Date(this.date);
+      endOfDay.setHours(23, 59, 59, 999);
+      return endOfDay.getTime() < Date.now();
     },
     get isToday() {
       if (!this.date) return false;
