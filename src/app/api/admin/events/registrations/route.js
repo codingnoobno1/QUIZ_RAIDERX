@@ -78,11 +78,16 @@ export async function GET(req) {
 }
 
 /**
- * DELETE ?eventId=<id>&confirm=<id>[&force=true]
+ * DELETE ?eventId=<id>&confirm=<id>[&force=true][&includePlay=true]
  *
  * Removes every registration for the event — solo and team alike. Activities,
  * their questions and the round rosters are left alone: this resets who is
  * entered, not what is being run.
+ *
+ * `includePlay` also clears what those entrants did: submissions, dealt papers,
+ * live answers, votes and hunt progress. Without it a rehearsal leaves its own
+ * wreckage on the board — a scoreless entry from an attempt that was refused
+ * still ranks on the standings of the "fresh" run that follows.
  */
 export async function DELETE(req) {
     const auth = await requireAdmin(req);
@@ -91,7 +96,10 @@ export async function DELETE(req) {
     const params = new URL(req.url).searchParams;
     const eventId = params.get('eventId');
     const confirm = params.get('confirm');
-    const force = params.get('force') === 'true';
+    const includePlay = params.get('includePlay') === 'true';
+    // Clearing the play data removes the very thing the refusal protects, so
+    // asking for it is also answering it.
+    const force = params.get('force') === 'true' || includePlay;
 
     const invalid = invalidIdResponse(eventId, 'eventId');
     if (invalid) return invalid;
@@ -122,8 +130,27 @@ export async function DELETE(req) {
 
         const result = await EventRegistration.deleteMany({ eventId });
 
+        let playDeleted = null;
+        if (includePlay) {
+            const [submissions, papers, answers, votes, hunts] = await Promise.all([
+                QuizSubmission.deleteMany({ eventId }),
+                QuizPaper.deleteMany({ eventId }),
+                LiveAnswer.deleteMany({ eventId }),
+                EventVote.deleteMany({ eventId }),
+                HuntProgress.deleteMany({ eventId }),
+            ]);
+            playDeleted = {
+                submissions: submissions.deletedCount,
+                papers: papers.deletedCount,
+                answers: answers.deletedCount,
+                votes: votes.deletedCount,
+                hunts: hunts.deletedCount,
+            };
+        }
+
         console.warn(
-            `[api:admin/registrations/reset] ${result.deletedCount} registration(s) deleted for `
+            `[api:admin/registrations/reset] ${result.deletedCount} registration(s)`
+            + `${includePlay ? ` and play data ${JSON.stringify(playDeleted)}` : ''} deleted for `
             + `"${event.title}" (${eventId}) by ${auth.actor?.email || auth.actor?.name || 'admin'}`,
         );
 
@@ -132,7 +159,8 @@ export async function DELETE(req) {
             data: {
                 event: { id: eventId, title: event.title },
                 deleted: result.deletedCount,
-                playDataLeftBehind: force ? before.play : null,
+                playDeleted,
+                playDataLeftBehind: !includePlay && before.playTotal > 0 ? before.play : null,
                 remaining: await tally(eventId),
             },
         });
