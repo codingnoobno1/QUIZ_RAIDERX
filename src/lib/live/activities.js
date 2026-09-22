@@ -1,4 +1,6 @@
 import EventActivity from '@/models/EventActivity';
+import { buildStandings } from '@/lib/buzzer/scoring';
+import { listEventTeams } from '@/lib/rounds/roster';
 
 /**
  * Activity rules shared by every route that creates, edits or switches one.
@@ -51,6 +53,17 @@ export async function startActivity(activity) {
         // answer a question nobody has been asked yet.
         if (!quiz.buzzer) quiz.buzzer = {};
         quiz.buzzer.round = lobbyRound(quiz.buzzer.round?.questionIndex ?? 0);
+
+        // Seed the board, so the lobby on every phone and the projector show
+        // the whole field at zero from the moment the round goes live rather
+        // than an empty list until the first question is staged. Scores from a
+        // previous run are kept: they live in buzz_attempts, and clearing them
+        // is a rehearsal reset, not a restart.
+        quiz.buzzer.standings = await buildStandings({
+            activityId: activity._id,
+            teams: await listEventTeams(activity.eventId),
+        });
+        quiz.buzzer.standingsAt = new Date();
     }
 }
 
