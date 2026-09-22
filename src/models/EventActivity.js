@@ -7,9 +7,32 @@ const QuestionSchema = new mongoose.Schema({
      * path used by written/typed live questions; it is graded server-side after
      * trimming whitespace and folding case.
      */
-    type: { type: String, enum: ['choice', 'text'], default: 'choice' },
+    /**
+     * `choice` and `text` predate Electric Answers and still mean what they
+     * always did. `mcq`, `truefalse` and `fillup` are what the app renders an
+     * answer box for, and `lib/buzzer/machine.js` maps the old names onto them
+     * so questions written years apart can be staged in the same round.
+     */
+    type: {
+        type: String,
+        enum: ['choice', 'text', 'mcq', 'truefalse', 'fillup'],
+        default: 'choice',
+    },
     options: [{ type: String }],
-    correctAnswer: { type: String, required: true },
+    /**
+     * Required, except for a question the host typed in during the event to be
+     * answered aloud — there the host is the judge and there is nothing to
+     * store. The console warns that such a question has nothing to show at
+     * reveal.
+     */
+    correctAnswer: {
+        type: String,
+        required: function () { return this.source !== 'spot'; },
+    },
+    /** Fill-up: every spelling the grader should accept besides the canonical one. */
+    acceptedAnswers: [{ type: String }],
+    /** `spot` = typed in by the host mid-event, rather than dealt from the pack. */
+    source: { type: String, enum: ['pack', 'spot'], default: 'pack' },
     /**
      * What a generated paper draws on, and what decides the question's value
      * when the paper defines a points table. Questions written before this
@@ -67,7 +90,7 @@ const EventActivitySchema = new mongoose.Schema({
         default: 'inactive', index: true
     },
     quiz: {
-        quizType: { type: String, enum: ['rapid_fire', 'custom_live', 'preloaded', 'kbc'], default: 'rapid_fire' },
+        quizType: { type: String, enum: ['rapid_fire', 'custom_live', 'preloaded', 'kbc', 'buzzer'], default: 'rapid_fire' },
         questions: [QuestionSchema],
         timePerQuestion: { type: Number, default: 10 },
         /** Overall host-paced envelope. Starts with the first opened question. */
@@ -231,6 +254,127 @@ const EventActivitySchema = new mongoose.Schema({
             startedAt: { type: Date, default: null },
             endsAt: { type: Date, default: null },
             durationSeconds: { type: Number, default: null },
+        },
+
+        // ── Electric Answers (buzzer) ────────────────────────────────────
+        //
+        // The buzzer round's own state, kept apart from `liveRound` for the
+        // same reason KBC's is: a race with a countdown, a seat and a queue has
+        // no idle/open/locked, and `liveRound` has no armsAt. The machine is
+        // `lib/buzzer/machine.js`.
+        //
+        // `countdown` -> `buzzing` and `buzzing` -> `no_buzz` are DERIVED from
+        // `armsAt` and `buzzClosesAt` on every read, never written. There is no
+        // scheduler on Netlify, and a three-second countdown could not wait for
+        // one anyway.
+        buzzer: {
+            // Activity defaults. The host may override `answerMode` and
+            // `showOptionsBeforeBuzz` per question when staging it.
+            answerMode: { type: String, enum: ['in_app', 'spoken'], default: 'in_app' },
+            countdownSeconds: { type: Number, default: 3, min: 1 },
+            buzzWindowSeconds: { type: Number, default: 10, min: 1 },
+            answerSeconds: { type: Number, default: 15, min: 1 },
+            /** A magnitude, subtracted. Zero means a wrong answer simply scores nothing. */
+            wrongPenalty: { type: Number, default: 0, min: 0 },
+            /** What a passed question is worth. `null` = the question's own points. */
+            passPoints: { type: Number, default: null },
+            falseStartLockout: { type: Boolean, default: true },
+            /** Whether a tie for the win, or any tie on the podium, offers sudden death. */
+            tieScope: { type: String, enum: ['first', 'podium'], default: 'first' },
+            /**
+             * Off until a rehearsal says otherwise. On, the phone's own
+             * skew-corrected press time is accepted inside a window its
+             * measured round trip allows — which is still partly trusting a
+             * client, and worth doing only if the room's Wi-Fi makes it matter.
+             */
+            latencyCompensation: { type: Boolean, default: false },
+            /** Empty = every team registered for the event. */
+            teamIds: [{ type: String }],
+            /** Per-team override of who may press, for a leader with no working phone. */
+            answerers: [{ teamId: String, email: String }],
+
+            round: {
+                /** New on every staging, as `liveRound.instanceId` is on every open. */
+                instanceId: { type: mongoose.Schema.Types.ObjectId, default: null },
+                questionIndex: { type: Number, default: 0 },
+                phase: {
+                    type: String,
+                    enum: [
+                        'lobby',
+                        'staged',
+                        'countdown',
+                        'buzzing',
+                        'seated',
+                        'judged_correct',
+                        'judged_wrong',
+                        'no_buzz',
+                        'revealed',
+                        'completed',
+                    ],
+                    default: 'lobby',
+                },
+                answerMode: { type: String, enum: ['in_app', 'spoken'], default: 'in_app' },
+                showOptionsBeforeBuzz: { type: Boolean, default: true },
+
+                stagedAt: { type: Date, default: null },
+                /** The one instant every phone counts down to. */
+                armsAt: { type: Date, default: null },
+                buzzClosesAt: { type: Date, default: null },
+                revealedAt: { type: Date, default: null },
+
+                /** All teams, or only the tied ones in a tie-break. */
+                eligibleTeamIds: [{ type: String }],
+                /** False starts. Out for this question only. */
+                lockedOutTeamIds: [{ type: String }],
+                /** Teams that have already had the seat for this question. */
+                attemptedTeamIds: [{ type: String }],
+
+                /**
+                 * Who has the floor. Claimed by a conditional update that only
+                 * matches while `teamId` is null, so two presses in the same
+                 * millisecond are decided by the database rather than by a
+                 * read-then-write in JavaScript.
+                 */
+                seat: {
+                    teamId: { type: String, default: null },
+                    teamName: { type: String, default: null },
+                    leaderEmail: { type: String, default: null },
+                    leaderName: { type: String, default: null },
+                    pressedAt: { type: Date, default: null },
+                    /**
+                     * When this team took the floor, which is not when they
+                     * pressed: a passed question seats a team whose press was
+                     * half a minute earlier. Time on the seat is what ranks two
+                     * teams level on points.
+                     */
+                    seatedAt: { type: Date, default: null },
+                    attempt: { type: Number, default: 0 },
+                    answerEndsAt: { type: Date, default: null },
+                    answeredAt: { type: Date, default: null },
+                    submittedAnswer: { type: String, default: null },
+                },
+
+                isTiebreak: { type: Boolean, default: false },
+            },
+
+            /**
+             * The scoreboard, denormalised.
+             *
+             * Every phone polls twice a second in the hot phases and reads the
+             * scoreboard off every payload. Aggregating `buzz_attempts` on each
+             * of those polls would be one aggregation per phone per 500ms for
+             * the length of the round. Standings only move when a seat is
+             * judged — a host action, a few times a minute — so they are
+             * recomputed on that write and read straight off this document.
+             */
+            standings: [{
+                teamId: String,
+                teamName: String,
+                score: Number,
+                tiebreakWins: Number,
+                seatMs: Number,
+            }],
+            standingsAt: { type: Date, default: null },
         },
 
         // ── KBC ──────────────────────────────────────────────────────────

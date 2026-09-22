@@ -46,11 +46,20 @@ export async function startActivity(activity) {
         quiz.liveRound = idleRound(quiz.liveRound?.questionIndex ?? 0);
         quiz.roundClock = { startedAt: null, endsAt: null, durationSeconds: null };
     }
+    if (quiz?.quizType === 'buzzer') {
+        // Restarting with a seat still held from last time would let one team
+        // answer a question nobody has been asked yet.
+        if (!quiz.buzzer) quiz.buzzer = {};
+        quiz.buzzer.round = lobbyRound(quiz.buzzer.round?.questionIndex ?? 0);
+    }
 }
 
 export function stopActivity(activity) {
     activity.status = 'completed';
     activity.completedAt = new Date();
+    if (activity.quiz?.quizType === 'buzzer' && activity.quiz.buzzer?.round?.instanceId) {
+        activity.quiz.buzzer.round = lobbyRound(activity.quiz.buzzer.round.questionIndex ?? 0);
+    }
     if (activity.quiz?.quizType === 'custom_live' && activity.quiz.liveRound?.instanceId) {
         activity.quiz.liveRound = idleRound(activity.quiz.liveRound.questionIndex ?? 0);
     }
@@ -58,6 +67,26 @@ export function stopActivity(activity) {
         activity.quiz.roundClock = { startedAt: null, endsAt: null, durationSeconds: null };
     }
 }
+
+/** A buzzer round with nothing staged: no instance, no seat, nobody locked out. */
+const lobbyRound = (questionIndex) => ({
+    instanceId: null,
+    questionIndex,
+    phase: 'lobby',
+    stagedAt: null,
+    armsAt: null,
+    buzzClosesAt: null,
+    revealedAt: null,
+    eligibleTeamIds: [],
+    lockedOutTeamIds: [],
+    attemptedTeamIds: [],
+    seat: {
+        teamId: null, teamName: null, leaderEmail: null, leaderName: null,
+        pressedAt: null, seatedAt: null, attempt: 0,
+        answerEndsAt: null, answeredAt: null, submittedAnswer: null,
+    },
+    isTiebreak: false,
+});
 
 const idleRound = (questionIndex) => ({
     instanceId: null,
@@ -85,7 +114,7 @@ const EDITABLE = {
     quiz: [
         'quizType', 'questions', 'timePerQuestion', 'roundDurationSeconds', 'scoring', 'shuffle',
         'autoAdvance', 'maxParticipants', 'scope', 'allowRetake', 'paper', 'advancement',
-        'qualificationRoundId', 'penalties',
+        'qualificationRoundId', 'penalties', 'buzzer',
     ],
     voting: ['question', 'options', 'allowMultiple', 'showLiveResults', 'votingDurationSeconds'],
     hunt: ['checkpoints', 'ordered'],
@@ -93,7 +122,25 @@ const EDITABLE = {
     announcement: ['message', 'displaySeconds'],
 };
 
-const QUESTION_FIELDS = ['text', 'type', 'options', 'correctAnswer', 'difficulty', 'pool', 'points', 'imageUrl'];
+const QUESTION_FIELDS = [
+    'text', 'type', 'options', 'correctAnswer', 'acceptedAnswers', 'source',
+    'difficulty', 'pool', 'points', 'imageUrl',
+];
+
+/**
+ * The buzzer round's *settings* — never its state.
+ *
+ * `quiz.buzzer` holds both, so a config edit that wrote the whole object would
+ * clear the seat and the standings mid-question. Only these keys are writable
+ * here, and they are written as dotted paths so `round` and `standings` beside
+ * them survive the edit. Everything else under `quiz.buzzer` belongs to the
+ * live command route and its machine.
+ */
+const BUZZER_SETTINGS = [
+    'answerMode', 'countdownSeconds', 'buzzWindowSeconds', 'answerSeconds',
+    'wrongPenalty', 'passPoints', 'falseStartLockout', 'tieScope',
+    'latencyCompensation', 'teamIds',
+];
 const CHECKPOINT_FIELDS = [
     'checkpointId', 'hint', 'location', 'challengeType', 'quizRef', 'externalUrl', 'points', 'order',
 ];
@@ -119,6 +166,9 @@ export function sectionFor(type, body) {
 
     if (type === 'quiz' && Array.isArray(section.questions)) {
         section.questions = section.questions.map((q) => pick(q, [...QUESTION_FIELDS, '_id']));
+    }
+    if (type === 'quiz' && section.buzzer !== undefined) {
+        section.buzzer = pick(section.buzzer, BUZZER_SETTINGS);
     }
     // Only the size of the cut is configuration. Who actually advanced is
     // written by the sign-off endpoint alone, so a config edit cannot rewrite it.
@@ -153,6 +203,12 @@ export function updatePaths(type, body) {
 
     const section = sectionFor(type, body);
     for (const [key, value] of Object.entries(section)) {
+        if (type === 'quiz' && key === 'buzzer') {
+            // Dotted, so the live round and the board beside these settings are
+            // not replaced by a settings edit.
+            for (const [setting, v] of Object.entries(value)) $set[`quiz.buzzer.${setting}`] = v;
+            continue;
+        }
         if (type === 'quiz' && key === 'advancement') {
             // A dotted path, so the confirmed list beside it survives the edit.
             $set['quiz.advancement.count'] = value.count;

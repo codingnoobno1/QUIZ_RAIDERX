@@ -6,6 +6,22 @@ import AudiencePollVote from '@/models/AudiencePollVote';
 import FastestFingerSubmission from '@/models/FastestFingerSubmission';
 import { canRun, fiftyFiftyEliminations, COMMAND, PHASE } from '@/lib/kbc/machine';
 import LiveAnswer from '@/models/LiveAnswer';
+import BuzzPress from '@/models/BuzzPress';
+import BuzzAttempt from '@/models/BuzzAttempt';
+import {
+    BUZZER_COMMAND,
+    BUZZER_PHASE,
+    applyBuzzerEffects,
+    buzzerPoints,
+    buzzerQuestionType,
+    buzzerSettings,
+    canRunBuzzer,
+    effectiveBuzzerPhase,
+    remainingTeams,
+    tiedTeams,
+} from '@/lib/buzzer/machine';
+import { refreshStandings } from '@/lib/buzzer/scoring';
+import { listEventTeams } from '@/lib/rounds/roster';
 import {
     canRunLive,
     applyLiveEffects,
@@ -128,8 +144,12 @@ export async function POST(req) {
             });
         }
 
+        if (quiz.quizType === 'buzzer') {
+            return await runBuzzerCommand({ activity, quiz, action, payload, actor: auth.actor });
+        }
+
         return badRequest(
-            'This activity is not host-paced. Live commands apply to kbc and custom_live quizzes.',
+            'This activity is not host-paced. Live commands apply to kbc, custom_live and buzzer quizzes.',
         );
     } catch (error) {
         if (error?.code === 11000) {
@@ -336,6 +356,10 @@ export async function GET(req) {
             return NextResponse.json({ success: true, data: await liveConsoleState(activity) });
         }
 
+        if (activity.quiz?.quizType === 'buzzer') {
+            return NextResponse.json({ success: true, data: await buzzerConsoleState(activity) });
+        }
+
         const quiz = activity.quiz ?? {};
         const index = quiz.currentQuestion ?? 0;
         const question = quiz.questions?.[index] ?? null;
@@ -465,6 +489,290 @@ async function liveConsoleState(activity) {
         answerCount: answers.length,
         // The console counts down to this, corrected against serverTime, for
         // the same reason the phones do.
+        serverTime: now.toISOString(),
+    };
+}
+
+/**
+ * Electric Answers, driven from the console.
+ *
+ * The machine decides what is legal; this performs the effects and owns every
+ * write. Two things it has to work out first, because the machine deliberately
+ * cannot read them: who is next in the buzz queue, and who has not had a go
+ * yet. Both live in `buzz_presses`, and handing them to the machine as payload
+ * is what keeps it testable without a database.
+ */
+async function runBuzzerCommand({ activity, quiz, action, payload, actor }) {
+    const now = new Date();
+    const before = quiz.buzzer?.round ?? {};
+    const context = { ...payload };
+
+    if (action === BUZZER_COMMAND.PASS) {
+        context.nextTeam = await nextInQueue(before);
+    }
+
+    if (action === BUZZER_COMMAND.REBUZZ) {
+        context.remainingTeamIds = remainingTeams(before, await pressedTeamIds(before));
+    }
+
+    const staging = action === BUZZER_COMMAND.STAGE_QUESTION
+        || (action === BUZZER_COMMAND.INSERT_QUESTION && payload.stage);
+
+    let roster = null;
+    if (staging || action === BUZZER_COMMAND.START_TIEBREAK || action === BUZZER_COMMAND.END_GAME) {
+        roster = await eligibleTeams(activity, quiz);
+        // A tie-break goes out only to the teams the host named. Everything
+        // else goes out to everyone in the round.
+        if (staging) context.eligibleTeamIds = roster.ids;
+    }
+
+    const verdict = canRunBuzzer(action, quiz, context, now);
+    if (!verdict.ok) {
+        return conflict(verdict.reason, {
+            code: 'ILLEGAL_TRANSITION',
+            phase: effectiveBuzzerPhase(before, now),
+        });
+    }
+
+    // Captured before the effects run: MARK_* records an attempt for the team
+    // on the seat now, not for whoever the round moves on to.
+    const judgedSeat = (action === BUZZER_COMMAND.MARK_CORRECT || action === BUZZER_COMMAND.MARK_WRONG)
+        ? {
+            ...(before.seat ?? {}),
+            questionIndex: before.questionIndex ?? 0,
+            instanceId: before.instanceId,
+            isTiebreak: before.isTiebreak,
+        }
+        : null;
+
+    applyBuzzerEffects({
+        command: action,
+        payload: context,
+        quiz,
+        now,
+        // A fresh instance for every staging, for the same reason a live round
+        // mints one on every open: a re-asked question must not collide with
+        // the presses and attempts of the one that was abandoned.
+        newInstanceId: staging || action === BUZZER_COMMAND.START_TIEBREAK
+            ? new mongoose.Types.ObjectId()
+            : before.instanceId ?? null,
+    });
+
+    quiz.buzzer.round.phase = verdict.nextPhase;
+
+    // Marked narrowly on purpose. `markModified('quiz.buzzer')` would rewrite
+    // the whole subtree, and a press claiming the seat in the same moment would
+    // be undone by a command that never meant to touch it.
+    activity.markModified('quiz.buzzer.round');
+    if (action === BUZZER_COMMAND.SET_ANSWERER) activity.markModified('quiz.buzzer.answerers');
+    if (action === BUZZER_COMMAND.INSERT_QUESTION || action === BUZZER_COMMAND.START_TIEBREAK) {
+        activity.markModified('quiz.questions');
+    }
+    await activity.save();
+
+    if (judgedSeat?.teamId) {
+        await recordJudgement({
+            activity,
+            quiz,
+            seat: judgedSeat,
+            outcome: judgementOutcome(action, judgedSeat, now),
+            actor,
+            now,
+        });
+    }
+
+    // The board is denormalised onto the activity, so it is rebuilt whenever a
+    // score could have moved — and seeded when a round is staged, so the lobby
+    // shows every team at zero rather than an empty list.
+    if (judgedSeat?.teamId || roster) {
+        await refreshStandings({
+            activityId: activity._id,
+            teams: (roster ?? await eligibleTeams(activity, quiz)).teams,
+        });
+    }
+
+    const round = quiz.buzzer.round;
+    return NextResponse.json({
+        success: true,
+        phase: round.phase,
+        buzzer: {
+            instanceId: round.instanceId ? String(round.instanceId) : null,
+            questionIndex: round.questionIndex,
+            answerMode: round.answerMode,
+            armsAt: round.armsAt,
+            buzzClosesAt: round.buzzClosesAt,
+            seat: round.seat?.teamId ? round.seat : null,
+            eligibleTeamIds: round.eligibleTeamIds,
+            lockedOutTeamIds: round.lockedOutTeamIds,
+            attemptedTeamIds: round.attemptedTeamIds,
+            isTiebreak: round.isTiebreak,
+        },
+        serverTime: now.toISOString(),
+        changedBy: actor.email || actor.name,
+    });
+}
+
+/** The next team down the queue that has not already had the seat. */
+async function nextInQueue(round) {
+    if (!round?.instanceId) return null;
+
+    const presses = await BuzzPress.find({ instanceId: round.instanceId, falseStart: false })
+        .sort({ receivedAt: 1 })
+        .select('teamId teamName email name receivedAt')
+        .lean();
+
+    const attempted = new Set((round.attemptedTeamIds ?? []).map(String));
+    const next = presses.find((p) => !attempted.has(String(p.teamId)));
+    if (!next) return null;
+
+    return {
+        teamId: String(next.teamId),
+        teamName: next.teamName ?? null,
+        leaderEmail: next.email ?? null,
+        leaderName: next.name ?? null,
+        pressedAt: next.receivedAt,
+    };
+}
+
+/** Everyone with a press on record for this staging, false starts included. */
+async function pressedTeamIds(round) {
+    if (!round?.instanceId) return [];
+    const rows = await BuzzPress.find({ instanceId: round.instanceId }).select('teamId').lean();
+    return rows.map((r) => String(r.teamId));
+}
+
+/** The teams in this round, and their ids — the roster the board is built on. */
+async function eligibleTeams(activity, quiz) {
+    const teams = await listEventTeams(activity.eventId);
+    const allow = (quiz.buzzer?.teamIds ?? []).map(String);
+    const chosen = allow.length ? teams.filter((t) => allow.includes(String(t.teamId))) : teams;
+    return { teams: chosen, ids: chosen.map((t) => String(t.teamId)) };
+}
+
+/**
+ * A wrong answer and a silence are both wrong, but they are not the same thing
+ * to read back afterwards: one team answered and missed, the other let the
+ * clock run out. Both cost the same.
+ */
+function judgementOutcome(action, seat, now) {
+    if (action === BUZZER_COMMAND.MARK_CORRECT) return 'correct';
+    if (seat.submittedAnswer) return 'wrong';
+    return seat.answerEndsAt && now > new Date(seat.answerEndsAt) ? 'timeout' : 'wrong';
+}
+
+/**
+ * The host's verdict on one seat.
+ *
+ * Upserted rather than inserted: MARK_CORRECT after an in-app grade is an
+ * override, and an override has to replace the row it overrides rather than
+ * score the question twice.
+ */
+async function recordJudgement({ activity, quiz, seat, outcome, actor, now }) {
+    const question = quiz.questions?.[seat.questionIndex ?? 0];
+    const settings = buzzerSettings(quiz);
+    const attempt = seat.attempt || 1;
+    const seatedAt = seat.seatedAt ?? seat.pressedAt ?? now;
+
+    await BuzzAttempt.updateOne(
+        { instanceId: seat.instanceId, teamId: String(seat.teamId) },
+        {
+            $set: {
+                activityId: activity._id,
+                eventId: activity.eventId,
+                questionIndex: seat.questionIndex ?? 0,
+                teamName: seat.teamName ?? null,
+                attempt,
+                answerMode: quiz.buzzer?.round?.answerMode ?? settings.answerMode,
+                submittedAnswer: seat.submittedAnswer ?? null,
+                judgedBy: actor.email || actor.name || 'host',
+                outcome,
+                points: buzzerPoints({ question, settings, attempt, outcome }),
+                isTiebreak: Boolean(seat.isTiebreak),
+                seatMs: Math.max(0, now.getTime() - new Date(seatedAt).getTime()),
+                decidedAt: now,
+            },
+        },
+        { upsert: true },
+    );
+}
+
+/**
+ * Electric Answers console state.
+ *
+ * Everything the control room needs and nobody in the room may see: the correct
+ * answer, every press with the offset that decided it, the seat with its clock,
+ * the attempts so far, and who is tied where it matters.
+ */
+async function buzzerConsoleState(activity) {
+    const quiz = activity.quiz ?? {};
+    const round = quiz.buzzer?.round ?? {};
+    const now = new Date();
+    const index = round.questionIndex ?? quiz.currentQuestion ?? 0;
+    const question = quiz.questions?.[index] ?? null;
+    const settings = buzzerSettings(quiz);
+
+    const [presses, attempts] = round.instanceId
+        ? await Promise.all([
+            BuzzPress.find({ instanceId: round.instanceId })
+                .sort({ receivedAt: 1 })
+                .select('teamId teamName name email offsetMs falseStart receivedAt')
+                .lean(),
+            BuzzAttempt.find({ instanceId: round.instanceId })
+                .sort({ attempt: 1 })
+                .select('teamId teamName attempt outcome points submittedAnswer judgedBy')
+                .lean(),
+        ])
+        : [[], []];
+
+    const standings = quiz.buzzer?.standings ?? [];
+
+    return {
+        quizType: 'buzzer',
+        phase: effectiveBuzzerPhase(round, now),
+        storedPhase: round.phase ?? BUZZER_PHASE.LOBBY,
+        settings,
+        questionIndex: index,
+        totalQuestions: quiz.questions?.length ?? 0,
+        question: question
+            ? {
+                  text: question.text,
+                  type: buzzerQuestionType(question),
+                  options: question.options ?? [],
+                  points: question.points,
+                  correctAnswer: question.correctAnswer ?? null, // host only
+                  acceptedAnswers: question.acceptedAnswers ?? [],
+                  source: question.source ?? 'pack',
+              }
+            : null,
+        round: {
+            instanceId: round.instanceId ? String(round.instanceId) : null,
+            answerMode: round.answerMode ?? settings.answerMode,
+            showOptionsBeforeBuzz: round.showOptionsBeforeBuzz !== false,
+            stagedAt: round.stagedAt ?? null,
+            armsAt: round.armsAt ?? null,
+            buzzClosesAt: round.buzzClosesAt ?? null,
+            eligibleTeamIds: round.eligibleTeamIds ?? [],
+            lockedOutTeamIds: round.lockedOutTeamIds ?? [],
+            attemptedTeamIds: round.attemptedTeamIds ?? [],
+            seat: round.seat?.teamId ? round.seat : null,
+            isTiebreak: Boolean(round.isTiebreak),
+        },
+        // Sorted by arrival, each with the offset from `armsAt` that decided
+        // it. Two presses a few milliseconds apart were effectively a tie, and
+        // the host is the only one who can say so.
+        presses: presses.map((p, i) => ({
+            position: p.falseStart ? null : i,
+            teamId: p.teamId,
+            teamName: p.teamName,
+            name: p.name,
+            offsetMs: p.offsetMs,
+            falseStart: p.falseStart,
+            receivedAt: p.receivedAt,
+        })),
+        attempts,
+        standings,
+        tiedTeams: tiedTeams(standings, settings.tieScope),
+        answerers: quiz.buzzer?.answerers ?? [],
         serverTime: now.toISOString(),
     };
 }

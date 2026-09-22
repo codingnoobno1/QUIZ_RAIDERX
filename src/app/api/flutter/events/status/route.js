@@ -10,6 +10,9 @@ import FastestFingerSubmission from '@/models/FastestFingerSubmission';
 import EventRegistration from '@/models/EventRegistration';
 import LiveAnswer from '@/models/LiveAnswer';
 import { buildKbcPayload } from '@/lib/kbc/viewerPayload';
+import { buildBuzzerPayload } from '@/lib/buzzer/viewerPayload';
+import BuzzPress from '@/models/BuzzPress';
+import BuzzAttempt from '@/models/BuzzAttempt';
 import { ROUND_STATE, effectiveRoundState, isTargeted, leaderNameOf, resolveParticipantTeam } from '@/lib/live/rounds';
 import { teamIsQualified } from '@/lib/rounds/qualification';
 import { invalidIdResponse, notFound, requireEventUser, serverError } from '@/lib/apiGuards';
@@ -180,7 +183,13 @@ export async function GET(req) {
                             : null,
                     }
                     : null,
-                questions: qualified && q.quizType !== 'custom_live' && !q.paper?.enabled
+                // A buzzer round's pack is staged one question at a time and
+                // is withheld here for the same reason custom_live's is: the
+                // room must not be able to read ahead, and v1 carries answers.
+                questions: qualified
+                    && q.quizType !== 'custom_live'
+                    && q.quizType !== 'buzzer'
+                    && !q.paper?.enabled
                     ? questions.map(qu => ({
                         _id: qu._id,
                         text: qu.text,
@@ -192,6 +201,11 @@ export async function GET(req) {
                     }))
                     : undefined
             };
+
+            if (q.quizType === 'buzzer') {
+                safe.quiz.buzzer = await buildBuzzer({ activity: activeActivity, quiz: q, req });
+                safe.quiz.activeQuestion = null;
+            }
 
             if (version >= 2 && q.quizType === 'custom_live') {
                 safe.quiz.liveRound = await buildLiveRound({
@@ -256,13 +270,75 @@ export async function GET(req) {
                 // A question that is open is worth a tight loop — a second of
                 // skew between two phones is a second of unfair thinking time.
                 // Everything else can wait.
-                pollAfterMs: safe.quiz?.liveRound?.state === 'open' ? 1000 : 5000
+                pollAfterMs: pollCadence(safe)
             }
         });
 
     } catch (error) {
         return serverError(error, 'flutter/events/status');
     }
+}
+
+/**
+ * How soon to come back.
+ *
+ * Dictated from here rather than hardcoded per client, so a room full of phones
+ * can be sped up or calmed down from one place. Electric Answers gets 500ms in
+ * the phases where the round is actually moving: a phone that hears about
+ * `armsAt` late arms late, and the three-second countdown is only fair because
+ * it is longer than this interval.
+ */
+const BUZZER_FAST = new Set(['staged', 'countdown', 'buzzing', 'seated']);
+const BUZZER_WARM = new Set(['judged_correct', 'judged_wrong', 'no_buzz', 'revealed']);
+
+function pollCadence(safe) {
+    const phase = safe.quiz?.buzzer?.phase;
+    if (phase) {
+        if (BUZZER_FAST.has(phase)) return 500;
+        return BUZZER_WARM.has(phase) ? 2000 : 10000;
+    }
+    return safe.quiz?.liveRound?.state === 'open' ? 1000 : 5000;
+}
+
+/**
+ * The buzzer round, shaped for whoever is holding this phone.
+ *
+ * Costed for 2Hz from every phone in the room: one lean read of the presses for
+ * this instance (at most one row per team), and the board comes off the
+ * activity document rather than out of an aggregation. The attempts are read
+ * only once the host has revealed, which is the one phase where nobody is
+ * racing.
+ */
+async function buildBuzzer({ activity, quiz, req }) {
+    const round = quiz.buzzer?.round ?? {};
+    const question = round.instanceId ? quiz.questions?.[round.questionIndex ?? 0] ?? null : null;
+    const revealing = round.phase === 'revealed' || round.phase === 'completed';
+
+    // The verified session, never the `participantId` query parameter — that
+    // one is unauthenticated and decides nothing but which badge to show.
+    const auth = await requireEventUser(req);
+    const team = auth.ok ? await resolveParticipantTeam(activity.eventId, auth.email) : null;
+
+    const [presses, attempts] = round.instanceId
+        ? await Promise.all([
+            BuzzPress.find({ instanceId: round.instanceId })
+                .sort({ receivedAt: 1 })
+                .select('teamId teamName offsetMs falseStart receivedAt')
+                .lean(),
+            revealing
+                ? BuzzAttempt.find({ instanceId: round.instanceId }).select('teamId outcome').lean()
+                : [],
+        ])
+        : [[], []];
+
+    return buildBuzzerPayload({
+        quiz,
+        question,
+        team,
+        presses,
+        attempts,
+        viewerEmail: auth.ok ? auth.email : null,
+    });
 }
 
 /**

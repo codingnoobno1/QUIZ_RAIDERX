@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import LiveAnswer from '@/models/LiveAnswer';
 import QuizSubmission from '@/models/QuizSubmission';
+import { fromBuzzAttempts } from '@/lib/buzzer/scoring';
 
 /**
  * The ranking for one quiz activity, and who goes through.
@@ -18,11 +19,22 @@ import QuizSubmission from '@/models/QuizSubmission';
 
 export async function rankActivity(activity) {
     const isTeamScope = activity.quiz?.scope === 'team';
-    const rows = activity.quiz?.quizType === 'custom_live'
-        ? await fromLiveAnswers(activity._id, isTeamScope)
-        : await fromSubmissions(activity._id, isTeamScope);
+    const quizType = activity.quiz?.quizType;
 
-    rows.sort((a, b) => (b.score - a.score) || (a.totalElapsedMs - b.totalElapsedMs));
+    const rows = quizType === 'buzzer'
+        ? await fromBuzzAttempts(activity._id)
+        : quizType === 'custom_live'
+            ? await fromLiveAnswers(activity._id, isTeamScope)
+            : await fromSubmissions(activity._id, isTeamScope);
+
+    // A sudden-death win ranks between score and time: it is what the tie-break
+    // was played to settle, so it settles it, without being added to a total it
+    // was never worth. Every other format leaves `tiebreakWins` undefined and
+    // ranks exactly as it always did.
+    rows.sort((a, b) =>
+        (b.score - a.score)
+        || ((b.tiebreakWins ?? 0) - (a.tiebreakWins ?? 0))
+        || (a.totalElapsedMs - b.totalElapsedMs));
 
     // Competition ranking: entrants level on both score and time share a rank,
     // and the next rank skips accordingly (1, 2, 2, 4). A dense rank would put
@@ -31,6 +43,7 @@ export async function rankActivity(activity) {
     return rows.map((row, i) => {
         const tied = previous
             && previous.score === row.score
+            && (previous.tiebreakWins ?? 0) === (row.tiebreakWins ?? 0)
             && previous.totalElapsedMs === row.totalElapsedMs;
         const rank = tied ? previous.rank : i + 1;
         previous = { ...row, rank };
