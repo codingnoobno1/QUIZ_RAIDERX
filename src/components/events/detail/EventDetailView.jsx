@@ -81,11 +81,11 @@ export default function EventDetailView({ event, registration, onNavigate }) {
   };
 
   return (
-    <Box sx={{ pb: { xs: 11, lg: 4 } }}>
-      <Hero event={event} />
+    <Box sx={{ pb: { xs: 13, lg: 4 } }}>
+      <Hero event={event} registration={registration} onNavigate={onNavigate} />
 
-      {/* Two columns from 1024px; the action panel stacks under the content
-          below that, and collapses to a bottom bar on phones. */}
+      {/* Two columns from 1024px. Phones get the same lobby and pass actions
+          inside the hero, plus a dock that stays on screen while they scroll. */}
       <Box
         sx={{
           display: 'grid',
@@ -228,32 +228,31 @@ export default function EventDetailView({ event, registration, onNavigate }) {
 
 /* ── hero ───────────────────────────────────────────────────────────────── */
 
-function Hero({ event }) {
+function Hero({ event, registration, onNavigate }) {
   return (
-    <Box sx={{ px: { xs: 2, md: 3 }, pt: { xs: 2, md: 3 }, pb: 3, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ px: { xs: 2, md: 3 }, pt: { xs: 2, md: 3 }, pb: { xs: 1.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
       <Box
         sx={{
           display: 'grid',
           gap: { xs: 2, sm: 3 },
           gridTemplateColumns: { xs: '1fr', sm: event.imageUrl ? '200px 1fr' : '1fr' },
           alignItems: 'center',
-          p: { xs: 2, sm: 2.5 },
+          p: { xs: 1.5, sm: 2.5 },
           borderRadius: `${radius.lg}px`,
           border: `1px solid ${color.border}`,
           bgcolor: color.surface,
         }}
       >
         {event.imageUrl && (
-          // Fixed frame with object-fit: a portrait poster is contained beside
-          // the text rather than stretched across the full width.
           <Box
             component="img"
             src={event.imageUrl}
             alt=""
             sx={{
               width: '100%',
-              height: { xs: 180, sm: 200 },
+              height: { xs: 132, sm: 200 },
               objectFit: 'cover',
+              objectPosition: 'center top',
               borderRadius: `${radius.md}px`,
               bgcolor: color.surface2,
               display: 'block',
@@ -268,7 +267,7 @@ function Hero({ event }) {
             sx={{
               color: color.text,
               fontWeight: 700,
-              fontSize: { xs: '1.5rem', md: '1.9rem' },
+              fontSize: { xs: '1.35rem', md: '1.9rem' },
               lineHeight: 1.2,
               mt: 1,
             }}
@@ -277,14 +276,14 @@ function Hero({ event }) {
           </Typography>
 
           {event.organizer?.name && (
-            <Typography sx={{ color: color.textMuted, fontSize: '0.9rem', mt: 0.5 }}>
+            <Typography sx={{ color: color.textMuted, fontSize: '0.9rem', mt: 0.5, display: { xs: 'none', sm: 'block' } }}>
               {event.organizer.name}
               {event.organizer.subtitle ? ` · ${event.organizer.subtitle}` : ''}
             </Typography>
           )}
 
           {event.tags.length > 0 && (
-            <Typography sx={{ color: color.textFaint, fontSize: '0.82rem', mt: 0.75 }}>
+            <Typography sx={{ color: color.textFaint, fontSize: '0.82rem', mt: 0.75, display: { xs: 'none', sm: 'block' } }}>
               {event.tags.join(' · ')}
             </Typography>
           )}
@@ -292,6 +291,8 @@ function Hero({ event }) {
           <MetaRow event={event} />
         </Box>
       </Box>
+
+      <MobileEventCard event={event} registration={registration} onNavigate={onNavigate} />
     </Box>
   );
 }
@@ -588,59 +589,145 @@ function ActivityCard({ mode }) {
 
 /* ── mobile ─────────────────────────────────────────────────────────────── */
 
-function MobileActionBar({ event, registration, onNavigate }) {
+/**
+ * The desktop side panel, rebuilt for a phone. Lobby and pass sit in the page
+ * itself — a fixed strip alone was covered by the app nav, so a live event
+ * looked like it had no way in.
+ */
+function MobileEventCard({ event, registration, onNavigate }) {
   const action = nextActionFor({ event, registration });
+  const Icon = action.icon;
 
   return (
     <Box
       sx={{
-        display: { xs: 'flex', md: 'none' },
+        display: { xs: 'block', md: 'none' },
+        mt: 1.5,
+        p: 1.75,
+        borderRadius: `${radius.lg}px`,
+        border: `1px solid ${tint(action.tone, 0.35)}`,
+        bgcolor: tint(action.tone, 0.06),
+      }}
+    >
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Icon sx={{ fontSize: 18, color: action.tone }} />
+        <Typography sx={{ color: action.tone, fontWeight: 800, fontSize: '0.92rem' }}>
+          {action.label}
+        </Typography>
+      </Stack>
+      <Typography sx={{ color: color.textMuted, fontSize: '0.82rem', mt: 0.5, lineHeight: 1.5 }}>
+        {action.help}
+      </Typography>
+
+      <Stack spacing={1} sx={{ mt: 1.5 }}>
+        {action.cta && (
+          <ActionButton tone={action.tone} filled onClick={() => onNavigate(action.cta.href)}>
+            {action.cta.text}
+          </ActionButton>
+        )}
+        {action.secondary && (
+          <ActionButton onClick={() => onNavigate(action.secondary.href)}>
+            {action.secondary.text}
+          </ActionButton>
+        )}
+        {!action.cta && !action.secondary && registration && (
+          <ActionButton onClick={() => onNavigate('pass')}>My pass</ActionButton>
+        )}
+      </Stack>
+
+      {registration && (
+        <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: 'wrap' }}>
+          {registration.isTeam && registration.teamName && (
+            <Chip
+              size="small"
+              icon={<PeopleAltOutlinedIcon sx={{ fontSize: '14px !important' }} />}
+              label={registration.teamName}
+              sx={{ height: 26, color: color.text, bgcolor: 'rgba(255,255,255,0.04)', border: `1px solid ${color.border}` }}
+            />
+          )}
+          {registration.passId && (
+            <Chip
+              size="small"
+              label={registration.passId.slice(-8).toUpperCase()}
+              sx={{
+                height: 26,
+                fontFamily: 'ui-monospace, monospace',
+                letterSpacing: 0.4,
+                color: color.textMuted,
+                bgcolor: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${color.border}`,
+              }}
+            />
+          )}
+        </Stack>
+      )}
+    </Box>
+  );
+}
+
+function ActionButton({ children, onClick, tone = color.text, filled = false }) {
+  return (
+    <Box
+      component="button"
+      type="button"
+      onClick={onClick}
+      className="pxe-tap"
+      sx={{
+        width: '100%',
+        minHeight: 48,
+        border: filled ? 'none' : `1px solid ${color.borderStrong}`,
+        font: 'inherit',
+        borderRadius: `${radius.md}px`,
+        bgcolor: filled ? tone : 'transparent',
+        color: filled ? color.bg : color.text,
+        fontWeight: 800,
+        fontSize: '0.95rem',
+        touchAction: 'manipulation',
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/** Stays on screen while the description scrolls. Both actions, not one. */
+function MobileActionBar({ event, registration, onNavigate }) {
+  const action = nextActionFor({ event, registration });
+  if (!action.cta && !action.secondary) return null;
+
+  return (
+    <Box
+      sx={{
+        display: { xs: 'block', md: 'none' },
         position: 'fixed',
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: 10,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 2,
-        px: 2,
-        py: 1.5,
-        pb: 'calc(12px + env(safe-area-inset-bottom))',
-        bgcolor: color.surface,
+        zIndex: 40,
+        px: 1.5,
+        pt: 1.25,
+        pb: 'max(12px, env(safe-area-inset-bottom, 0px))',
+        bgcolor: 'rgba(11,13,17,0.96)',
         borderTop: `1px solid ${color.border}`,
+        backdropFilter: 'blur(12px)',
       }}
     >
-      <Box sx={{ minWidth: 0 }}>
-        <Typography sx={{ color: action.tone, fontSize: '0.8rem', fontWeight: 600 }}>
-          {action.label}
-        </Typography>
-        <Typography className="pxe-clamp-1" sx={{ color: color.textFaint, fontSize: '0.72rem' }}>
-          {event.time} · {event.location}
-        </Typography>
-      </Box>
-
-      {action.cta && (
-        <Box
-          component="button"
-          type="button"
-          onClick={() => onNavigate(action.cta.href)}
-          className="pxe-tap"
-          sx={{
-            flexShrink: 0,
-            border: 'none',
-            font: 'inherit',
-            minHeight: 44,
-            px: 2.5,
-            borderRadius: `${radius.md}px`,
-            bgcolor: action.tone,
-            color: color.bg,
-            fontWeight: 700,
-            fontSize: '0.88rem',
-          }}
-        >
-          {action.cta.text}
-        </Box>
-      )}
+      <Stack direction="row" spacing={1}>
+        {action.secondary && (
+          <Box sx={{ flex: action.cta ? 0.85 : 1 }}>
+            <ActionButton onClick={() => onNavigate(action.secondary.href)}>
+              {action.secondary.text}
+            </ActionButton>
+          </Box>
+        )}
+        {action.cta && (
+          <Box sx={{ flex: 1.3 }}>
+            <ActionButton filled tone={action.tone} onClick={() => onNavigate(action.cta.href)}>
+              {action.cta.text}
+            </ActionButton>
+          </Box>
+        )}
+      </Stack>
     </Box>
   );
 }

@@ -118,8 +118,11 @@ function VotingActivity({ activity, participantId, onExit }) {
                 position: 'relative',
                 overflow: 'hidden',
                 width: '100%',
+                minHeight: 52,
                 textAlign: 'left',
                 font: 'inherit',
+                fontSize: 16,
+                touchAction: 'manipulation',
                 cursor: locked ? 'default' : 'pointer',
                 px: 2,
                 py: 1.5,
@@ -319,7 +322,8 @@ function BackButton({ onExit, tone }) {
       fullWidth
       sx={{
         mt: 3,
-        minHeight: 44,
+        mb: 'env(safe-area-inset-bottom, 0px)',
+        minHeight: 48,
         borderRadius: `${radius.md}px`,
         textTransform: 'none',
         fontWeight: 700,

@@ -28,6 +28,8 @@ export default function EventShellStyles() {
         padding-left: var(--safe-left);
         padding-right: var(--safe-right);
         -webkit-tap-highlight-color: transparent;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
       }
       .pxe-shell * { -webkit-tap-highlight-color: transparent; }
 

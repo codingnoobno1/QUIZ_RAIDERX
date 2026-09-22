@@ -13,7 +13,7 @@
  * a correct answer that was sent anyway.
  */
 
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
 import HowToVoteRoundedIcon from '@mui/icons-material/HowToVoteRounded';
@@ -25,11 +25,20 @@ import { color, radius, tint } from '@/theme/tokens';
 import Loading from '@/components/async/Loading';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+const LeaveShow = createContext(null);
 
-export default function KbcExperience({ quiz, onSubmit, submitting }) {
+export default function KbcExperience({ quiz, onSubmit, submitting, onExit }) {
   const viewer = quiz.viewer ?? {};
   const isContestant = Boolean(viewer.isActiveContestant);
 
+  return (
+    <LeaveShow.Provider value={onExit}>
+      <KbcPhase quiz={quiz} onSubmit={onSubmit} submitting={submitting} isContestant={isContestant} />
+    </LeaveShow.Provider>
+  );
+}
+
+function KbcPhase({ quiz, onSubmit, submitting, isContestant }) {
   switch (quiz.phase) {
     case 'fastest_finger':
       return <FastestFinger quiz={quiz} onSubmit={onSubmit} submitting={submitting} />;
@@ -81,16 +90,32 @@ function useServerCountdown(timer) {
 }
 
 function ShowBar({ label, right, tone = color.brand }) {
+  const onExit = useContext(LeaveShow);
   return (
     <Stack
       direction="row"
       justifyContent="space-between"
       alignItems="center"
-      sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${color.border}`, bgcolor: color.surface }}
+      flexWrap="wrap"
+      gap={1}
+      sx={{
+        px: 2,
+        pt: 'max(10px, env(safe-area-inset-top, 0px))',
+        pb: 1.25,
+        borderBottom: `1px solid ${color.border}`,
+        bgcolor: color.surface,
+      }}
     >
-      <Typography sx={{ color: tone, fontSize: '0.68rem', fontWeight: 800, letterSpacing: 1.2 }}>
-        {label}
-      </Typography>
+      <Box sx={{ minWidth: 0 }}>
+        {onExit && (
+          <Button onClick={onExit} sx={{ minHeight: 28, px: 0, py: 0, color: color.textMuted, textTransform: 'none', fontWeight: 700, fontSize: '0.75rem' }}>
+            ← Lobby
+          </Button>
+        )}
+        <Typography sx={{ color: tone, fontSize: '0.68rem', fontWeight: 800, letterSpacing: 1.2 }}>
+          {label}
+        </Typography>
+      </Box>
       {right}
     </Stack>
   );
@@ -144,8 +169,11 @@ function OptionGrid({ options, selected, lockedOption, correctAnswer, onPick, di
               alignItems: 'center',
               gap: 1.5,
               width: '100%',
+              minHeight: 52,
               textAlign: 'left',
               font: 'inherit',
+              fontSize: 16,
+              touchAction: 'manipulation',
               cursor: disabled ? 'default' : 'pointer',
               px: 2,
               py: 1.75,
@@ -209,8 +237,14 @@ function HotSeatBanner({ contestant, youAreOn }) {
 /* ── phases ─────────────────────────────────────────────────────────────── */
 
 function ShowLobby({ quiz }) {
+  const onExit = useContext(LeaveShow);
   return (
-    <Box sx={{ p: 5, textAlign: 'center' }}>
+    <Box sx={{ p: { xs: 3, md: 5 }, pt: { xs: 'max(16px, env(safe-area-inset-top, 0px))', md: 5 }, textAlign: 'center' }}>
+      {onExit && (
+        <Button onClick={onExit} sx={{ display: 'block', mx: 'auto', mb: 2, minHeight: 36, color: color.textMuted, textTransform: 'none', fontWeight: 700 }}>
+          ← Lobby
+        </Button>
+      )}
       <BoltRoundedIcon sx={{ fontSize: 42, color: color.textFaint }} />
       <Typography sx={{ color: color.text, fontWeight: 700, fontSize: '1.05rem', mt: 1.5 }}>
         The show is about to begin
@@ -285,8 +319,11 @@ function FastestFinger({ quiz, onSubmit, submitting }) {
                   alignItems: 'center',
                   gap: 1.5,
                   width: '100%',
+                  minHeight: 52,
                   textAlign: 'left',
                   font: 'inherit',
+                  fontSize: 16,
+                  touchAction: 'manipulation',
                   cursor: 'pointer',
                   px: 2,
                   py: 1.5,
@@ -364,7 +401,7 @@ function FastestFingerResult({ quiz }) {
         {ff.revealed && ff.question?.correctOrder && (
           <Box sx={{ mb: 2.5, p: 2, borderRadius: `${radius.md}px`, bgcolor: tint(color.green, 0.07), border: `1px solid ${tint(color.green, 0.25)}` }}>
             <Typography sx={{ color: color.textFaint, fontSize: '0.65rem', fontWeight: 800 }}>CORRECT ORDER</Typography>
-            <Typography sx={{ color: color.green, fontWeight: 700, fontSize: '1rem', mt: 0.5 }}>
+            <Typography sx={{ color: color.green, fontWeight: 700, fontSize: '1rem', mt: 0.5, lineHeight: 1.45, wordBreak: 'break-word' }}>
               {ff.question.correctOrder.join('  →  ')}
             </Typography>
           </Box>

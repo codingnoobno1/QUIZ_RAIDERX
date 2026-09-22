@@ -1,14 +1,14 @@
 'use client';
 
 /**
- * Generated paper — Round 2 on a laptop.
+ * Generated paper — Round 2 on a laptop or an iPhone.
  *
  * The paper is the server's: which questions this team was dealt, in what
  * order, with options in what order, and when the thirty minutes end. This
  * screen renders it, saves every choice as it is made, and hands it in. It
  * never sees a correct answer and never computes a score.
  *
- * Saving on every choice is the point. If the laptop dies at minute 28, the
+ * Saving on every choice is the point. If the phone dies at minute 28, the
  * answers already made are on the server, and the paper finalises from them at
  * the deadline whether or not anybody presses submit.
  */
@@ -62,13 +62,14 @@ export default function PaperActivity({ activity, onExit }) {
             activity={activity}
             paper={paper}
             refetch={() => paperQuery.refetch()}
+            onExit={onExit}
         />
     );
 }
 
 /* ── the sheet ──────────────────────────────────────────────────────────── */
 
-function PaperSheet({ activity, paper, refetch }) {
+function PaperSheet({ activity, paper, refetch, onExit }) {
     const isPower = paper.state === 'power';
     const questions = isPower ? paper.power.questions : paper.questions;
 
@@ -199,25 +200,56 @@ function PaperSheet({ activity, paper, refetch }) {
     const urgent = remaining < 2 * 60 * 1000;
 
     return (
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 980, mx: 'auto' }}>
-            {/* ── header: stage, clock, save state ─────────────────────────── */}
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2, gap: 2 }}>
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: { xs: 0, md: 'auto' },
+                height: { xs: '100%', md: 'auto' },
+                flex: { xs: 1, md: 'unset' },
+                maxWidth: 980,
+                mx: 'auto',
+                bgcolor: color.bg,
+                overscrollBehavior: 'none',
+            }}
+        >
+            {/* ── header: stage, clock, save — pinned on the phone ───────── */}
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{
+                    flexShrink: 0,
+                    gap: 1.5,
+                    px: { xs: 2, md: 3 },
+                    pt: { xs: 'max(10px, env(safe-area-inset-top, 0px))', md: 3 },
+                    pb: 1.5,
+                    borderBottom: `1px solid ${color.border}`,
+                    bgcolor: color.bg,
+                }}
+            >
                 <Box sx={{ minWidth: 0 }}>
-                    <Typography sx={{ color: isPower ? color.amber : color.brand, fontSize: '0.72rem', fontWeight: 800, letterSpacing: 1.5 }}>
+                    <Button onClick={onExit} sx={{ minHeight: 28, px: 0, py: 0, color: color.textMuted, textTransform: 'none', fontWeight: 700, fontSize: '0.75rem' }}>
+                        ← Lobby
+                    </Button>
+                    <Typography
+                        className="pxe-clamp-1"
+                        sx={{ color: isPower ? color.amber : color.brand, fontSize: '0.68rem', fontWeight: 800, letterSpacing: 1.4 }}
+                    >
                         {isPower ? 'POWER QUESTIONS' : 'ROUND PAPER'}
                         {paper.teamName ? ` · ${paper.teamName.toUpperCase()}` : ''}
                     </Typography>
-                    <Typography sx={{ color: color.textMuted, fontSize: '0.82rem', mt: 0.25 }}>
+                    <Typography sx={{ color: color.textMuted, fontSize: '0.78rem', mt: 0.25 }}>
                         {answeredCount} of {questions.length} answered
                     </Typography>
                 </Box>
 
-                <Stack direction="row" alignItems="center" spacing={2}>
-                    <SaveIndicator state={saveState} />
+                <Stack direction="row" alignItems="center" spacing={{ xs: 1, md: 2 }} sx={{ flexShrink: 0 }}>
+                    <SaveIndicator state={saveState} compact />
                     <Box
                         aria-live="polite"
                         sx={{
-                            px: 1.75,
+                            px: { xs: 1.25, md: 1.75 },
                             py: 0.75,
                             borderRadius: `${radius.md}px`,
                             border: `1px solid ${urgent ? tint(color.red, 0.5) : color.border}`,
@@ -228,7 +260,7 @@ function PaperSheet({ activity, paper, refetch }) {
                             sx={{
                                 color: urgent ? color.red : color.text,
                                 fontWeight: 800,
-                                fontSize: '1.35rem',
+                                fontSize: { xs: '1.15rem', md: '1.35rem' },
                                 fontVariantNumeric: 'tabular-nums',
                                 lineHeight: 1.1,
                             }}
@@ -238,6 +270,18 @@ function PaperSheet({ activity, paper, refetch }) {
                     </Box>
                 </Stack>
             </Stack>
+
+            <Box
+                sx={{
+                    flex: 1,
+                    minHeight: 0,
+                    overflowY: 'auto',
+                    WebkitOverflowScrolling: 'touch',
+                    px: { xs: 2, md: 3 },
+                    pt: 2,
+                    pb: { xs: 2, md: 3 },
+                }}
+            >
 
             {!isPower && <PowerBanner power={paper.power} unlockIn={unlockIn} />}
             {isPower && (
@@ -258,7 +302,7 @@ function PaperSheet({ activity, paper, refetch }) {
                         </Typography>
                     </Stack>
 
-                    <Typography sx={{ color: color.text, fontWeight: 700, fontSize: '1.2rem', lineHeight: 1.5, mb: 2.5 }}>
+                    <Typography sx={{ color: color.text, fontWeight: 700, fontSize: { xs: '1.05rem', md: '1.2rem' }, lineHeight: 1.5, mb: 2.5 }}>
                         {question.text}
                     </Typography>
 
@@ -267,7 +311,7 @@ function PaperSheet({ activity, paper, refetch }) {
                             component="img"
                             src={question.imageUrl}
                             alt=""
-                            sx={{ maxWidth: '100%', maxHeight: 280, borderRadius: `${radius.md}px`, mb: 2.5 }}
+                            sx={{ maxWidth: '100%', maxHeight: { xs: 180, md: 280 }, borderRadius: `${radius.md}px`, mb: 2.5, display: 'block' }}
                         />
                     )}
 
@@ -288,7 +332,7 @@ function PaperSheet({ activity, paper, refetch }) {
                             placeholder="Type your answer"
                             inputProps={{ maxLength: 1000, 'aria-label': `Answer for question ${index + 1}` }}
                             sx={{
-                                '& .MuiOutlinedInput-root': { color: color.text, bgcolor: 'rgba(255,255,255,0.02)' },
+                                '& .MuiOutlinedInput-root': { color: color.text, bgcolor: 'rgba(255,255,255,0.02)', fontSize: 16 },
                                 '& fieldset': { borderColor: color.border },
                             }}
                         />
@@ -305,14 +349,18 @@ function PaperSheet({ activity, paper, refetch }) {
                                     aria-checked={picked}
                                     onClick={() => choose(question.questionId, option)}
                                     disabled={remaining <= 0}
+                                    className="pxe-tap"
                                     sx={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: 1.5,
                                         width: '100%',
+                                        minHeight: 52,
                                         textAlign: 'left',
                                         font: 'inherit',
+                                        fontSize: 16,
                                         cursor: 'pointer',
+                                        touchAction: 'manipulation',
                                         px: 2,
                                         py: 1.5,
                                         borderRadius: `${radius.md}px`,
@@ -328,8 +376,8 @@ function PaperSheet({ activity, paper, refetch }) {
                                         component="span"
                                         sx={{
                                             flexShrink: 0,
-                                            width: 28,
-                                            height: 28,
+                                                    width: 32,
+                                                    height: 32,
                                             display: 'grid',
                                             placeItems: 'center',
                                             borderRadius: '50%',
@@ -348,7 +396,7 @@ function PaperSheet({ activity, paper, refetch }) {
                     </Stack>
                     )}
 
-                    <Stack direction="row" spacing={1.5} sx={{ mt: 3 }}>
+                    <Stack direction="row" spacing={1.5} sx={{ mt: 3, display: { xs: 'none', md: 'flex' } }}>
                         <NavButton onClick={() => setIndex((i) => Math.max(i - 1, 0))} disabled={index === 0}>
                             ← Previous
                         </NavButton>
@@ -362,47 +410,17 @@ function PaperSheet({ activity, paper, refetch }) {
                             </NavButton>
                         )}
                     </Stack>
-                    <Typography sx={{ mt: 1.25, color: color.textFaint, fontSize: '0.72rem' }}>
+                    <Typography sx={{ mt: 1.25, color: color.textFaint, fontSize: '0.72rem', display: { xs: 'none', md: 'block' } }}>
                         Keys: ← → to move{question.type === 'text' ? '' : ' · 1–4 or A–D to answer'}. Answers save as you work and can be changed until you submit.
                     </Typography>
                 </Box>
 
-                {/* ── palette ──────────────────────────────────────────────── */}
-                <Box>
+                {/* ── palette (laptop) ─────────────────────────────────────── */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
                     <Typography sx={{ color: color.textFaint, fontSize: '0.7rem', fontWeight: 700, letterSpacing: 1, mb: 1 }}>
                         QUESTIONS
                     </Typography>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 0.75 }}>
-                        {questions.map((q, i) => {
-                            const done = Boolean(answers[q.questionId]);
-                            const here = i === index;
-                            return (
-                                <Box
-                                    key={q.questionId}
-                                    component="button"
-                                    type="button"
-                                    onClick={() => setIndex(i)}
-                                    aria-label={`Question ${i + 1}${done ? ', answered' : ', not answered'}`}
-                                    aria-current={here ? 'step' : undefined}
-                                    sx={{
-                                        aspectRatio: '1',
-                                        font: 'inherit',
-                                        fontSize: '0.8rem',
-                                        fontWeight: 700,
-                                        fontVariantNumeric: 'tabular-nums',
-                                        cursor: 'pointer',
-                                        borderRadius: `${radius.sm}px`,
-                                        color: done ? color.bg : color.textMuted,
-                                        bgcolor: done ? tint(color.brand, 0.85) : 'rgba(255,255,255,0.03)',
-                                        border: `2px solid ${here ? color.text : done ? 'transparent' : color.border}`,
-                                        '&:focus-visible': { outline: `2px solid ${color.brand}`, outlineOffset: 2 },
-                                    }}
-                                >
-                                    {i + 1}
-                                </Box>
-                            );
-                        })}
-                    </Box>
+                    <QuestionPalette questions={questions} answers={answers} index={index} onJump={setIndex} />
                     <Button
                         fullWidth
                         onClick={() => setConfirming(true)}
@@ -422,8 +440,52 @@ function PaperSheet({ activity, paper, refetch }) {
                     </Button>
                 </Box>
             </Box>
+            </Box>
 
-            <Dialog open={confirming} onClose={() => !submit.isPending && setConfirming(false)} maxWidth="xs" fullWidth>
+            <Box
+                sx={{
+                    display: { xs: 'block', md: 'none' },
+                    flexShrink: 0,
+                    px: 2,
+                    pt: 1.25,
+                    pb: 'max(12px, env(safe-area-inset-bottom, 0px))',
+                    borderTop: `1px solid ${color.border}`,
+                    bgcolor: color.bg,
+                }}
+            >
+                <Stack direction="row" alignItems="center" justifyContent="flex-end">
+                    <Button
+                        onClick={() => setConfirming(true)}
+                        disabled={remaining <= 0}
+                        sx={{ textTransform: 'none', fontWeight: 800, minHeight: 36, color: color.brand, px: 1 }}
+                    >
+                        {isPower ? 'Finish' : 'Submit paper'}
+                    </Button>
+                </Stack>
+                <QuestionPalette questions={questions} answers={answers} index={index} onJump={setIndex} variant="strip" />
+                <Stack direction="row" spacing={1.25} sx={{ mt: 1.25 }}>
+                    <NavButton onClick={() => setIndex((i) => Math.max(i - 1, 0))} disabled={index === 0}>
+                        Previous
+                    </NavButton>
+                    {!last ? (
+                        <NavButton primary onClick={() => setIndex((i) => i + 1)}>
+                            Next
+                        </NavButton>
+                    ) : (
+                        <NavButton primary onClick={() => setConfirming(true)} disabled={remaining <= 0}>
+                            {isPower ? 'Finish' : 'Submit'}
+                        </NavButton>
+                    )}
+                </Stack>
+            </Box>
+
+            <Dialog
+                open={confirming}
+                onClose={() => !submit.isPending && setConfirming(false)}
+                maxWidth="xs"
+                fullWidth
+                sx={{ '& .MuiDialog-paper': { m: { xs: 1.5, sm: 3 }, pb: 'env(safe-area-inset-bottom, 0px)' } }}
+            >
                 <DialogTitle sx={{ fontWeight: 800 }}>{isPower ? 'Finish the round?' : 'Submit your paper?'}</DialogTitle>
                 <DialogContent>
                     <Typography sx={{ mb: 1.5 }}>
@@ -509,7 +571,7 @@ function Banner({ tone, icon: Icon, children }) {
     );
 }
 
-function SaveIndicator({ state }) {
+function SaveIndicator({ state, compact = false }) {
     const map = {
         saved: { icon: CloudDoneRoundedIcon, tone: color.green, text: 'Saved' },
         saving: { icon: CloudSyncRoundedIcon, tone: color.textMuted, text: 'Saving…' },
@@ -517,10 +579,65 @@ function SaveIndicator({ state }) {
     };
     const { icon: Icon, tone, text } = map[state] ?? map.saved;
     return (
-        <Stack direction="row" spacing={0.75} alignItems="center" aria-live="polite">
+        <Stack direction="row" spacing={0.75} alignItems="center" aria-live="polite" aria-label={text}>
             <Icon sx={{ fontSize: 18, color: tone }} />
-            <Typography sx={{ color: tone, fontSize: '0.78rem', fontWeight: 600 }}>{text}</Typography>
+            <Typography
+                sx={{
+                    color: tone,
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    display: compact ? { xs: 'none', md: 'block' } : 'block',
+                }}
+            >
+                {text}
+            </Typography>
         </Stack>
+    );
+}
+
+function QuestionPalette({ questions, answers, index, onJump, variant = 'grid' }) {
+    const strip = variant === 'strip';
+    return (
+        <Box
+            className={strip ? 'pxe-scroll-x' : undefined}
+            sx={
+                strip
+                    ? { display: 'flex', gap: 0.75, overflowX: 'auto', WebkitOverflowScrolling: 'touch', pb: 0.25 }
+                    : { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 0.75 }
+            }
+        >
+            {questions.map((q, i) => {
+                const done = Boolean(answers[q.questionId]);
+                const here = i === index;
+                return (
+                    <Box
+                        key={q.questionId}
+                        component="button"
+                        type="button"
+                        className="pxe-tap"
+                        onClick={() => onJump(i)}
+                        aria-label={`Question ${i + 1}${done ? ', answered' : ', not answered'}`}
+                        aria-current={here ? 'step' : undefined}
+                        sx={{
+                            ...(strip ? { width: 40, height: 40, flexShrink: 0 } : { aspectRatio: '1' }),
+                            font: 'inherit',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            fontVariantNumeric: 'tabular-nums',
+                            cursor: 'pointer',
+                            touchAction: 'manipulation',
+                            borderRadius: `${radius.sm}px`,
+                            color: done ? color.bg : color.textMuted,
+                            bgcolor: done ? tint(color.brand, 0.85) : 'rgba(255,255,255,0.03)',
+                            border: `2px solid ${here ? color.text : done ? 'transparent' : color.border}`,
+                            '&:focus-visible': { outline: `2px solid ${color.brand}`, outlineOffset: 2 },
+                        }}
+                    >
+                        {i + 1}
+                    </Box>
+                );
+            })}
+        </Box>
     );
 }
 
@@ -553,7 +670,7 @@ function PaperResult({ paper, title, onExit }) {
     const powerEarned = paper.power?.unlocked;
 
     return (
-        <Box sx={{ p: 4, textAlign: 'center', maxWidth: 520, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 3, md: 4 }, pt: { xs: 'max(24px, env(safe-area-inset-top, 0px))', md: 4 }, pb: { xs: 'max(24px, env(safe-area-inset-bottom, 0px))', md: 4 }, textAlign: 'center', maxWidth: 520, mx: 'auto' }}>
             <Box
                 sx={{
                     width: 84,

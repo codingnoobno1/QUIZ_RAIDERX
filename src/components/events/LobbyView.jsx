@@ -11,6 +11,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
 import HourglassEmptyRoundedIcon from '@mui/icons-material/HourglassEmptyRounded';
@@ -60,14 +61,26 @@ export default function LobbyView({ event, participantId }) {
   const isStale = statusQuery.isError && Boolean(status);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <LobbyHeader
-        event={event}
-        status={status}
-        isFetching={statusQuery.isFetching}
-        isStale={isStale}
-      />
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0,
+        flex: 1,
+        overflow: isOpen ? 'hidden' : 'auto',
+        WebkitOverflowScrolling: 'touch',
+      }}
+    >
+      {!isOpen && (
+        <LobbyHeader
+          event={event}
+          status={status}
+          isFetching={statusQuery.isFetching}
+          isStale={isStale}
+        />
+      )}
 
+      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <AsyncBoundary query={statusQuery} loadingLabel="Connecting to the event">
         {() =>
           isOpen ? (
@@ -96,6 +109,7 @@ export default function LobbyView({ event, participantId }) {
           )
         }
       </AsyncBoundary>
+      </Box>
 
       {/* Who is through to each round. Hidden while an activity is open: that
           screen is the thing the participant is doing, and a qualifier board
@@ -106,6 +120,7 @@ export default function LobbyView({ event, participantId }) {
 }
 
 function LobbyHeader({ event, status, isFetching, isStale }) {
+  const router = useRouter();
   const live = Boolean(status?.activeActivity);
 
   let connection;
@@ -118,12 +133,27 @@ function LobbyHeader({ event, status, isFetching, isStale }) {
       sx={{
         px: { xs: 2, md: 3 },
         py: 2,
+        pt: { xs: 'max(12px, env(safe-area-inset-top, 0px))', md: 2 },
         borderBottom: `1px solid ${color.border}`,
         bgcolor: color.surface,
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
         <Box sx={{ minWidth: 0 }}>
+          <Button
+            onClick={() => router.push(`/event/dashboard/${event.id}`)}
+            sx={{
+              minHeight: 36,
+              px: 0,
+              mb: 0.5,
+              color: color.textMuted,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.78rem',
+            }}
+          >
+            ← Event
+          </Button>
           <Typography className="pxe-clamp-1" sx={{ color: color.text, fontWeight: 800 }}>
             {event.title}
           </Typography>

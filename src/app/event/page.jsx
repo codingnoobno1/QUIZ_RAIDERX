@@ -48,9 +48,7 @@ export default function EventAuthPage() {
 
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={false}
           className="evt-header"
         >
           <div className="evt-title-row">
@@ -63,9 +61,7 @@ export default function EventAuthPage() {
 
         {/* Auth card with Radix Tabs */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
+          initial={false}
           className="evt-card"
         >
           <Tabs.Root value={tab} onValueChange={setTab}>
@@ -110,9 +106,14 @@ function EventAuthStyles() {
     <style>{`
       .evt-root {
         min-height: 100vh;
+        min-height: 100dvh;
         background: radial-gradient(ellipse at top, #1a0533 0%, #0a0a0f 50%, #000 100%);
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        padding: 24px; position: relative; overflow: hidden;
+        display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+        padding: max(20px, env(safe-area-inset-top, 0px)) 20px max(24px, env(safe-area-inset-bottom, 0px));
+        position: relative; overflow-x: hidden; overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        -webkit-text-size-adjust: 100%;
+        box-sizing: border-box;
       }
       .evt-orb {
         position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none;
@@ -141,7 +142,7 @@ function EventAuthStyles() {
       .evt-header { text-align: center; margin-bottom: 28px; position: relative; z-index: 1; }
       .evt-title-row { display: inline-flex; align-items: center; gap: 12px; }
       .evt-title {
-        font-size: 2.4rem; font-weight: 800; margin: 0; letter-spacing: -0.02em;
+        font-size: clamp(1.5rem, 7vw, 2.4rem); font-weight: 800; margin: 0; letter-spacing: -0.02em;
         background: linear-gradient(135deg, #c084fc, #818cf8, #a855f7);
         -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
       }
@@ -182,9 +183,10 @@ function EventAuthStyles() {
       .evt-input-wrap { position: relative; display: flex; align-items: center; }
       .evt-input-icon { position: absolute; left: 12px; color: rgba(255,255,255,0.4); pointer-events: none; display: flex; }
       .evt-input {
-        width: 100%; box-sizing: border-box; padding: 11px 12px 11px 38px;
-        font-size: 0.95rem; color: #fff; background: rgba(255,255,255,0.04);
+        width: 100%; box-sizing: border-box; padding: 12px 12px 12px 38px;
+        font-size: 16px; color: #fff; background: rgba(255,255,255,0.04);
         border: 1px solid rgba(255,255,255,0.15); border-radius: 11px; outline: none;
+        min-height: 44px;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
       }
       .evt-input::placeholder { color: rgba(255,255,255,0.3); }
@@ -203,6 +205,7 @@ function EventAuthStyles() {
         background: linear-gradient(135deg, #7c3aed, #a855f7); border: none; border-radius: 12px;
         cursor: pointer; box-shadow: 0 4px 20px rgba(124,58,237,0.4); transition: all 0.25s ease;
         display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        min-height: 48px; touch-action: manipulation;
       }
       .evt-btn:hover:not(:disabled) {
         background: linear-gradient(135deg, #6d28d9, #9333ea);
@@ -219,6 +222,11 @@ function EventAuthStyles() {
       .evt-link:hover { text-decoration: underline; }
       .evt-spin { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: evtSpin 0.7s linear infinite; }
       @keyframes evtSpin { to { transform: rotate(360deg); } }
+      @media (max-width: 480px) {
+        .evt-row { flex-direction: column; gap: 0; }
+        .evt-card { padding: 20px 16px; border-radius: 16px; }
+        .evt-tab { min-height: 44px; }
+      }
     `}</style>
   );
 }

@@ -12,6 +12,10 @@
  *             moves inline where each page decides it belongs
  *   >= 900px  nav + content
  *   >= 1200px nav + content + rail
+ *
+ * Event detail / register / pass hide the bottom bar so the page's own CTA is
+ * tappable on iPhone. The live lobby drops the chrome entirely — a paper quiz
+ * is a 30-minute exam, not a dashboard.
  */
 
 import { useState } from 'react';
@@ -44,6 +48,17 @@ const RAIL_W = 300;
 const WIDE = '@media (min-width:1200px)';
 const MID = '@media (min-width:900px)';
 const NARROW = '@media (max-width:899px)';
+const LIST_SEGMENTS = new Set(['explore', 'events', 'teams', 'invitations']);
+
+/** home | list | focus (event / register / pass) | lobby */
+function eventRouteKind(pathname) {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts[0] !== 'event' || parts[1] !== 'dashboard') return 'home';
+  if (parts.length < 3) return 'home';
+  if (LIST_SEGMENTS.has(parts[2])) return 'list';
+  if (parts[3] === 'lobby') return 'lobby';
+  return 'focus';
+}
 
 export default function EventDashboardLayout({ children }) {
   const router = useRouter();
@@ -61,9 +76,12 @@ export default function EventDashboardLayout({ children }) {
     if (term) router.push(`/event/dashboard/explore?q=${encodeURIComponent(term)}`);
   };
 
+  const kind = eventRouteKind(pathname);
+  const isLobby = kind === 'lobby';
+  const hideMobileNav = kind === 'focus' || kind === 'lobby';
   // The detail route carries its own sticky action panel, so the rail would be
   // a second competing column of actions.
-  const isDetail = /^\/event\/dashboard\/[^/]+$/.test(pathname) && !NAV.some((n) => n.href === pathname);
+  const isDetail = kind === 'focus' && pathname.split('/').filter(Boolean).length === 3;
 
   if (isLoading) return <Loading label="Loading your events" />;
   if (!isAuthenticated) return null; // useEventUser is already redirecting
@@ -76,22 +94,36 @@ export default function EventDashboardLayout({ children }) {
     .toUpperCase();
 
   return (
-    <Box sx={{ bgcolor: color.bg, minHeight: '100dvh' }}>
+    <Box
+      className="pxe-shell"
+      sx={{
+        bgcolor: color.bg,
+        minHeight: '100dvh',
+        ...(isLobby && {
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }),
+      }}
+    >
       <EventShellStyles />
 
-      {/* ── top bar ─────────────────────────────────────────────────────── */}
+      {/* ── top bar — hidden in the live lobby so a paper fills the phone ─ */}
       <Box
         component="header"
         sx={{
           position: 'sticky',
           top: 0,
           zIndex: 20,
-          height: 64,
-          display: 'flex',
+          minHeight: 64,
+          height: 'calc(64px + env(safe-area-inset-top, 0px))',
+          display: isLobby ? 'none' : 'flex',
           alignItems: 'center',
+          boxSizing: 'border-box',
           borderBottom: `1px solid ${color.border}`,
           bgcolor: 'rgba(9,10,14,0.94)',
           backdropFilter: 'blur(14px)',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
         <Stack
@@ -209,27 +241,41 @@ export default function EventDashboardLayout({ children }) {
 
       {/* ── body ────────────────────────────────────────────────────────── */}
       <Box
-        sx={{
-          maxWidth: 1450,
-          mx: 'auto',
-          display: 'grid',
-          gap: 3,
-          px: { xs: 1.5, md: 3 },
-          pt: 3,
-          pb: { xs: 11, md: 8 },
-          gridTemplateColumns: '1fr',
-          [MID]: { gridTemplateColumns: `${NAV_W}px minmax(0,1fr)` },
-          ...(!isDetail && {
-            [WIDE]: { gridTemplateColumns: `${NAV_W}px minmax(0,1fr) ${RAIL_W}px` },
-          }),
-        }}
+        sx={
+          isLobby
+            ? {
+                flex: 1,
+                minHeight: 0,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'auto',
+                WebkitOverflowScrolling: 'touch',
+              }
+            : {
+                maxWidth: 1450,
+                mx: 'auto',
+                display: 'grid',
+                gap: 3,
+                px: { xs: 1.5, md: 3 },
+                pt: 3,
+                pb: hideMobileNav ? { xs: 2, md: 8 } : { xs: 11, md: 8 },
+                gridTemplateColumns: '1fr',
+                [MID]: { gridTemplateColumns: `${NAV_W}px minmax(0,1fr)` },
+                ...(!isDetail && {
+                  [WIDE]: { gridTemplateColumns: `${NAV_W}px minmax(0,1fr) ${RAIL_W}px` },
+                }),
+              }
+        }
       >
-        {/* left nav — desktop */}
+        {/* left nav — desktop (not in the lobby: that screen is the activity) */}
         <Box
           component="nav"
           sx={{
             display: 'none',
-            [MID]: { display: 'block', position: 'sticky', top: 88, height: 'max-content' },
+            ...(!isLobby && {
+              [MID]: { display: 'block', position: 'sticky', top: 88, height: 'max-content' },
+            }),
           }}
         >
           <SectionLabel>MENU</SectionLabel>
@@ -244,22 +290,25 @@ export default function EventDashboardLayout({ children }) {
           ))}
         </Box>
 
-        <Box sx={{ minWidth: 0 }}>{children}</Box>
+        <Box sx={{ minWidth: 0, ...(isLobby && { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }) }}>
+          {children}
+        </Box>
 
-        {!isDetail && (
+        {!isDetail && !isLobby && (
           <Box sx={{ display: 'none', [WIDE]: { display: 'block', position: 'sticky', top: 88, height: 'max-content' } }}>
             <RightRail user={user} />
           </Box>
         )}
       </Box>
 
-      {/* ── bottom nav — mobile ─────────────────────────────────────────── */}
+      {/* ── bottom nav — mobile. Hidden on event pages: their own CTA sits
+          here, and covering it is how iPhone users could not enter the lobby. */}
       <Box
         component="nav"
         className="pxe-nav"
         sx={{
           [NARROW]: {
-            display: 'flex',
+            display: hideMobileNav ? 'none' : 'flex',
             position: 'fixed',
             left: 0,
             right: 0,

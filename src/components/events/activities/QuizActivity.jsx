@@ -32,6 +32,8 @@ import Loading from '@/components/async/Loading';
 import PaperActivity from './PaperActivity';
 import { formatClock, useRemaining, useServerOffset } from './serverClock';
 
+const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
 export default function QuizActivity({ activity, participantId, eventId, serverTime, onExit }) {
   const quiz = activity.quiz;
 
@@ -191,17 +193,33 @@ function SelfPacedQuiz({ activity, participantId, onExit }) {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-        <Typography sx={{ color: color.textMuted, fontSize: '0.75rem', fontWeight: 700, letterSpacing: 1 }}>
-          QUESTION {index + 1} / {questions.length}
-        </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: { xs: '100dvh', md: 'auto' }, bgcolor: color.bg }}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{
+          px: { xs: 2, md: 3 },
+          pt: { xs: 'max(10px, env(safe-area-inset-top, 0px))', md: 3 },
+          pb: 1.25,
+          borderBottom: `1px solid ${color.border}`,
+        }}
+      >
+        <Box>
+          <Button onClick={onExit} sx={{ minHeight: 32, px: 0, color: color.textMuted, textTransform: 'none', fontWeight: 700, fontSize: '0.78rem' }}>
+            ← Lobby
+          </Button>
+          <Typography sx={{ color: color.textMuted, fontSize: '0.75rem', fontWeight: 700, letterSpacing: 1 }}>
+            QUESTION {index + 1} / {questions.length}
+          </Typography>
+        </Box>
         {timed && (
-          <Typography sx={{ color: timeLeft <= 3 ? color.red : color.brand, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+          <Typography sx={{ color: timeLeft <= 3 ? color.red : color.brand, fontWeight: 800, fontSize: '1.35rem', fontVariantNumeric: 'tabular-nums' }}>
             {timeLeft}s
           </Typography>
         )}
       </Stack>
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', px: { xs: 2, md: 3 }, pt: 2, pb: 2 }}>
 
       <LinearProgress
         variant="determinate"
@@ -233,7 +251,7 @@ function SelfPacedQuiz({ activity, participantId, onExit }) {
             placeholder="Type your answer"
             inputProps={{ maxLength: 1000, 'aria-label': 'Typed answer' }}
             sx={{
-              '& .MuiOutlinedInput-root': { color: color.text, bgcolor: 'rgba(255,255,255,0.02)' },
+              '& .MuiOutlinedInput-root': { color: color.text, bgcolor: 'rgba(255,255,255,0.02)', fontSize: 16 },
               '& fieldset': { borderColor: color.border },
             }}
           />
@@ -246,17 +264,20 @@ function SelfPacedQuiz({ activity, participantId, onExit }) {
       ) : (
         <QuestionBody question={question} chosen={chosen} onChoose={choose} />
       )}
+      </Box>
 
       {!timed && (
-        <PrimaryButton
-          disabled={question.type === 'text' ? (!chosen && !draft.trim()) : !chosen}
-          onClick={() => {
-            if (question.type === 'text' && !chosen) choose(draft.trim());
-            advance();
-          }}
-        >
-          {isLast ? 'Finish' : 'Next question'}
-        </PrimaryButton>
+        <Box sx={{ px: { xs: 2, md: 3 }, pt: 1, pb: { xs: 'max(12px, env(safe-area-inset-bottom, 0px))', md: 3 }, borderTop: `1px solid ${color.border}` }}>
+          <PrimaryButton
+            disabled={question.type === 'text' ? (!chosen && !draft.trim()) : !chosen}
+            onClick={() => {
+              if (question.type === 'text' && !chosen) choose(draft.trim());
+              advance();
+            }}
+          >
+            {isLast ? 'Finish' : 'Next question'}
+          </PrimaryButton>
+        </Box>
       )}
     </Box>
   );
@@ -352,14 +373,17 @@ function LiveQuiz({ activity, participantId, eventId, serverTime, onExit }) {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
+    <Box sx={{ px: { xs: 2, md: 3 }, pt: { xs: 'max(8px, env(safe-area-inset-top, 0px))', md: 3 }, pb: { xs: 'max(16px, env(safe-area-inset-bottom, 0px))', md: 3 } }}>
+      <Button onClick={onExit} sx={{ minHeight: 32, px: 0, mb: 1, color: color.textMuted, textTransform: 'none', fontWeight: 700, fontSize: '0.78rem' }}>
+        ← Lobby
+      </Button>
       <TurnBanner round={round} />
 
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5, mt: 2 }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1} sx={{ mb: 1.5, mt: 2 }}>
         <Typography sx={{ color: color.green, fontSize: '0.72rem', fontWeight: 800, letterSpacing: 1.5 }}>
           ● LIVE · QUESTION {round.questionIndex + 1}
         </Typography>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
           {activity.quiz.roundClock?.endsAt && (
             <Typography sx={{ color: roundRemaining <= 60_000 ? color.red : color.textMuted, fontWeight: 750, fontSize: '0.78rem', fontVariantNumeric: 'tabular-nums' }}>
               ROUND {formatClock(roundRemaining)}
@@ -393,7 +417,7 @@ function LiveQuiz({ activity, participantId, eventId, serverTime, onExit }) {
             placeholder="Type your answer"
             inputProps={{ maxLength: 1000, 'aria-label': 'Typed answer' }}
             sx={{
-              '& .MuiOutlinedInput-root': { color: color.text, bgcolor: 'rgba(255,255,255,0.02)' },
+              '& .MuiOutlinedInput-root': { color: color.text, bgcolor: 'rgba(255,255,255,0.02)', fontSize: 16 },
               '& fieldset': { borderColor: color.border },
             }}
           />
@@ -451,7 +475,7 @@ function TurnBanner({ round }) {
     <Stack
       direction="row"
       spacing={1.25}
-      alignItems="center"
+      alignItems="flex-start"
       sx={{ px: 2, py: 1.25, borderRadius: `${radius.md}px`, bgcolor: tint(tone, 0.08), border: `1px solid ${tint(tone, 0.3)}` }}
     >
       <Icon sx={{ color: tone, fontSize: 20 }} />
@@ -460,7 +484,7 @@ function TurnBanner({ round }) {
           {yours ? 'YOUR TEAM IS UP' : `${others.toUpperCase()} IS ANSWERING`}
           {round.isTeamLeader && yours ? ' · YOU LEAD' : ''}
         </Typography>
-        <Typography sx={{ color: color.textMuted, fontSize: '0.82rem' }}>
+        <Typography sx={{ color: color.textMuted, fontSize: '0.82rem', lineHeight: 1.45 }}>
           {[yours ? round.myTeamName : others, leader ? `led by ${leader}` : null].filter(Boolean).join(' · ')}
           {!yours ? ' — you can watch, but this one is not yours to answer.' : ''}
         </Typography>
@@ -486,7 +510,7 @@ function QuestionBody({ question, chosen, onChoose, disabled = false, correctOpt
       </Typography>
 
       <Stack spacing={1.25}>
-        {question.options.map((option) => {
+        {question.options.map((option, i) => {
           const picked = chosen === option;
           const isCorrect = correctOption != null && option === correctOption;
           const isWrongPick = correctOption != null && picked && option !== correctOption;
@@ -510,9 +534,12 @@ function QuestionBody({ question, chosen, onChoose, disabled = false, correctOpt
                 justifyContent: 'space-between',
                 gap: 1.5,
                 width: '100%',
+                minHeight: 52,
                 textAlign: 'left',
                 font: 'inherit',
+                fontSize: 16,
                 cursor: locked ? 'default' : 'pointer',
+                touchAction: 'manipulation',
                 px: 2,
                 py: 1.5,
                 borderRadius: `${radius.md}px`,
@@ -523,7 +550,10 @@ function QuestionBody({ question, chosen, onChoose, disabled = false, correctOpt
                 '&:focus-visible': { outline: `2px solid ${color.brand}`, outlineOffset: 2 },
               }}
             >
-              <span>{option}</span>
+              <Box component="span" sx={{ flexShrink: 0, width: 28, height: 28, display: 'grid', placeItems: 'center', borderRadius: '50%', fontWeight: 800, fontSize: '0.8rem', bgcolor: picked || isCorrect ? tone : 'rgba(255,255,255,0.06)', color: picked || isCorrect ? color.bg : color.textMuted }}>
+                {LETTERS[i] ?? i + 1}
+              </Box>
+              <Box component="span" sx={{ flex: 1 }}>{option}</Box>
               {isCorrect && <CheckCircleRoundedIcon sx={{ fontSize: 20, color: color.green }} />}
               {isWrongPick && <CancelRoundedIcon sx={{ fontSize: 20, color: color.red }} />}
             </Box>
@@ -550,7 +580,7 @@ function PrimaryButton({ children, ...props }) {
       disableElevation
       {...props}
       sx={{
-        mt: 3,
+        mt: 0,
         minHeight: 48,
         borderRadius: `${radius.md}px`,
         textTransform: 'none',
@@ -579,7 +609,7 @@ function Sending({ pending, error, onRetry, onExit }) {
         <>
           <Typography sx={{ color: color.red, fontWeight: 800, letterSpacing: 1 }}>NOT RECORDED</Typography>
           <Typography sx={{ color: color.textMuted, mt: 1.5 }}>{error.message}</Typography>
-          <Stack direction="row" spacing={1.5} justifyContent="center" sx={{ mt: 3 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="center" sx={{ mt: 3 }}>
             <Button onClick={onRetry} variant="contained" disableElevation sx={{ textTransform: 'none', fontWeight: 800, bgcolor: color.brand, color: color.bg }}>
               Try again
             </Button>
@@ -597,7 +627,7 @@ function ResultView({ score, total, correctCount, percentage, title, onExit, res
   const pct = percentage ?? (total ? Math.round((score / total) * 100) : null);
 
   return (
-    <Box sx={{ p: 4, textAlign: 'center' }}>
+    <Box sx={{ p: { xs: 2.5, md: 4 }, pt: { xs: 'max(24px, env(safe-area-inset-top, 0px))', md: 4 }, pb: { xs: 'max(24px, env(safe-area-inset-bottom, 0px))', md: 4 }, textAlign: 'center' }}>
       <Box
         sx={{
           width: 84,

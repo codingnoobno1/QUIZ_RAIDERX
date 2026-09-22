@@ -5,8 +5,13 @@ import MainAppWrapper from '@/components/layouts/MainAppWrapper';
 
 export const metadata = {
   title: 'Pixel Quiz Raiderx',
-
-  description: 'A simple login/register page',
+  description: 'PIXEL Events — live quizzes, papers and the event lobby.',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'PIXEL Events',
+  },
+  formatDetection: { telephone: false },
 };
 
 /**

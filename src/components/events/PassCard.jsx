@@ -20,7 +20,7 @@ export default function PassCard({ event, registration, onEnterLobby }) {
   const accepted = registration.members.filter((m) => m.inviteStatus === 'accepted').length;
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 460, mx: 'auto', width: '100%' }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, pb: { xs: 'max(20px, env(safe-area-inset-bottom, 0px))', md: 3 }, maxWidth: 460, mx: 'auto', width: '100%' }}>
       <Box
         sx={{
           borderRadius: `${radius.xl}px`,

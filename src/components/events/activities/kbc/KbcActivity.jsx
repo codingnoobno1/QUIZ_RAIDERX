@@ -13,16 +13,17 @@ import { Box } from '@mui/material';
 import { useLiveAnswer } from '@/hooks/queries/useEventQueries';
 import KbcExperience from './KbcExperience';
 
-export default function KbcActivity({ activity, participantId, eventId }) {
+export default function KbcActivity({ activity, participantId, eventId, onExit }) {
   const answer = useLiveAnswer(activity.id, eventId, participantId);
   const quiz = activity.quiz ?? {};
 
   return (
-    <Box sx={{ minHeight: 0 }}>
+    <Box sx={{ minHeight: 0, pb: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
       <KbcExperience
         quiz={quiz}
         submitting={answer.isPending}
         onSubmit={(vars) => answer.mutate(vars)}
+        onExit={onExit}
       />
     </Box>
   );

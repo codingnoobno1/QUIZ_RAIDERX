@@ -9,6 +9,7 @@
 
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
+import { Box } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import EventBusyRoundedIcon from '@mui/icons-material/EventBusyRounded';
 import useEventUser from '@/hooks/useEventUser';
@@ -42,6 +43,7 @@ export default function LobbyPage({ params }) {
   }
 
   return (
+    <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
     <AsyncBoundary
       query={eventQuery}
       loadingLabel="Loading event"
@@ -56,5 +58,6 @@ export default function LobbyPage({ params }) {
     >
       {(event) => <LobbyView event={event} participantId={participantId} />}
     </AsyncBoundary>
+    </Box>
   );
 }
