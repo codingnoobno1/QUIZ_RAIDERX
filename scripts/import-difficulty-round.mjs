@@ -23,12 +23,26 @@ import { fileURLToPath } from 'node:url';
 import { MongoClient, ObjectId } from 'mongodb';
 
 const ROOT = path.dirname(fileURLToPath(new URL('.', import.meta.url)));
-const [eventId, bankFile] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
-const ACTIVATE = process.argv.includes('--activate');
-const DRY = process.argv.includes('--dry');
+const argv = process.argv.slice(2);
+const [eventId, bankFile] = argv.filter((a) => !a.startsWith('--') && !isFlagValue(a));
+const ACTIVATE = argv.includes('--activate');
+const DRY = argv.includes('--dry');
+/** A trial run of the same round: the same bank and deal, but repeatable. */
+const RETAKE = argv.includes('--retake');
+
+/** `--title "..."` names a second copy, so a trial does not overwrite the real round. */
+function flag(name, fallback) {
+    const i = argv.indexOf(`--${name}`);
+    return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback;
+}
+function isFlagValue(arg) {
+    const i = argv.indexOf(arg);
+    return i > 0 && argv[i - 1].startsWith('--') && argv[i - 1] !== '--activate'
+        && argv[i - 1] !== '--dry' && argv[i - 1] !== '--retake';
+}
 
 if (!eventId || !bankFile) {
-    console.error('Usage: node scripts/import-difficulty-round.mjs <eventId> <bank.json> [--activate] [--dry]');
+    console.error('Usage: node scripts/import-difficulty-round.mjs <eventId> <bank.json> [--activate] [--dry] [--retake] [--title "..."]');
     process.exit(1);
 }
 
@@ -39,7 +53,7 @@ const env = (key) => {
     return line ? line.slice(line.indexOf('=') + 1).trim() : null;
 };
 
-const TITLE = 'PIXEL QUIZQUEST — Difficulty Challenge';
+const TITLE = flag('title', 'PIXEL QUIZQUEST — Difficulty Challenge');
 
 /** Slot values, straight from the rulebook's table. */
 const POINTS = { easy: 60, medium: 90, hard: 120, impossible: 200 };
@@ -111,7 +125,8 @@ const activity = {
         autoAdvance: true,
         maxParticipants: 500,
         currentQuestion: 0,
-        allowRetake: false,
+        // A trial is worth nothing if a tester can only see it once.
+        allowRetake: RETAKE,
         paper: {
             enabled: true,
             counts: SLOTS,
@@ -144,6 +159,7 @@ console.log(`  values      ${POINTS.easy} / ${POINTS.medium} / ${POINTS.hard}, i
 console.log(`  timer       ${MINUTES} minutes, one per team`);
 console.log(`  max score   ${maxScore}`);
 console.log(`  advancement top ${activity.quiz.advancement.count}`);
+console.log(`  retakes     ${RETAKE ? 'allowed (trial)' : 'one attempt'}`);
 console.log('\n  DIFFERS FROM THE WRITTEN RULES:');
 console.log('    - no per-slot difficulty choice: the paper is dealt 5/5/5 rather than');
 console.log('      the team picking a tier before each of the 15 slots');
