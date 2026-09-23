@@ -24,19 +24,20 @@ export default function MCQQuestion({ question, onAnswer, value }) {
                                     cursor: 'pointer',
                                     borderRadius: 3,
                                     background: isSelected
-                                        ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%)'
-                                        : 'rgba(255, 255, 255, 0.03)',
-                                    border: `2px solid ${isSelected ? '#7c3aed' : 'rgba(255, 255, 255, 0.08)'}`,
-                                    color: isSelected ? '#a78bfa' : 'rgba(255,255,255,0.7)',
+                                        ? 'linear-gradient(135deg, color-mix(in srgb, var(--quiz-primary) 14%, var(--quiz-surface-solid)), color-mix(in srgb, var(--quiz-blue) 12%, var(--quiz-surface-solid)))'
+                                        : 'var(--quiz-surface-solid)',
+                                    border: `2px solid ${isSelected ? 'var(--quiz-primary)' : 'var(--quiz-border)'}`,
+                                    color: isSelected ? 'var(--quiz-primary-strong)' : 'var(--quiz-text)',
+                                    boxShadow: isSelected ? '0 10px 28px color-mix(in srgb, var(--quiz-primary) 16%, transparent)' : 'none',
                                     transition: 'all 0.2s ease',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: 2,
                                     '&:hover': {
                                         background: isSelected
-                                            ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.25) 0%, rgba(59, 130, 246, 0.25) 100%)'
-                                            : 'rgba(255, 255, 255, 0.05)',
-                                        borderColor: isSelected ? '#7c3aed' : 'rgba(255, 255, 255, 0.15)'
+                                            ? 'linear-gradient(135deg, color-mix(in srgb, var(--quiz-primary) 18%, var(--quiz-surface-solid)), color-mix(in srgb, var(--quiz-blue) 15%, var(--quiz-surface-solid)))'
+                                            : 'var(--quiz-soft)',
+                                        borderColor: isSelected ? 'var(--quiz-primary)' : 'color-mix(in srgb, var(--quiz-primary) 28%, var(--quiz-border))'
                                     }
                                 }}
                             >
@@ -48,11 +49,11 @@ export default function MCQQuestion({ question, onAnswer, value }) {
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        background: isSelected ? '#7c3aed' : 'rgba(255, 255, 255, 0.1)',
-                                        color: isSelected ? 'white' : 'rgba(255, 255, 255, 0.4)',
+                                        background: isSelected ? 'var(--quiz-primary)' : 'var(--quiz-soft)',
+                                        color: isSelected ? 'white' : 'var(--quiz-text-muted)',
                                         fontSize: '0.85rem',
                                         fontWeight: 'bold',
-                                        border: isSelected ? 'none' : '1px solid rgba(255, 255, 255, 0.2)'
+                                        border: isSelected ? 'none' : '1px solid var(--quiz-border)'
                                     }}
                                 >
                                     {String.fromCharCode(65 + idx)}

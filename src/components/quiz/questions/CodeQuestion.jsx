@@ -16,10 +16,6 @@ export default function CodeQuestion({ question, onAnswer, value }) {
 
     return (
         <Box>
-            <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.9)', mb: 3, fontWeight: 600 }}>
-                {question.text}
-            </Typography>
-
             {/* Simple Code Editor Area */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
                 <Paper
@@ -58,24 +54,24 @@ export default function CodeQuestion({ question, onAnswer, value }) {
             {/* Test Cases Display */}
             {question.testCases && question.testCases.length > 0 && (
                 <Box mt={4}>
-                    <Typography variant="overline" sx={{ color: '#444', fontWeight: 'bold' }}>
+                    <Typography variant="overline" sx={{ color: 'var(--quiz-text-muted)', fontWeight: 'bold' }}>
                         Test Scenarios
                     </Typography>
-                    <Box display="grid" gridTemplateColumns={{ xs: '1r', sm: '1fr 1fr' }} gap={2} mt={1}>
+                    <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={2} mt={1}>
                         {question.testCases.map((tc, idx) => (
                             <Paper
                                 key={idx}
                                 sx={{
                                     p: 2,
-                                    bgcolor: 'rgba(255,255,255,0.02)',
-                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    bgcolor: 'var(--quiz-surface-solid)',
+                                    border: '1px solid var(--quiz-border)',
                                     borderRadius: 3
                                 }}
                             >
-                                <Typography variant="caption" sx={{ color: '#555', fontWeight: 'bold' }}>INPUT</Typography>
-                                <Typography variant="body2" sx={{ color: '#888', fontFamily: 'monospace', mb: 1 }}>{tc.input || "No input required"}</Typography>
-                                <Typography variant="caption" sx={{ color: '#555', fontWeight: 'bold' }}>EXPECTED OUTPUT</Typography>
-                                <Typography variant="body2" sx={{ color: '#3b82f6', fontFamily: 'monospace' }}>{tc.output}</Typography>
+                                <Typography variant="caption" sx={{ color: 'var(--quiz-text-muted)', fontWeight: 'bold' }}>INPUT</Typography>
+                                <Typography variant="body2" sx={{ color: 'var(--quiz-text)', fontFamily: 'monospace', mb: 1 }}>{tc.input || "No input required"}</Typography>
+                                <Typography variant="caption" sx={{ color: 'var(--quiz-text-muted)', fontWeight: 'bold' }}>EXPECTED OUTPUT</Typography>
+                                <Typography variant="body2" sx={{ color: 'var(--quiz-blue)', fontFamily: 'monospace' }}>{tc.output}</Typography>
                             </Paper>
                         ))}
                     </Box>

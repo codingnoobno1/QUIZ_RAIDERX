@@ -55,6 +55,11 @@ const QuestionSchema = new mongoose.Schema({
      * question can never turn up on someone's ordinary paper.
      */
     pool: { type: String, enum: ['regular', 'power', 'tiebreak'], default: 'regular' },
+    /**
+     * Slot id, such as S1. When every regular question names one, a paper
+     * draws exactly one question from each slot instead of a difficulty count.
+     */
+    slot: { type: String, trim: true },
     /** Fallback value, used when no paper points table applies. */
     points: { type: Number, default: 10 },
     imageUrl: { type: String }
@@ -198,6 +203,15 @@ const EventActivitySchema = new mongoose.Schema({
                 count: { type: Number, default: 2 },
                 points: { type: Number, default: 25 },
                 cutoffMinutes: { type: Number, default: 25 },
+            },
+            /**
+             * When on, the paper is not dealt up front. Before each of `slots`
+             * questions the team names easy, medium, or hard, and one unused
+             * question of that tier is drawn.
+             */
+            choice: {
+                enabled: { type: Boolean, default: false },
+                slots: { type: Number, default: 15, min: 1 },
             },
         },
 

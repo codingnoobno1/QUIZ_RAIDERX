@@ -137,7 +137,7 @@ const EDITABLE = {
 
 const QUESTION_FIELDS = [
     'text', 'type', 'options', 'correctAnswer', 'acceptedAnswers', 'source',
-    'difficulty', 'pool', 'points', 'imageUrl',
+    'difficulty', 'pool', 'slot', 'points', 'imageUrl',
 ];
 
 /**

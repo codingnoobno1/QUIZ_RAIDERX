@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   Sparkles, Search, X, Layers, BookOpen, FileQuestion,
@@ -9,8 +10,11 @@ import {
 } from 'lucide-react';
 import FacultyCard from '@/components/ui/profilecard';
 import QuizCard from '@/components/ui/QuizCard';
+import QuizThemeToggle from '@/components/quiz/QuizThemeToggle';
+import useQuizTheme from '@/components/quiz/useQuizTheme';
 
 export default function QuizHubPage() {
+  const { theme, toggleTheme } = useQuizTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [facultyData, setFacultyData] = useState([]);
   const [error, setError] = useState(null);
@@ -110,7 +114,7 @@ export default function QuizHubPage() {
   })();
 
   return (
-    <div className="qz-page">
+    <div className="qz-page" data-quiz-theme={theme}>
       <QuizHubStyles />
       <div className="qz-bg" aria-hidden="true" />
 
@@ -122,38 +126,52 @@ export default function QuizHubPage() {
         transition={{ duration: 0.5 }}
       >
         <div className="qz-hero-glow" />
-        <span className="qz-hero-eyebrow"><Sparkles size={13} /> Knowledge Arena</span>
-        <h1 className="qz-hero-title">Quiz Hub</h1>
-        <p className="qz-hero-sub">
-          Pick a mentor to explore their batches, subjects and live quizzes.
-        </p>
-        {!isLoading && !error && facultyData.length > 0 && (
-          <div className="qz-hero-tools">
-            <label className="qz-search">
-              <Search size={16} />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search mentors by name, subject or department…"
-              />
-              {search && (
-                <button
-                  type="button"
-                  className="qz-search-clear"
-                  onClick={() => setSearch('')}
-                  aria-label="Clear search"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </label>
-            <span className="qz-hero-count">
-              <GraduationCap size={14} /> {filteredFaculty.length}
-              {search ? ` / ${facultyData.length}` : ''} mentor{facultyData.length > 1 ? 's' : ''}
-            </span>
-          </div>
-        )}
+        <div className="qz-theme-control">
+          <QuizThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
+        <div className="qz-hero-copy">
+          <span className="qz-hero-eyebrow"><Sparkles size={13} /> Knowledge Arena</span>
+          <h1 className="qz-hero-title">Ready for your next win?</h1>
+          <p className="qz-hero-sub">
+            Pick a mentor, choose your subject, and turn every question into progress.
+          </p>
+          {!isLoading && !error && facultyData.length > 0 && (
+            <div className="qz-hero-tools">
+              <label className="qz-search">
+                <Search size={16} />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search mentors, subjects or departments…"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    className="qz-search-clear"
+                    onClick={() => setSearch('')}
+                    aria-label="Clear search"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </label>
+              <span className="qz-hero-count">
+                <GraduationCap size={14} /> {filteredFaculty.length}
+                {search ? ` / ${facultyData.length}` : ''} mentor{facultyData.length > 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="qz-hero-art" aria-hidden="true">
+          <Image
+            src="/quiz-assets/quiz-adventure-hero.png"
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 780px) 100vw, 48vw"
+          />
+        </div>
       </motion.header>
 
       {/* ── Faculty grid ───────────────────────────────────────────────── */}
@@ -342,7 +360,7 @@ export default function QuizHubPage() {
 function QuizHubStyles() {
   return (
     <style>{`
-      .qz-page { position: relative; max-width: 1320px; margin: 0 auto; padding: 8px 16px 56px; color: #e7e7ea; }
+      .qz-page { position: relative; isolation: isolate; max-width: 1320px; margin: 0 auto; padding: 8px 16px 56px; color: #e7e7ea; }
 
       /* Ambient backdrop — layered glows + faded grid for depth */
       .qz-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none;
@@ -361,7 +379,20 @@ function QuizHubStyles() {
       /* Hero */
       .qz-hero { position: relative; overflow: hidden; border-radius: 22px; padding: 32px 30px; margin-bottom: 28px;
         background: linear-gradient(135deg, rgba(34,211,238,.12), rgba(168,85,247,.10) 55%, rgba(17,17,24,.96));
-        border: 1px solid rgba(255,255,255,.08); }
+        border: 1px solid rgba(255,255,255,.08); min-height: 330px; display: flex; align-items: center; }
+      .qz-hero-copy { position: relative; z-index: 3; width: min(58%, 660px); }
+      .qz-hero-art { position: absolute; z-index: 1; inset: 0 0 0 38%; overflow: hidden; pointer-events: none; }
+      .qz-hero-art::after { content: ''; position: absolute; inset: 0;
+        background: linear-gradient(90deg, #12121b 0%, rgba(18,18,27,.62) 18%, transparent 55%); }
+      .qz-hero-art img { object-fit: cover; object-position: center; }
+      .qz-theme-control { position: absolute; z-index: 5; top: 18px; right: 18px; }
+      .quiz-theme-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 7px 13px 7px 8px;
+        border-radius: 999px; border: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.86);
+        background: rgba(10,10,16,.62); backdrop-filter: blur(12px); cursor: pointer; font: 700 .78rem/1 inherit;
+        box-shadow: 0 8px 24px rgba(0,0,0,.18); transition: transform .18s ease, border-color .18s ease; }
+      .quiz-theme-toggle:hover { transform: translateY(-1px); border-color: rgba(103,232,249,.55); }
+      .quiz-theme-toggle__icon { width: 27px; height: 27px; border-radius: 50%; display: grid; place-items: center;
+        color: #0f172a; background: linear-gradient(135deg,#fde047,#fb923c); }
       .qz-hero-glow { position: absolute; top: -70%; right: -5%; width: 420px; height: 420px; border-radius: 50%;
         background: radial-gradient(circle, rgba(34,211,238,.22), transparent 70%); filter: blur(60px); pointer-events: none; }
       .qz-hero::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .55;
@@ -516,6 +547,71 @@ function QuizHubStyles() {
         .qz-step-label { display: none; }
         .qz-step-line { margin: 0 6px; }
         .qz-modal-body { padding: 18px 16px 22px; }
+      }
+      @media (max-width: 780px) {
+        .qz-hero { min-height: 520px; align-items: flex-start; padding-top: 72px; }
+        .qz-hero-copy { width: 100%; }
+        .qz-hero-art { inset: 47% 0 0; }
+        .qz-hero-art::after { background: linear-gradient(180deg, #12121b 0%, transparent 48%); }
+      }
+
+      /* Bright quiz theme. Kept scoped to quiz surfaces so the rest of the app
+         retains its existing appearance. */
+      html[data-quiz-theme='bright'] .qz-page { color: #18213d; }
+      html[data-quiz-theme='bright'] .qz-bg { z-index: -1; background:
+        radial-gradient(800px 500px at 4% 0%, rgba(77,208,225,.28), transparent 66%),
+        radial-gradient(760px 520px at 100% 5%, rgba(139,92,246,.23), transparent 62%),
+        linear-gradient(180deg,#fffaf3 0%,#f7f8ff 46%,#eefcff 100%); }
+      html[data-quiz-theme='bright'] .qz-bg::after { background-image:
+        linear-gradient(rgba(76,74,111,.055) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(76,74,111,.055) 1px,transparent 1px); }
+      html[data-quiz-theme='bright'] .qz-hero { background: #fff9f1; border-color: rgba(91,70,172,.14);
+        box-shadow: 0 24px 70px rgba(83,63,145,.15); }
+      html[data-quiz-theme='bright'] .qz-hero-art::after { background: linear-gradient(90deg,#fff9f1 0%,rgba(255,249,241,.82) 22%,transparent 58%); }
+      html[data-quiz-theme='bright'] .qz-hero-title { background: linear-gradient(120deg,#191735 10%,#5b21b6 56%,#2563eb);
+        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+      html[data-quiz-theme='bright'] .qz-hero-sub { color: #5d6378; }
+      html[data-quiz-theme='bright'] .qz-search { color: #262641; background: rgba(255,255,255,.82); border-color: rgba(66,57,121,.18);
+        box-shadow: 0 8px 24px rgba(91,70,172,.08); }
+      html[data-quiz-theme='bright'] .qz-search:focus-within { background: #fff; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.12); }
+      html[data-quiz-theme='bright'] .qz-search input { color: #17152f; }
+      html[data-quiz-theme='bright'] .qz-search input::placeholder { color: #84889a; }
+      html[data-quiz-theme='bright'] .qz-search > svg { color: #6d5bb2; }
+      html[data-quiz-theme='bright'] .qz-hero-count { color: #5b5478; background: rgba(255,255,255,.72); border-color: rgba(91,70,172,.15); }
+      html[data-quiz-theme='bright'] .quiz-theme-toggle { color: #312e55; background: rgba(255,255,255,.82); border-color: rgba(91,70,172,.16);
+        box-shadow: 0 8px 24px rgba(71,54,128,.12); }
+      html[data-quiz-theme='bright'] .qz-state { color: #77758c; }
+      html[data-quiz-theme='bright'] .qz-skel { background: linear-gradient(180deg,#fff,#faf8ff); border-color: #e8e3f0;
+        box-shadow: 0 12px 34px rgba(60,47,105,.08); }
+      html[data-quiz-theme='bright'] .qz-skel > * { background: #eeeaf5; }
+      html[data-quiz-theme='bright'] .qz-skel > *::after { background: linear-gradient(90deg,transparent,rgba(255,255,255,.82),transparent); }
+      html[data-quiz-theme='bright'] .qz-fac-inner { background: linear-gradient(180deg,#fff 0%,#fbfaff 100%) !important; }
+      html[data-quiz-theme='bright'] .qz-fac { background: linear-gradient(145deg,rgba(14,165,233,.48),rgba(124,58,237,.35),rgba(251,146,60,.28)) !important;
+        box-shadow: 0 14px 40px rgba(62,48,118,.10); }
+      html[data-quiz-theme='bright'] .qz-fac-name, html[data-quiz-theme='bright'] .qz-fac-stat b { color: #24213c !important; }
+      html[data-quiz-theme='bright'] .qz-fac-dept { color: #747184 !important; }
+      html[data-quiz-theme='bright'] .qz-fac-stat { background: #f7f5ff !important; border-color: #ebe7fb !important; }
+      html[data-quiz-theme='bright'] .qz-fac-stat span { color: #77738b !important; }
+      html[data-quiz-theme='bright'] .qz-fac-av { border-color: #fff !important; background: #f5f2ff !important; }
+      html[data-quiz-theme='bright'] .qz-modal { background: #fffdfb; border-color: rgba(72,61,112,.16); box-shadow: 0 40px 120px rgba(64,48,109,.28); }
+      html[data-quiz-theme='bright'] .qz-modal-head, html[data-quiz-theme='bright'] .qz-steps { border-color: #ece8f5; }
+      html[data-quiz-theme='bright'] .qz-steps { background: #faf8ff; }
+      html[data-quiz-theme='bright'] .qz-modal-name { color: #25213f; }
+      html[data-quiz-theme='bright'] .qz-modal-dept, html[data-quiz-theme='bright'] .qz-step-label,
+      html[data-quiz-theme='bright'] .qz-sel-label, html[data-quiz-theme='bright'] .qz-quiz-listhead { color: #79758b; }
+      html[data-quiz-theme='bright'] .qz-modal-close { color: #514c68; background: #f7f4fc; border-color: #e8e2f2; }
+      html[data-quiz-theme='bright'] .qz-step-num { color: #726d85; background: #f1eef8; border-color: #e5dff0; }
+      html[data-quiz-theme='bright'] .qz-step--active .qz-step-label, html[data-quiz-theme='bright'] .qz-step--done .qz-step-label { color: #302b48; }
+      html[data-quiz-theme='bright'] .qz-step-line { background: #ded8ea; }
+      html[data-quiz-theme='bright'] .qz-pill { color: #514c68; background: #f8f6fc; border-color: #e7e2ef; }
+      html[data-quiz-theme='bright'] .qz-pill:hover { color: #312e55; background: #f1edff; border-color: #8b5cf6; }
+      html[data-quiz-theme='bright'] .qz-pill--active, html[data-quiz-theme='bright'] .qz-pill--active:hover { color: #fff;
+        background: linear-gradient(135deg,#7c3aed,#2563eb); }
+      html[data-quiz-theme='bright'] .qz-quiz-empty { color: #9894a8; border-color: #ddd7e9; background: #fcfaff; }
+      html[data-quiz-theme='bright'] .qz-quiz-empty p { color: #514d65; }
+      html[data-quiz-theme='bright'] .qz-overlay { background: rgba(39,29,68,.34); }
+      @media (max-width: 780px) {
+        html[data-quiz-theme='bright'] .qz-hero-art::after { background: linear-gradient(180deg,#fff9f1 0%,transparent 52%); }
       }
       @media (prefers-reduced-motion: reduce) {
         .qz-overlay, .qz-modal { animation: none; }

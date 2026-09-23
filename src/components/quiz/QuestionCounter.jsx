@@ -10,27 +10,27 @@ export default function QuestionCounter({ current, total }) {
         <Box sx={{ mb: 4 }}>
             <Box display="flex" justifyContent="space-between" alignItems="flex-end" mb={1.5}>
                 <Box>
-                    <Typography variant="caption" sx={{ color: '#888', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
+                    <Typography variant="caption" sx={{ color: 'var(--quiz-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
                         Progress
                     </Typography>
-                    <Typography variant="h6" fontWeight="800" color="text.primary" sx={{ lineHeight: 1 }}>
-                        Question {current + 1} <span style={{ color: '#444', fontWeight: '400' }}>/ {total}</span>
+                    <Typography variant="h6" fontWeight="800" sx={{ lineHeight: 1, color: 'var(--quiz-text)' }}>
+                        Question {current + 1} <span style={{ color: 'var(--quiz-text-muted)', fontWeight: '400' }}>/ {total}</span>
                     </Typography>
                 </Box>
-                <Typography variant="body2" fontWeight="700" color="primary.light">
+                <Typography variant="body2" fontWeight="800" sx={{ color: 'var(--quiz-primary)' }}>
                     {Math.round(progress)}%
                 </Typography>
             </Box>
 
             {/* Custom High-Spec Progress Bar */}
-            <Box sx={{ height: 10, width: '100%', bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 5, overflow: 'hidden', position: 'relative' }}>
+            <Box sx={{ height: 10, width: '100%', bgcolor: 'var(--quiz-soft)', border: '1px solid var(--quiz-border)', borderRadius: 5, overflow: 'hidden', position: 'relative' }}>
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.8, ease: "circOut" }}
                     style={{
                         height: '100%',
-                        background: 'linear-gradient(90deg, #7c3aed 0%, #3b82f6 100%)',
+                        background: 'linear-gradient(90deg, var(--quiz-primary) 0%, var(--quiz-blue) 100%)',
                         boxShadow: '0 0 15px rgba(124, 58, 237, 0.3)',
                         borderRadius: 5
                     }}

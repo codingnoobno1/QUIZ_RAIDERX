@@ -224,13 +224,36 @@ export const eventRepository = {
     return api.post('/api/flutter/events/quiz/paper', { activityId }, { signOutOn401: false, retries: 0 });
   },
 
+  /** POST — name easy, medium, or hard for the next unanswered slot. */
+  async pickPaperDifficulty({ activityId, difficulty }) {
+    return api.post('/api/flutter/events/quiz/paper', { activityId, difficulty }, { signOutOn401: false, retries: 0 });
+  },
+
   // ── Host-paced rounds ─────────────────────────────────────────────────────
 
   /**
-   * POST /api/flutter/events/quiz/answer — one answer to one opened question.
-   * Distinct from `submitLiveAnswer`, which is the KBC show's endpoint.
+   * POST /api/flutter/events/buzzer/press — one press, never replayed.
+   * A retry would be a second buzz after the seat was already claimed.
    */
+  async pressBuzzer({ activityId, instanceId }) {
+    return api.post(
+      '/api/flutter/events/buzzer/press',
+      { activityId, instanceId },
+      { signOutOn401: false, retries: 0, timeoutMs: 5_000 },
+    );
+  },
+
+  /** POST /api/flutter/events/buzzer/answer — records the answer. Correctness comes later, on reveal. */
+  async answerBuzzer({ activityId, instanceId, answer }) {
+    return api.post(
+      '/api/flutter/events/buzzer/answer',
+      { activityId, instanceId, answer },
+      { signOutOn401: false, retries: 0, timeoutMs: 5_000 },
+    );
+  },
+
   async submitRoundAnswer({ activityId, instanceId, option }) {
+    // Distinct from submitLiveAnswer, which is the KBC show's endpoint.
     return api.post(
       '/api/flutter/events/quiz/answer',
       { activityId, instanceId, option },

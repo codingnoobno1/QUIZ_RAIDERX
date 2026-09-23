@@ -21,6 +21,8 @@ import {
   Lightbulb,
   Calendar,
   Notebook,
+  SlidersHorizontal,
+  MonitorPlay,
   Menu,
   ChevronLeft,
 } from 'lucide-react';
@@ -38,6 +40,8 @@ const navItems = [
   { text: 'Coding Solutions', icon: <Lightbulb size={20} />, path: '/coding-club/solutions' },
   { text: 'Events', icon: <Calendar size={20} />, path: '/coding-club/events' },
   { text: 'Notes', icon: <Notebook size={20} />, path: '/coding-club/notes' },
+  { text: 'Prepare', icon: <SlidersHorizontal size={20} />, path: '/coding-club/prepare' },
+  { text: 'Rock the Show', icon: <MonitorPlay size={20} />, path: '/coding-club/rock' },
 ];
 
 const accentColors = ['#61dafb', '#a2fac3', '#ffc600', '#ff6b6b', '#be95ff', '#50fa7b', '#ff79c6'];

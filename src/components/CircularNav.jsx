@@ -12,6 +12,8 @@ import {
   Description as ProjectIcon,
   Terminal as SolutionIcon,
   Event as EventIcon,
+  Tune as PrepareIcon,
+  LiveTv as ShowIcon,
 } from '@mui/icons-material';
 
 const navItems = [
@@ -22,6 +24,8 @@ const navItems = [
   { label: 'Projects', icon: <ProjectIcon fontSize="small" />, href: '/coding-club/projects' },
   { label: 'Solutions', icon: <SolutionIcon fontSize="small" />, href: '/coding-club/solutions' },
   { label: 'Events', icon: <EventIcon fontSize="small" />, href: '/coding-club/events' },
+  { label: 'Prepare', icon: <PrepareIcon fontSize="small" />, href: '/coding-club/prepare' },
+  { label: 'Show', icon: <ShowIcon fontSize="small" />, href: '/coding-club/rock' },
 ];
 
 export default function CircularNav({ onClose }) {

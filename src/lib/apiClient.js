@@ -110,12 +110,13 @@ export async function apiFetch(path, options = {}) {
     signal,
     retries = API.MAX_RETRIES,
     signOutOn401 = true,
+    timeoutMs = API.TIMEOUT_MS,
   } = options;
 
   for (let attempt = 0; ; attempt++) {
     // A fresh timeout controller per attempt — a retry gets a full budget.
     const timeoutCtrl = new AbortController();
-    const timer = setTimeout(() => timeoutCtrl.abort(), API.TIMEOUT_MS);
+    const timer = setTimeout(() => timeoutCtrl.abort(), timeoutMs);
     const onCallerAbort = () => timeoutCtrl.abort();
     signal?.addEventListener('abort', onCallerAbort, { once: true });
 

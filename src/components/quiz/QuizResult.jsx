@@ -12,7 +12,7 @@ export default function QuizResult({ result, resultData }) {
     if (!review || review.length === 0) {
         return (
             <Box p={4} textAlign="center">
-                <Typography variant="h5" color="text.secondary">No results available to display.</Typography>
+                <Typography variant="h5" sx={{ color: 'var(--quiz-text-muted)' }}>No results available to display.</Typography>
             </Box>
         );
     }
@@ -42,7 +42,7 @@ export default function QuizResult({ result, resultData }) {
                         borderRadius: 6,
                         mb: 6,
                         textAlign: 'center',
-                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+                        background: 'linear-gradient(135deg, #6d28d9 0%, #2563eb 100%)',
                         color: 'white',
                         border: '1px solid rgba(255,255,255,0.05)',
                         boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
@@ -59,7 +59,7 @@ export default function QuizResult({ result, resultData }) {
             </motion.div>
 
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-                <Typography variant="h5" fontWeight="800" color="text.primary">
+                <Typography variant="h5" fontWeight="800" sx={{ color: 'var(--quiz-text)' }}>
                     Execution Review
                 </Typography>
                 <Link href="/coding-club/quiz" style={{ textDecoration: 'none' }}>
@@ -67,7 +67,7 @@ export default function QuizResult({ result, resultData }) {
                         icon={<ArrowBack sx={{ fontSize: '1rem !important' }} />}
                         label="Back to Quizzes"
                         clickable
-                        sx={{ bgcolor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', py: 2 }}
+                        sx={{ bgcolor: 'var(--quiz-soft)', color: 'var(--quiz-text-muted)', border: '1px solid var(--quiz-border)', py: 2 }}
                     />
                 </Link>
             </Box>
@@ -81,8 +81,9 @@ export default function QuizResult({ result, resultData }) {
                                 sx={{
                                     p: 3,
                                     borderRadius: 4,
-                                    bgcolor: 'rgba(255,255,255,0.02)',
-                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    bgcolor: 'var(--quiz-surface-solid)',
+                                    border: '1px solid var(--quiz-border)',
+                                    boxShadow: '0 12px 32px rgba(48,38,82,.08)',
                                     position: 'relative',
                                     overflow: 'hidden'
                                 }}
@@ -91,7 +92,7 @@ export default function QuizResult({ result, resultData }) {
                                 <Box sx={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 4, bgcolor: item.isCorrect ? '#10b981' : '#ef4444' }} />
 
                                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2} pl={1}>
-                                    <Typography variant="h6" fontWeight="700" color="text.primary" sx={{ maxWidth: '80%' }}>
+                                    <Typography variant="h6" fontWeight="700" sx={{ maxWidth: '80%', color: 'var(--quiz-text)' }}>
                                         {item.questionText}
                                     </Typography>
                                     <Box display="flex" flexDirection="column" alignItems="flex-end">
@@ -104,9 +105,9 @@ export default function QuizResult({ result, resultData }) {
                                     </Box>
                                 </Box>
 
-                                <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr 100px' }} gap={3} sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 3 }}>
+                                <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr 100px' }} gap={3} sx={{ bgcolor: 'var(--quiz-soft)', p: 2, borderRadius: 3 }}>
                                     <Box>
-                                        <Typography variant="caption" sx={{ color: '#555', fontWeight: 'bold' }}>YOUR INPUT</Typography>
+                                        <Typography variant="caption" sx={{ color: 'var(--quiz-text-muted)', fontWeight: 'bold' }}>YOUR INPUT</Typography>
                                         <Typography variant="body2" sx={{ color: item.isCorrect ? '#10b981' : '#ef4444', fontWeight: 'bold', mt: 0.5 }}>
                                             {String(item.userAnswer || "No Response")}
                                         </Typography>
@@ -114,7 +115,7 @@ export default function QuizResult({ result, resultData }) {
 
                                     {!item.isCorrect && (
                                         <Box>
-                                            <Typography variant="caption" sx={{ color: '#555', fontWeight: 'bold' }}>EXPECTED</Typography>
+                                            <Typography variant="caption" sx={{ color: 'var(--quiz-text-muted)', fontWeight: 'bold' }}>EXPECTED</Typography>
                                             <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 'bold', mt: 0.5 }}>
                                                 {String(item.correctAnswer)}
                                             </Typography>
@@ -122,10 +123,10 @@ export default function QuizResult({ result, resultData }) {
                                     )}
 
                                     <Box ml="auto" textAlign="right">
-                                        <Typography variant="caption" sx={{ color: '#555', fontWeight: 'bold' }}>TIME</Typography>
+                                        <Typography variant="caption" sx={{ color: 'var(--quiz-text-muted)', fontWeight: 'bold' }}>TIME</Typography>
                                         <Box display="flex" alignItems="center" justifyContent="flex-end" gap={0.5} mt={0.5}>
-                                            <AccessTime sx={{ fontSize: '0.85rem', color: '#555' }} />
-                                            <Typography variant="body2" fontWeight="medium" color="#888">{item.timeTaken}s</Typography>
+                                            <AccessTime sx={{ fontSize: '0.85rem', color: 'var(--quiz-text-muted)' }} />
+                                            <Typography variant="body2" fontWeight="medium" sx={{ color: 'var(--quiz-text-muted)' }}>{item.timeTaken}s</Typography>
                                         </Box>
                                     </Box>
                                 </Box>
@@ -133,7 +134,7 @@ export default function QuizResult({ result, resultData }) {
                                 {item.explanation && (
                                     <Box mt={2} pl={1}>
                                         <Typography variant="caption" sx={{ color: '#6366f1', fontWeight: 'bold' }}>INSIGHT</Typography>
-                                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mt: 0.5 }}>
+                                        <Typography variant="body2" sx={{ color: 'var(--quiz-text-muted)', mt: 0.5 }}>
                                             {item.explanation}
                                         </Typography>
                                     </Box>

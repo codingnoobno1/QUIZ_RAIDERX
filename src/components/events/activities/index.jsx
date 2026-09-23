@@ -21,6 +21,7 @@ import { useSubmitVote, useVoteResults } from '@/hooks/queries/useEventQueries';
 import Loading from '@/components/async/Loading';
 import QuizActivity from './QuizActivity';
 import KbcActivity from './kbc/KbcActivity';
+import ElectricAnswers from './ElectricAnswers';
 
 /** Icon + accent per activity type — `_typeMeta` in the Flutter lobby. */
 export const ACTIVITY_META = {
@@ -36,10 +37,13 @@ export const metaFor = (type) => ACTIVITY_META[type] ?? { icon: LiveTvRoundedIco
 export default function ActivityRenderer({ activity, participantId, eventId, serverTime, onExit }) {
   switch (activity.type) {
     case 'quiz':
-      // KBC is a live show with roles, not a worksheet everyone fills in.
-      return activity.quiz?.quizType === 'kbc' ? (
-        <KbcActivity activity={activity} participantId={participantId} eventId={eventId} onExit={onExit} />
-      ) : (
+      if (activity.quiz?.quizType === 'kbc') {
+        return <KbcActivity activity={activity} participantId={participantId} eventId={eventId} onExit={onExit} />;
+      }
+      if (activity.quiz?.quizType === 'buzzer') {
+        return <ElectricAnswers activity={activity} serverTime={serverTime} onExit={onExit} />;
+      }
+      return (
         <QuizActivity
           activity={activity}
           participantId={participantId}

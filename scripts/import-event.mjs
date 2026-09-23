@@ -148,6 +148,7 @@ try {
       correctAnswer: question.correctAnswer,
       difficulty: question.difficulty ?? 'medium',
       pool: question.pool ?? 'regular',
+      ...(question.slot ? { slot: String(question.slot) } : {}),
       points: question.points ?? 10,
       ...(question.imageUrl ? { imageUrl: question.imageUrl } : {}),
     }));

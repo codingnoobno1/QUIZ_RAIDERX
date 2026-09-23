@@ -30,14 +30,14 @@ export default function TrueFalseQuestion({ question, onAnswer, value }) {
                                     textAlign: 'center',
                                     background: isSelected
                                         ? (isTrue ? 'rgba(76, 175, 80, 0.15)' : 'rgba(244, 67, 54, 0.15)')
-                                        : 'rgba(255, 255, 255, 0.03)',
-                                    border: `3px solid ${isSelected ? (isTrue ? '#4caf50' : '#f44336') : 'rgba(255, 255, 255, 0.08)'}`,
-                                    color: isSelected ? (isTrue ? '#81c784' : '#e57373') : 'rgba(255, 255, 255, 0.5)',
+                                        : 'var(--quiz-surface-solid)',
+                                    border: `3px solid ${isSelected ? (isTrue ? '#16a34a' : '#ef4444') : 'var(--quiz-border)'}`,
+                                    color: isSelected ? (isTrue ? '#16a34a' : '#ef4444') : 'var(--quiz-text-muted)',
                                     transition: 'all 0.3s ease',
                                     '&:hover': {
                                         background: isSelected
                                             ? (isTrue ? 'rgba(76, 175, 80, 0.2)' : 'rgba(244, 67, 54, 0.2)')
-                                            : 'rgba(255, 255, 255, 0.07)',
+                                            : 'var(--quiz-soft)',
                                     }
                                 }}
                             >

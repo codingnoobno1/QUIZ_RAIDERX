@@ -81,6 +81,10 @@ export function paperConfig(quiz) {
             points: p.power?.points ?? 25,
             cutoffMinutes: p.power?.cutoffMinutes ?? 25,
         },
+        choice: {
+            enabled: Boolean(p.choice?.enabled),
+            slots: Math.max(1, Number(p.choice?.slots) || 15),
+        },
     };
 }
 
@@ -91,8 +95,28 @@ export function paperConfig(quiz) {
  * worst kind: a team sitting down to a paper that is short of hard questions,
  * discovered at the moment they open it.
  */
-export function bankShortfalls(questions, counts, power) {
-    const have = tally(inPool(questions, 'regular'));
+export function bankShortfalls(questions, counts, power, choice) {
+    const regular = inPool(questions, 'regular');
+    if (choice?.enabled) {
+        const have = tally(regular);
+        const rows = DIFFICULTIES
+            .map((d) => ({ difficulty: d, need: choice.slots, have: have[d] ?? 0 }))
+            .filter((row) => row.have < row.need);
+        if (power?.enabled) {
+            const powerHave = inPool(questions, 'power').length;
+            if (powerHave < power.count) rows.push({ pool: 'power', need: power.count, have: powerHave });
+        }
+        return rows;
+    }
+    if (isSlotted(regular)) {
+        const rows = [];
+        if (power?.enabled) {
+            const powerHave = inPool(questions, 'power').length;
+            if (powerHave < power.count) rows.push({ pool: 'power', need: power.count, have: powerHave });
+        }
+        return rows;
+    }
+    const have = tally(regular);
     const rows = DIFFICULTIES
         .map((d) => ({ difficulty: d, need: counts[d] ?? 0, have: have[d] ?? 0 }))
         .filter((row) => row.have < row.need);
@@ -147,11 +171,29 @@ export function pointsFor(question, config) {
  */
 export function dealPaper({ questions, config, seed }) {
     const rand = seededRandom(seed);
+    const regular = inPool(questions, 'regular');
+
+    // A slotted bank deals one question from each slot, then shuffles. That is
+    // stricter than a difficulty count: two questions that share a slot can
+    // never both appear, and no slot can be skipped.
+    if (isSlotted(regular)) {
+        const bySlot = new Map();
+        for (const q of regular) {
+            const slot = slotOf(q);
+            if (!bySlot.has(slot)) bySlot.set(slot, []);
+            bySlot.get(slot).push(q);
+        }
+        const picked = [...bySlot.keys()]
+            .sort(compareSlots)
+            .map((slot) => shuffled(bySlot.get(slot), rand)[0]);
+        return { items: toItems(config.shuffleQuestions ? shuffled(picked, rand) : picked, config, rand) };
+    }
+
     const byDifficulty = { easy: [], medium: [], hard: [] };
 
     // The regular pool only. Power and tie-break questions are held back for
     // their own draws, so a reserve question cannot surface on an ordinary paper.
-    for (const q of inPool(questions, 'regular')) byDifficulty[difficultyOf(q)].push(q);
+    for (const q of regular) byDifficulty[difficultyOf(q)].push(q);
 
     let picked = [];
     for (const difficulty of DIFFICULTIES) {
@@ -162,26 +204,66 @@ export function dealPaper({ questions, config, seed }) {
         picked = picked.concat(shuffled(byDifficulty[difficulty], rand).slice(0, want));
     }
 
-    const ordered = config.shuffleQuestions ? shuffled(picked, rand) : picked;
+    return { items: toItems(config.shuffleQuestions ? shuffled(picked, rand) : picked, config, rand) };
+}
 
+function toItems(ordered, config, rand) {
+    return ordered.map((q) => ({
+        questionId: String(q._id),
+        difficulty: difficultyOf(q),
+        points: pointsFor(q, config),
+        optionOrder: config.shuffleOptions
+            ? shuffled(q.options.map((_, i) => i), rand)
+            : q.options.map((_, i) => i),
+    }));
+}
+
+/** A bank is slotted only when every regular question names a slot. */
+function isSlotted(questions) {
+    return questions.length > 0 && questions.every((q) => slotOf(q));
+}
+
+export const slotOf = (q) => {
+    const slot = String(q?.slot ?? '').trim();
+    return slot || null;
+};
+
+function compareSlots(a, b) {
+    const na = Number(String(a).replace(/\D/g, ''));
+    const nb = Number(String(b).replace(/\D/g, ''));
+    if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) return na - nb;
+    return String(a).localeCompare(String(b));
+}
+
+/**
+ * One question of the tier a team just named.
+ *
+ * Drawn from the regular pool, never a question already on this paper, and
+ * seeded from the slot so a repeated request for the same slot cannot shop
+ * for a different question.
+ */
+export function dealChoice({ questions, config, usedIds, difficulty, seed }) {
+    if (!DIFFICULTIES.includes(difficulty)) return { error: 'Choose easy, medium, or hard.' };
+    const used = new Set((usedIds ?? []).map(String));
+    const pool = inPool(questions, 'regular').filter(
+        (q) => difficultyOf(q) === difficulty && !used.has(String(q._id)),
+    );
+    if (!pool.length) return { error: `No ${difficulty} questions are left in the bank.` };
+
+    const rand = seededRandom(`${seed}:choice:${used.size}:${difficulty}`);
+    const q = shuffled(pool, rand)[0];
     return {
-        items: ordered.map((q) => ({
+        item: {
             questionId: String(q._id),
-            difficulty: difficultyOf(q),
+            difficulty,
             points: pointsFor(q, config),
             optionOrder: config.shuffleOptions
                 ? shuffled(q.options.map((_, i) => i), rand)
                 : q.options.map((_, i) => i),
-        })),
+        },
     };
 }
 
-/**
- * Deal the power questions for an early finisher.
- *
- * Seeded from the paper's own seed plus a suffix, so the power draw is as
- * reproducible as the regular one and independent of it.
- */
 export function dealPower({ questions, config, seed }) {
     const rand = seededRandom(`${seed}:power`);
     const pool = shuffled(inPool(questions, 'power'), rand).slice(0, config.power.count);

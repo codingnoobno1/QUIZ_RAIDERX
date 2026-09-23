@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, use } from "react";
-import { Box, Typography, CircularProgress, Container } from "@mui/material";
+import { Box, Typography, CircularProgress, Container, Chip } from "@mui/material";
+import { Sparkles } from "lucide-react";
 
 // Components
 import QuizHeader from "@/components/quiz/QuizHeader";
@@ -8,8 +9,12 @@ import QuestionCounter from "@/components/quiz/QuestionCounter";
 import QuestionRenderer from "@/components/quiz/QuestionRenderer";
 import QuizNavigation from "@/components/quiz/QuizNavigation";
 import QuizResult from "@/components/quiz/QuizResult";
+import QuizThemeToggle from "@/components/quiz/QuizThemeToggle";
+import useQuizTheme from "@/components/quiz/useQuizTheme";
+import "../quiz-design.css";
 
 export default function QuizPage({ params }) {
+  const { theme, toggleTheme } = useQuizTheme();
   // Unwrap params in Next.js 15
   const resolvedParams = use(params);
   const quizId = resolvedParams.id;
@@ -120,33 +125,58 @@ export default function QuizPage({ params }) {
 
   // 4. Render Loading
   if (isLoading) return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-      <CircularProgress />
+    <Box className="quiz-active-shell" data-quiz-theme={theme} display="flex" flexDirection="column" gap={2} justifyContent="center" alignItems="center" minHeight="100vh">
+      <CircularProgress sx={{ color: 'var(--quiz-primary)' }} />
+      <Typography sx={{ color: 'var(--quiz-text-muted)', fontWeight: 700 }}>Preparing your challenge…</Typography>
     </Box>
   );
 
   // 5. Render Result
-  if (result) return <QuizResult result={result} />;
+  if (result) return (
+    <Box className="quiz-active-shell" data-quiz-theme={theme}>
+      <Box className="quiz-floating-theme"><QuizThemeToggle theme={theme} onToggle={toggleTheme} /></Box>
+      <QuizResult result={result} />
+    </Box>
+  );
 
   // 6. Render Quiz Active
   const question = questions[current];
   const userAns = answers[question?._id];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#0a0a0a', py: 4 }}>
+    <Box className="quiz-active-shell" data-quiz-theme={theme}>
       <Container maxWidth="md">
+        <Box className="quiz-top-tools">
+          <Chip
+            icon={<Sparkles size={15} />}
+            label="Focus mode"
+            className="quiz-focus-chip"
+          />
+          <QuizThemeToggle theme={theme} onToggle={toggleTheme} />
+        </Box>
         <QuizHeader quiz={quiz} />
         <QuestionCounter current={current} total={questions.length} />
 
-        <Box sx={{ minHeight: '300px', py: 2 }}>
+        <Box className="quiz-question-card">
+          <Box className="quiz-question-heading">
+            <span className="quiz-question-number">{String(current + 1).padStart(2, '0')}</span>
+            <Box>
+              <Typography variant="overline" className="quiz-question-kicker">
+                Choose the best answer
+              </Typography>
+              <Typography variant="h5" className="quiz-question-title">
+                {question?.text || question?.question || question?.prompt || 'Answer this question'}
+              </Typography>
+            </Box>
+          </Box>
           <QuestionRenderer
             question={question}
             onAnswer={recordAnswer}
             value={userAns?.value}
           />
           {userAns && (
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-              Recorded: {String(userAns.value)}
+            <Typography variant="caption" sx={{ display: 'block', mt: 2, color: 'var(--quiz-success)', fontWeight: 800 }}>
+              ✓ Answer saved
             </Typography>
           )}
         </Box>

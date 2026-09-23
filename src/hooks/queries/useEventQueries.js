@@ -118,7 +118,7 @@ export function useEventStatus(eventId, participantId, { fast = false } = {}) {
     refetchInterval: (query) => {
       if (!fast) return POLL.LOBBY_MS;
       const asked = query.state.data?.pollAfterMs;
-      return asked ? Math.min(Math.max(asked, 750), POLL.ACTIVITY_MS) : POLL.ACTIVITY_MS;
+      return asked ? Math.min(Math.max(asked, 500), POLL.ACTIVITY_MS) : POLL.ACTIVITY_MS;
     },
     refetchIntervalInBackground: false,
     // Keep the last good status on screen while a poll is in flight, so the
@@ -323,6 +323,32 @@ export function useSubmitPaper(activityId) {
   return useMutation({
     mutationFn: () => eventRepository.submitPaper({ activityId }),
     onSettled: () => qc.invalidateQueries({ queryKey: [...eventKeys.all, 'paper', activityId ?? null] }),
+  });
+}
+
+export function usePickPaperDifficulty(activityId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (difficulty) => eventRepository.pickPaperDifficulty({ activityId, difficulty }),
+    onSettled: () => qc.invalidateQueries({ queryKey: [...eventKeys.all, 'paper', activityId ?? null] }),
+  });
+}
+
+/** One buzz. Never retried: a second press is a different event from a lost one. */
+export function usePressBuzzer(activityId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (instanceId) => eventRepository.pressBuzzer({ activityId, instanceId }),
+    onSettled: () => qc.invalidateQueries({ queryKey: eventKeys.all }),
+  });
+}
+
+/** The seated leader's in-app answer. The response does not say whether it was right. */
+export function useAnswerBuzzer(activityId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ instanceId, answer }) => eventRepository.answerBuzzer({ activityId, instanceId, answer }),
+    onSettled: () => qc.invalidateQueries({ queryKey: eventKeys.all }),
   });
 }
 

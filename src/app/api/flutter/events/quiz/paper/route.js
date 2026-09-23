@@ -8,6 +8,7 @@ import { teamIsQualified } from '@/lib/rounds/qualification';
 import {
     GRACE_MS,
     bankShortfalls,
+    dealChoice,
     dealPaper,
     dealPower,
     gradePaper,
@@ -69,7 +70,7 @@ export async function GET(req) {
         let paper = await QuizPaper.findOne({ activityId, ownerKey: owner.key });
 
         if (!paper) {
-            const shortfalls = bankShortfalls(quiz.questions, config.counts, config.power);
+            const shortfalls = bankShortfalls(quiz.questions, config.counts, config.power, config.choice);
             if (shortfalls.length) {
                 // Refused rather than dealt short. A team discovering mid-round
                 // that their paper has four hard questions instead of five has
@@ -181,7 +182,7 @@ export async function POST(req) {
     const parsed = await readJson(req);
     if (!parsed.ok) return parsed.response;
 
-    const { activityId } = parsed.data;
+    const { activityId, difficulty } = parsed.data;
     const invalid = invalidIdResponse(activityId, 'activityId');
     if (invalid) return invalid;
 
@@ -194,6 +195,10 @@ export async function POST(req) {
 
         const paper = await QuizPaper.findOne({ activityId, ownerKey: owner.key });
         if (!paper) return notFound('There is no paper to submit.', { code: 'NO_PAPER' });
+
+        if (difficulty) {
+            return await pickDifficulty({ paper, activity, quiz, config, difficulty });
+        }
 
         if (paper.submittedAt) {
             return NextResponse.json({ success: true, alreadySubmitted: true, data: present(paper, quiz, config) });
@@ -290,7 +295,9 @@ const seedOf = (activity, ownerKey) => `${activity._id}:${ownerKey}`;
  */
 async function issue({ activity, quiz, config, owner, email }) {
     const now = new Date();
-    const { items } = dealPaper({ questions: quiz.questions, config, seed: seedOf(activity, owner.key) });
+    const { items } = config.choice.enabled
+        ? { items: [] }
+        : dealPaper({ questions: quiz.questions, config, seed: seedOf(activity, owner.key) });
     const durationSeconds = Math.max(1, Math.round(config.durationMinutes * 60));
 
     try {
@@ -313,6 +320,52 @@ async function issue({ activity, quiz, config, owner, email }) {
         }
         throw error;
     }
+}
+
+/**
+ * The team named a tier for the next slot. One unused question of that tier
+ * is appended. A second tap for the same slot loses the race and sees the
+ * question the first tap drew.
+ */
+async function pickDifficulty({ paper, activity, quiz, config, difficulty }) {
+    if (!config.choice.enabled) {
+        return badRequest('This paper does not ask you to choose a difficulty.', { code: 'NOT_A_CHOICE_PAPER' });
+    }
+    if (paper.submittedAt || paper.regularSubmittedAt) {
+        return conflict('Those answers are already locked.', { code: 'ALREADY_SUBMITTED' });
+    }
+    if (paperState(paper) === 'closed') {
+        return conflict('Time is up for this paper.', { code: 'TOO_LATE' });
+    }
+
+    const filled = paper.items?.length ?? 0;
+    if (filled >= config.choice.slots) {
+        return conflict('Every question already has a difficulty.', { code: 'PAPER_FULL' });
+    }
+
+    const dealt = dealChoice({
+        questions: quiz.questions,
+        config,
+        usedIds: (paper.items ?? []).map((item) => item.questionId),
+        difficulty: String(difficulty).toLowerCase(),
+        seed: seedOf(activity, paper.ownerKey),
+    });
+    if (dealt.error) return badRequest(dealt.error, { code: 'NO_QUESTION' });
+
+    const saved = await QuizPaper.findOneAndUpdate(
+        {
+            _id: paper._id,
+            submittedAt: null,
+            regularSubmittedAt: null,
+            $expr: { $eq: [{ $size: '$items' }, filled] },
+        },
+        { $push: { items: dealt.item } },
+        { new: true },
+    );
+    if (!saved) {
+        return conflict('That question was just dealt. Open the paper again.', { code: 'SLOT_TAKEN' });
+    }
+    return NextResponse.json({ success: true, data: present(saved, quiz, config) });
 }
 
 /**
@@ -412,6 +465,7 @@ function present(paper, quiz, config) {
     const questionsById = new Map((quiz.questions ?? []).map((q) => [String(q._id), q]));
     const state = paperState(paper);
     const answers = paper.answers instanceof Map ? paper.answers : new Map(Object.entries(paper.answers ?? {}));
+    const choosing = Boolean(config.choice?.enabled) && state !== 'power' && state !== 'submitted';
     const regularPossible = paper.items?.reduce((sum, i) => sum + i.points, 0) ?? 0;
 
     const base = {
@@ -424,7 +478,18 @@ function present(paper, quiz, config) {
         serverTime: new Date().toISOString(),
         scope: paper.scope,
         teamName: paper.teamName,
-        totalQuestions: paper.items?.length ?? 0,
+        totalQuestions: choosing ? config.choice.slots : (paper.items?.length ?? 0),
+        choice: choosing
+            ? {
+                enabled: true,
+                slots: config.choice.slots,
+                filled: paper.items?.length ?? 0,
+                tiers: ['easy', 'medium', 'hard'].map((tier) => ({
+                    difficulty: tier,
+                    points: config.points?.[tier] ?? 0,
+                })),
+            }
+            : { enabled: false },
         totalPossible: regularPossible,
         answeredCount: (paper.items ?? []).filter((i) => answers.has(String(i.questionId))).length,
         savedAnswers: Object.fromEntries(answers),

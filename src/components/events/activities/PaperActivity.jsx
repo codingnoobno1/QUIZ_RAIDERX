@@ -31,7 +31,7 @@ import CloudSyncRoundedIcon from '@mui/icons-material/CloudSyncRounded';
 import CloudOffRoundedIcon from '@mui/icons-material/CloudOffRounded';
 import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
 import { color, radius, tint } from '@/theme/tokens';
-import { usePaper, useSavePaperAnswers, useSubmitPaper } from '@/hooks/queries/useEventQueries';
+import { usePaper, usePickPaperDifficulty, useSavePaperAnswers, useSubmitPaper } from '@/hooks/queries/useEventQueries';
 import Loading from '@/components/async/Loading';
 import { formatClock, useRemaining, useServerOffset } from './serverClock';
 
@@ -83,6 +83,7 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
 
     const save = useSavePaperAnswers(activity.id);
     const submit = useSubmitPaper(activity.id);
+    const pick = usePickPaperDifficulty(activity.id);
 
     // Stable references for the save path. The clock re-renders this component
     // four times a second; without these, every tick would rebuild the save
@@ -149,10 +150,18 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
         return () => clearTimeout(t);
     }, [expired]);
 
+    const choosing = Boolean(paper.choice?.enabled) && !isPower;
+    const slotCount = choosing ? paper.choice.slots : questions.length;
     const question = questions[index];
+    const awaitingPick = choosing && !question && index < slotCount;
     const answeredCount = questions.filter((q) => answers[q.questionId]).length;
-    const unanswered = questions.length - answeredCount;
-    const last = index >= questions.length - 1;
+    const unanswered = slotCount - answeredCount;
+    const last = index >= slotCount - 1;
+    const choiceOpen = choosing && questions.length < slotCount;
+    const paletteItems = choosing
+        ? Array.from({ length: slotCount }, (_, i) => questions[i] || { questionId: `open-${i}` })
+        : questions;
+    const jump = (i) => setIndex(Math.max(0, Math.min(i, questions.length, Math.max(slotCount - 1, 0))));
 
     // Keyboard: arrows move, 1-4 or A-D answer. A team working through 23
     // questions on a laptop should not need the trackpad for any of it.
@@ -189,7 +198,7 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
         });
     };
 
-    if (!question) {
+    if (!question && !awaitingPick) {
         return (
             <Box sx={{ p: 4, textAlign: 'center' }}>
                 <Typography sx={{ color: color.textMuted }}>This paper has no questions.</Typography>
@@ -295,18 +304,28 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
                 <Box>
                     <Stack direction="row" alignItems="baseline" spacing={1.5} sx={{ mb: 1.5 }}>
                         <Typography sx={{ color: color.textMuted, fontSize: '0.78rem', fontWeight: 700, letterSpacing: 1 }}>
-                            QUESTION {index + 1} OF {questions.length}
+                            QUESTION {index + 1} OF {slotCount}
                         </Typography>
-                        <Typography sx={{ color: color.textFaint, fontSize: '0.78rem' }}>
-                            {isPower ? 'Power' : DIFFICULTY_LABEL[question.difficulty] ?? ''} · {question.points} pts
-                        </Typography>
+                        {!awaitingPick && (
+                            <Typography sx={{ color: color.textFaint, fontSize: '0.78rem' }}>
+                                {isPower ? 'Power' : DIFFICULTY_LABEL[question.difficulty] ?? ''} · {question.points} pts
+                            </Typography>
+                        )}
                     </Stack>
 
+                    {awaitingPick ? (
+                        <DifficultyPicker
+                            tiers={paper.choice.tiers}
+                            busy={pick.isPending}
+                            onPick={(tier) => pick.mutate(tier)}
+                        />
+                    ) : (
                     <Typography sx={{ color: color.text, fontWeight: 700, fontSize: { xs: '1.05rem', md: '1.2rem' }, lineHeight: 1.5, mb: 2.5 }}>
                         {question.text}
                     </Typography>
+                    )}
 
-                    {question.imageUrl && (
+                    {!awaitingPick && question.imageUrl && (
                         <Box
                             component="img"
                             src={question.imageUrl}
@@ -315,7 +334,7 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
                         />
                     )}
 
-                    {question.type === 'text' ? (
+                    {!awaitingPick && (question.type === 'text' ? (
                         <TextField
                             fullWidth
                             multiline
@@ -394,18 +413,18 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
                             );
                         })}
                     </Stack>
-                    )}
+                    ))}
 
                     <Stack direction="row" spacing={1.5} sx={{ mt: 3, display: { xs: 'none', md: 'flex' } }}>
                         <NavButton onClick={() => setIndex((i) => Math.max(i - 1, 0))} disabled={index === 0}>
                             ← Previous
                         </NavButton>
-                        {!last ? (
-                            <NavButton primary onClick={() => setIndex((i) => i + 1)}>
+                        {!last && !awaitingPick ? (
+                            <NavButton primary onClick={() => setIndex((i) => Math.min(i + 1, questions.length))}>
                                 Next →
                             </NavButton>
-                        ) : (
-                            <NavButton primary onClick={() => setConfirming(true)} disabled={remaining <= 0}>
+                        ) : last ? (
+                            <NavButton primary onClick={() => setConfirming(true)} disabled={remaining <= 0 || choiceOpen}>
                                 {isPower ? 'Finish' : 'Review & submit'}
                             </NavButton>
                         )}
@@ -420,11 +439,11 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
                     <Typography sx={{ color: color.textFaint, fontSize: '0.7rem', fontWeight: 700, letterSpacing: 1, mb: 1 }}>
                         QUESTIONS
                     </Typography>
-                    <QuestionPalette questions={questions} answers={answers} index={index} onJump={setIndex} />
+                    <QuestionPalette questions={paletteItems} answers={answers} index={index} onJump={jump} />
                     <Button
                         fullWidth
                         onClick={() => setConfirming(true)}
-                        disabled={remaining <= 0}
+                        disabled={remaining <= 0 || choiceOpen}
                         variant="outlined"
                         sx={{
                             mt: 2,
@@ -456,23 +475,23 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
                 <Stack direction="row" alignItems="center" justifyContent="flex-end">
                     <Button
                         onClick={() => setConfirming(true)}
-                        disabled={remaining <= 0}
+                        disabled={remaining <= 0 || choiceOpen}
                         sx={{ textTransform: 'none', fontWeight: 800, minHeight: 36, color: color.brand, px: 1 }}
                     >
                         {isPower ? 'Finish' : 'Submit paper'}
                     </Button>
                 </Stack>
-                <QuestionPalette questions={questions} answers={answers} index={index} onJump={setIndex} variant="strip" />
+                <QuestionPalette questions={paletteItems} answers={answers} index={index} onJump={jump} variant="strip" />
                 <Stack direction="row" spacing={1.25} sx={{ mt: 1.25 }}>
                     <NavButton onClick={() => setIndex((i) => Math.max(i - 1, 0))} disabled={index === 0}>
                         Previous
                     </NavButton>
-                    {!last ? (
-                        <NavButton primary onClick={() => setIndex((i) => i + 1)}>
+                    {!last && !awaitingPick ? (
+                        <NavButton primary onClick={() => setIndex((i) => Math.min(i + 1, questions.length))}>
                             Next
                         </NavButton>
-                    ) : (
-                        <NavButton primary onClick={() => setConfirming(true)} disabled={remaining <= 0}>
+                    ) : last ? (
+                        <NavButton primary onClick={() => setConfirming(true)} disabled={remaining <= 0 || choiceOpen}>
                             {isPower ? 'Finish' : 'Submit'}
                         </NavButton>
                     )}
@@ -490,8 +509,8 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
                 <DialogContent>
                     <Typography sx={{ mb: 1.5 }}>
                         {unanswered === 0
-                            ? `All ${questions.length} questions answered.`
-                            : `${unanswered} of ${questions.length} ${unanswered === 1 ? 'question is' : 'questions are'} unanswered and will score 0.`}
+                            ? `All ${slotCount} questions answered.`
+                            : `${unanswered} of ${slotCount} ${unanswered === 1 ? 'question is' : 'questions are'} unanswered and will score 0.`}
                     </Typography>
                     {!isPower && paper.power?.enabled && (
                         <Typography sx={{ color: paper.power.stillEligible ? color.amber : color.textMuted, fontSize: '0.9rem' }}>
@@ -592,6 +611,39 @@ function SaveIndicator({ state, compact = false }) {
                 {text}
             </Typography>
         </Stack>
+    );
+}
+
+function DifficultyPicker({ tiers, busy, onPick }) {
+    return (
+        <Box>
+            <Typography sx={{ color: color.text, fontWeight: 750, fontSize: '1.15rem', lineHeight: 1.45, mb: 2 }}>
+                Choose a difficulty for this question.
+            </Typography>
+            <Stack spacing={1.25}>
+                {(tiers ?? []).map((tier) => (
+                    <Button
+                        key={tier.difficulty}
+                        onClick={() => onPick(tier.difficulty)}
+                        disabled={busy}
+                        variant="outlined"
+                        sx={{
+                            minHeight: 56,
+                            justifyContent: 'space-between',
+                            px: 2,
+                            textTransform: 'none',
+                            fontWeight: 800,
+                            fontSize: 16,
+                            color: color.text,
+                            borderColor: color.border,
+                        }}
+                    >
+                        <span>{DIFFICULTY_LABEL[tier.difficulty] ?? tier.difficulty}</span>
+                        <span>{tier.points} pts</span>
+                    </Button>
+                ))}
+            </Stack>
+        </Box>
     );
 }
 

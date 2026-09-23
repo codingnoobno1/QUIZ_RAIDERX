@@ -21,25 +21,25 @@ export default function FillUpQuestion({ question, onAnswer, value }) {
                     onChange={(e) => onAnswer(e.target.value)}
                     sx={{
                         '& .MuiOutlinedInput-root': {
-                            color: 'white',
+                            color: 'var(--quiz-text)',
                             height: 60,
                             borderRadius: 3,
-                            bgcolor: 'rgba(255, 255, 255, 0.03)',
+                            bgcolor: 'var(--quiz-surface-solid)',
                             fontSize: '1.2rem',
                             '& fieldset': {
-                                borderColor: 'rgba(255, 255, 255, 0.1)',
+                                borderColor: 'var(--quiz-border)',
                                 borderWidth: '2px',
                                 transition: 'all 0.2s'
                             },
                             '&:hover fieldset': {
-                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                borderColor: 'color-mix(in srgb, var(--quiz-primary) 35%, var(--quiz-border))',
                             },
                             '&.Mui-focused fieldset': {
-                                borderColor: '#7c3aed',
+                                borderColor: 'var(--quiz-primary)',
                             },
                         },
                         '& .MuiInputBase-input::placeholder': {
-                            color: 'rgba(255, 255, 255, 0.3)',
+                            color: 'var(--quiz-text-muted)',
                             opacity: 1
                         }
                     }}

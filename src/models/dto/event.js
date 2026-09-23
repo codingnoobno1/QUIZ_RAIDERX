@@ -303,6 +303,8 @@ export function toLiveActivity(json) {
         : null,
       /** custom_live: the server's round — deadline, targeting, answer state. */
       liveRound: q.liveRound ? toLiveRound(q.liveRound) : null,
+      /** Electric Answers. The answer is read only from reveal, and only after the host reveals. */
+      buzzer: q.buzzer ? toBuzzer(q.buzzer) : null,
     };
   }
 
@@ -351,6 +353,58 @@ export function toLiveActivity(json) {
   }
 
   return base;
+}
+
+/**
+ * Electric Answers, as the status poll describes it for this viewer.
+ * `question.correctAnswer` is never copied. A reveal is kept only in the
+ * phases the contract allows a phone to see an answer.
+ */
+function toBuzzer(b) {
+  const phase = str(b.phase, 'lobby');
+  const shown = phase === 'revealed' || phase === 'completed';
+  const question = b.question ?? {};
+  const team = (t) =>
+    t && typeof t === 'object'
+      ? {
+          teamId: str(t.teamId),
+          teamName: str(t.teamName, 'Team'),
+          leaderName: str(t.leaderName),
+        }
+      : null;
+
+  return {
+    phase,
+    instanceId: str(b.instanceId),
+    question: {
+      text: str(question.text),
+      type: str(question.type),
+      options: list(question.options).map((o) => str(o)).filter(Boolean),
+    },
+    armsAt: date(b.armsAt),
+    buzzClosesAt: date(b.buzzClosesAt),
+    answerEndsAt: date(b.answerEndsAt),
+    answerMode: str(b.answerMode, 'in_app'),
+    isTiebreak: bool(b.isTiebreak),
+    myTeam: team(b.myTeam),
+    amLeader: bool(b.amLeader),
+    canBuzz: bool(b.canBuzz),
+    lockedOut: bool(b.lockedOut),
+    myQueuePosition: b.myQueuePosition == null || !Number.isFinite(Number(b.myQueuePosition))
+      ? null
+      : Number(b.myQueuePosition),
+    seat: team(b.seat),
+    mySeat: bool(b.mySeat),
+    scoreboard: list(b.scoreboard).map((row) => ({
+      teamId: str(row?.teamId),
+      teamName: str(row?.teamName, 'Team'),
+      score: num(row?.score),
+      tiebreakWins: num(row?.tiebreakWins),
+    })),
+    reveal: shown && b.reveal
+      ? { correctAnswer: str(b.reveal.correctAnswer) || null }
+      : null,
+  };
 }
 
 /**

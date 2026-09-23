@@ -13,8 +13,12 @@ export default function QuizNavigation({ current, total, onNext, onPrev, onSubmi
                 display: 'flex',
                 justifyContent: 'space-between',
                 mt: 6,
-                pt: 3,
-                borderTop: '1px solid rgba(255,255,255,0.05)',
+                p: 2,
+                border: '1px solid var(--quiz-border)',
+                borderRadius: 4,
+                background: 'var(--quiz-surface)',
+                boxShadow: '0 12px 32px rgba(45,35,83,.12)',
+                backdropFilter: 'blur(16px)',
                 position: 'sticky',
                 bottom: 20,
                 zIndex: 10
@@ -30,15 +34,15 @@ export default function QuizNavigation({ current, total, onNext, onPrev, onSubmi
                         borderRadius: 3,
                         px: 4,
                         py: 1.5,
-                        borderColor: 'rgba(255,255,255,0.1)',
-                        color: 'rgba(255,255,255,0.6)',
+                        borderColor: 'var(--quiz-border)',
+                        color: 'var(--quiz-text-muted)',
                         '&:hover': {
-                            borderColor: 'rgba(255,255,255,0.3)',
-                            background: 'rgba(255,255,255,0.03)'
+                            borderColor: 'var(--quiz-primary)',
+                            background: 'var(--quiz-soft)'
                         },
                         '&.Mui-disabled': {
-                            color: 'rgba(255,255,255,0.2)',
-                            borderColor: 'rgba(255,255,255,0.05)'
+                            color: 'color-mix(in srgb, var(--quiz-text-muted) 45%, transparent)',
+                            borderColor: 'var(--quiz-border)'
                         }
                     }}
                 >
@@ -59,10 +63,10 @@ export default function QuizNavigation({ current, total, onNext, onPrev, onSubmi
                             px: 5,
                             py: 1.5,
                             fontWeight: 'bold',
-                            background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+                            background: 'linear-gradient(135deg, var(--quiz-primary) 0%, var(--quiz-blue) 100%)',
                             boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
                             '&:hover': {
-                                background: 'linear-gradient(135deg, #6d28d9 0%, #2563eb 100%)',
+                                background: 'linear-gradient(135deg, var(--quiz-primary-strong) 0%, var(--quiz-blue) 100%)',
                                 boxShadow: '0 6px 20px rgba(124, 58, 237, 0.6)',
                             },
                         }}
@@ -80,12 +84,12 @@ export default function QuizNavigation({ current, total, onNext, onPrev, onSubmi
                             px: 5,
                             py: 1.5,
                             fontWeight: 'bold',
-                            background: 'rgba(255,255,255,0.05)',
-                            color: 'white',
-                            border: '1px solid rgba(255,255,255,0.1)',
+                            background: 'var(--quiz-surface-solid)',
+                            color: 'var(--quiz-text)',
+                            border: '1px solid var(--quiz-border)',
                             '&:hover': {
-                                background: 'rgba(255,255,255,0.1)',
-                                borderColor: 'rgba(255,255,255,0.2)'
+                                background: 'var(--quiz-soft)',
+                                borderColor: 'var(--quiz-primary)'
                             },
                         }}
                     >

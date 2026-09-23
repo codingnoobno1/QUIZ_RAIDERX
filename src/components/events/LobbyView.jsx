@@ -42,7 +42,7 @@ export default function LobbyView({ event, participantId }) {
   const status = statusQuery.data;
   const activity = status?.activeActivity ?? null;
 
-  const isLiveShow = activity?.quiz?.quizType === 'kbc';
+  const isLiveShow = activity?.quiz?.quizType === 'kbc' || activity?.quiz?.quizType === 'buzzer';
   useEffect(() => {
     setSeenLiveShow(isLiveShow);
   }, [isLiveShow]);
@@ -274,7 +274,7 @@ function LiveActivityCard({ activity, onJoin }) {
         </Box>
 
         <Typography sx={{ color: meta.tone, fontSize: '0.65rem', fontWeight: 800, letterSpacing: 1.5 }}>
-          {meta.label.toUpperCase()} · LIVE NOW
+          {(activity.quiz?.quizType === 'buzzer' ? 'Electric Answers' : meta.label).toUpperCase()} · LIVE NOW
         </Typography>
 
         <Typography sx={{ color: color.text, fontWeight: 800, fontSize: '1.15rem', mt: 0.5 }}>
@@ -314,7 +314,7 @@ function LiveActivityCard({ activity, onJoin }) {
             '&:hover': { bgcolor: submitted ? 'rgba(255,255,255,0.12)' : meta.tone, filter: 'brightness(1.08)' },
           }}
         >
-          {submitted ? 'View my result' : 'Join now'}
+          {submitted ? 'View my result' : activity.quiz?.quizType === 'buzzer' ? 'Open the buzzer' : 'Join now'}
         </Button>
       </Box>
     </Box>
