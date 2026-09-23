@@ -427,11 +427,13 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
                             <NavButton primary onClick={() => setConfirming(true)} disabled={remaining <= 0 || choiceOpen}>
                                 {isPower ? 'Finish' : 'Review & submit'}
                             </NavButton>
-                        )}
+                        ) : null}
                     </Stack>
+                    {!awaitingPick && (
                     <Typography sx={{ mt: 1.25, color: color.textFaint, fontSize: '0.72rem', display: { xs: 'none', md: 'block' } }}>
                         Keys: ← → to move{question.type === 'text' ? '' : ' · 1–4 or A–D to answer'}. Answers save as you work and can be changed until you submit.
                     </Typography>
+                    )}
                 </Box>
 
                 {/* ── palette (laptop) ─────────────────────────────────────── */}
@@ -494,7 +496,7 @@ function PaperSheet({ activity, paper, refetch, onExit }) {
                         <NavButton primary onClick={() => setConfirming(true)} disabled={remaining <= 0 || choiceOpen}>
                             {isPower ? 'Finish' : 'Submit'}
                         </NavButton>
-                    )}
+                    ) : null}
                 </Stack>
             </Box>
 
