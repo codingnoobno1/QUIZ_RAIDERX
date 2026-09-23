@@ -19,7 +19,18 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { color, tint } from '@/theme/tokens';
+
+/**
+ * The club's own cube, the one that turns on the front page — same component,
+ * so the poster and the site cannot end up with two different PIXEL cubes.
+ *
+ * `ssr: false` for the same reason the home page does it: the cube is
+ * styled-components and pure decoration, and there is nothing to gain from
+ * rendering it on the server.
+ */
+const RotatingCube = dynamic(() => import('@/components/RotatingCube'), { ssr: false });
 
 const EVENT = {
     title: 'Quiz QUEST',
@@ -32,9 +43,6 @@ const EVENT = {
     venueRooms: ['519', '510'],
     venueLabel: 'Amity University',
 };
-
-/** The five faces that spell the club's name as the cube turns, plus a sixth. */
-const CUBE_FACES = ['P', 'I', 'X', 'E', 'L', '◼'];
 
 export default function QuizQuestPoster() {
     const [remaining, setRemaining] = useState(null);
@@ -111,14 +119,10 @@ export default function QuizQuestPoster() {
 
                 <div className="qq-right" aria-hidden="true">
                     <div className="qq-stage">
-                        <div className="qq-cube">
-                            {CUBE_FACES.map((glyph, i) => (
-                                <div key={glyph} className={`qq-face qq-face--${i}`}>
-                                    <span>{glyph}</span>
-                                </div>
-                            ))}
+                        <div className="qq-halo" />
+                        <div className="qq-cube-scale">
+                            <RotatingCube size={180} />
                         </div>
-                        <div className="qq-shadow" />
                     </div>
                 </div>
             </section>
@@ -170,10 +174,10 @@ function splitDuration(ms) {
 }
 
 /**
- * Written as one stylesheet rather than as `sx` props because the cube needs
- * real 3D transforms and six positioned faces, which read far better here than
- * as a nest of style objects. Colours come from the palette tokens, so the
- * poster cannot drift from the rest of the site.
+ * One stylesheet rather than `sx` props: a poster is mostly layout and
+ * gradients, and those read better as CSS than as a nest of style objects.
+ * Colours come from the palette tokens, so the poster cannot drift from the
+ * rest of the site.
  */
 function PosterStyles() {
     return (
@@ -307,49 +311,29 @@ function PosterStyles() {
       /* ── The cube ──────────────────────────────────────────────────────── */
 
       .qq-right { display: flex; justify-content: center; }
-      .qq-stage { perspective: 900px; display: grid; place-items: center; }
 
-      .qq-cube {
-        --size: clamp(120px, 18vw, 180px);
+      /*
+       * The cube component sizes its own container at twice the cube, which at
+       * 180px is 360 — wider than a phone once the page gutters are taken off.
+       * Rather than thread a size through a resize listener, the stage clips to
+       * what the viewport can spare and scales the cube to fit. One transform,
+       * no JavaScript, and the 3D inside it is untouched.
+       */
+      .qq-stage {
+        --cube-scale: 1;
         position: relative;
-        width: var(--size); height: var(--size);
-        transform-style: preserve-3d;
-        animation: qq-spin 16s linear infinite;
+        width: min(360px, 82vw);
+        height: min(360px, 82vw);
+        display: grid;
+        place-items: center;
       }
+      .qq-cube-scale { transform: scale(var(--cube-scale)); transform-origin: center; }
 
-      .qq-face {
-        position: absolute; inset: 0;
-        display: grid; place-items: center;
-        border: 1px solid ${tint(color.brand, 0.55)};
-        /* Nearly opaque on purpose. Translucent faces let the letters on the
-           far side show through mirrored, and PIXEL stops being readable. */
-        background:
-          linear-gradient(${tint(color.brand, 0.14)} 1px, transparent 1px) 0 0 / 20px 20px,
-          linear-gradient(90deg, ${tint(color.brand, 0.14)} 1px, transparent 1px) 0 0 / 20px 20px,
-          linear-gradient(145deg, ${tint(color.brand, 0.16)}, ${tint(color.surface, 0.9)}),
-          ${color.bg};
-        box-shadow: inset 0 0 36px ${tint(color.brand, 0.22)};
-      }
-      .qq-face span {
-        font-size: calc(var(--size) * 0.42);
-        font-weight: 900;
-        color: var(--brand);
-        text-shadow: 0 0 18px var(--glow);
-      }
-
-      .qq-face--0 { transform: translateZ(calc(var(--size) / 2)); }
-      .qq-face--1 { transform: rotateY(90deg)  translateZ(calc(var(--size) / 2)); }
-      .qq-face--2 { transform: rotateY(180deg) translateZ(calc(var(--size) / 2)); }
-      .qq-face--3 { transform: rotateY(-90deg) translateZ(calc(var(--size) / 2)); }
-      .qq-face--4 { transform: rotateX(90deg)  translateZ(calc(var(--size) / 2)); }
-      .qq-face--5 { transform: rotateX(-90deg) translateZ(calc(var(--size) / 2)); }
-
-      .qq-shadow {
-        width: clamp(120px, 18vw, 180px); height: 18px; margin-top: 36px;
-        border-radius: 50%;
-        background: radial-gradient(ellipse, ${tint(color.brand, 0.3)} 0%, transparent 70%);
-        filter: blur(6px);
-        animation: qq-breathe 16s ease-in-out infinite;
+      /* The same glow the front page sits its cube in. */
+      .qq-halo {
+        position: absolute; inset: -10%;
+        background: radial-gradient(circle, ${tint(color.brand, 0.16)} 0%, transparent 68%);
+        pointer-events: none;
       }
 
       .qq-foot {
@@ -359,14 +343,6 @@ function PosterStyles() {
       }
       .qq-dot { color: ${tint(color.brand, 0.6)}; }
 
-      @keyframes qq-spin {
-        from { transform: rotateX(-18deg) rotateY(0deg); }
-        to   { transform: rotateX(-18deg) rotateY(360deg); }
-      }
-      @keyframes qq-breathe {
-        0%, 100% { transform: scaleX(1);   opacity: 0.75; }
-        50%      { transform: scaleX(0.8); opacity: 0.45; }
-      }
       @keyframes qq-pulse {
         0%, 100% { opacity: 1; }
         50%      { opacity: 0.55; }
@@ -377,14 +353,18 @@ function PosterStyles() {
         /* The cube leads on a phone: it is the thing that says "this is PIXEL"
            before any of the type is read. */
         .qq-right { order: -1; }
+        .qq-stage { --cube-scale: 0.72; width: min(300px, 76vw); height: min(300px, 76vw); }
         .qq-unit { min-width: 72px; padding: 10px 12px; }
       }
 
       /* A poster that spins forever is exactly the kind of motion this setting
          exists to stop. The cube stays, at an angle that still reads as one. */
       @media (prefers-reduced-motion: reduce) {
-        .qq-cube { animation: none; transform: rotateX(-18deg) rotateY(-28deg); }
-        .qq-shadow, .qq-pill--live { animation: none; }
+        /* The cube brings its own spin and colour cycle from the front page,
+           so stopping it means reaching into the component rather than
+           switching off an animation declared here. */
+        .qq-stage *, .qq-pill--live { animation: none !important; }
+        .qq-cube-scale { transform: scale(var(--cube-scale)) rotateX(-12deg) rotateY(-28deg); }
       }
     `}</style>
     );
